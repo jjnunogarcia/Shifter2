@@ -69,12 +69,9 @@ public class EventLoader {
         /**
          * The projection used by the EventDays query.
          */
-        private static final String[] PROJECTION = {
-                CalendarContract.EventDays.STARTDAY, CalendarContract.EventDays.ENDDAY
-        };
+        private static final String[] PROJECTION = {CalendarContract.EventDays.STARTDAY, CalendarContract.EventDays.ENDDAY};
 
-        public LoadEventDaysRequest(int startDay, int numDays, boolean[] eventDays,
-                                    final Runnable uiCallback) {
+        public LoadEventDaysRequest(int startDay, int numDays, boolean[] eventDays, final Runnable uiCallback) {
             this.startDay = startDay;
             this.numDays = numDays;
             this.eventDays = eventDays;
@@ -138,8 +135,7 @@ public class EventLoader {
 
         @Override
         public void processRequest(EventLoader eventLoader) {
-            Event.loadEvents(eventLoader.mContext, events, startDay,
-                             numDays, id, eventLoader.mSequenceNumber);
+            Event.loadEvents(eventLoader.mContext, events, startDay, numDays, id, eventLoader.mSequenceNumber);
 
             // Check if we are still the most recent request.
             if (id == eventLoader.mSequenceNumber.get()) {
@@ -156,17 +152,17 @@ public class EventLoader {
     }
 
     private static class LoaderThread extends Thread {
-        LinkedBlockingQueue<LoadRequest> mQueue;
-        EventLoader                      mEventLoader;
+        private LinkedBlockingQueue<LoadRequest> queue;
+        private EventLoader                      eventLoader;
 
         public LoaderThread(LinkedBlockingQueue<LoadRequest> queue, EventLoader eventLoader) {
-            mQueue = queue;
-            mEventLoader = eventLoader;
+            this.queue = queue;
+            this.eventLoader = eventLoader;
         }
 
         public void shutdown() {
             try {
-                mQueue.put(new ShutdownRequest());
+                queue.put(new ShutdownRequest());
             } catch (InterruptedException ex) {
                 // The put() method fails with InterruptedException if the
                 // queue is full. This should never happen because the queue
@@ -181,22 +177,22 @@ public class EventLoader {
             while (true) {
                 try {
                     // Wait for the next request
-                    LoadRequest request = mQueue.take();
+                    LoadRequest request = queue.take();
 
                     // If there are a bunch of requests already waiting, then
                     // skip all but the most recent request.
-                    while (!mQueue.isEmpty()) {
+                    while (!queue.isEmpty()) {
                         // Let the request know that it was skipped
-                        request.skipRequest(mEventLoader);
+                        request.skipRequest(eventLoader);
 
                         // Skip to the next request
-                        request = mQueue.take();
+                        request = queue.take();
                     }
 
                     if (request instanceof ShutdownRequest) {
                         return;
                     }
-                    request.processRequest(mEventLoader);
+                    request.processRequest(eventLoader);
                 } catch (InterruptedException ex) {
                     Log.e("Cal", "background LoaderThread interrupted!");
                 }
@@ -267,8 +263,7 @@ public class EventLoader {
      */
     void loadEventDaysInBackground(int startDay, int numDays, boolean[] eventDays, final Runnable uiCallback) {
         // Send load request to the background thread
-        LoadEventDaysRequest request = new LoadEventDaysRequest(startDay, numDays,
-                                                                eventDays, uiCallback);
+        LoadEventDaysRequest request = new LoadEventDaysRequest(startDay, numDays, eventDays, uiCallback);
         try {
             mLoaderQueue.put(request);
         } catch (InterruptedException ex) {

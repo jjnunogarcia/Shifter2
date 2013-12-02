@@ -202,8 +202,7 @@ public class Utils {
      *                    long, long, int, String) formatDateRange}
      * @return a string containing the formatted date/time range.
      */
-    public static String formatDateRange(
-            Context context, long startMillis, long endMillis, int flags) {
+    public static String formatDateRange(Context context, long startMillis, long endMillis, int flags) {
         return mTZUtils.formatDateRange(context, startMillis, endMillis, flags);
     }
 
@@ -587,8 +586,7 @@ public class Utils {
      * @param cursor          The query of calendars to check
      * @param nameIndex       The column of the query that contains the display name
      */
-    public static void checkForDuplicateNames(
-            Map<String, Boolean> isDuplicateName, Cursor cursor, int nameIndex) {
+    public static void checkForDuplicateNames(Map<String, Boolean> isDuplicateName, Cursor cursor, int nameIndex) {
         isDuplicateName.clear();
         cursor.moveToPosition(-1);
         while (cursor.moveToNext()) {
@@ -991,8 +989,7 @@ public class Utils {
     }
 
     /**
-     * Add a new segment based on the event provided. This will handle splitting
-     * segments across day boundaries and ensures a minimum size for segments.
+     * Add a new segment based on the event provided. This will handle splitting segments across day boundaries and ensures a minimum size for segments.
      */
     private static void addNewSegment(LinkedList<DNASegment> segments, Event event, HashMap<Integer, DNAStrand> strands, int firstJulianDay, int minStart, int minMinutes) {
         if (event.startDay > event.endDay) {
@@ -1072,8 +1069,7 @@ public class Utils {
 //    }
 
     /**
-     * This sets up a search view to use Calendar's search suggestions provider
-     * and to allow refining the search.
+     * This sets up a search view to use Calendar's search suggestions provider and to allow refining the search.
      *
      * @param view The {@link android.widget.SearchView} to set up
      * @param act  The activity using the view
@@ -1085,8 +1081,7 @@ public class Utils {
     }
 
     /**
-     * Given a context and a time in millis since unix epoch figures out the
-     * correct week of the year for that time.
+     * Given a context and a time in millis since unix epoch figures out the correct week of the year for that time.
      *
      * @param millisSinceEpoch
      * @return
@@ -1111,8 +1106,7 @@ public class Utils {
     }
 
     /**
-     * Formats a day of the week string. This is either just the name of the day
-     * or a combination of yesterday/today/tomorrow and the day of the week.
+     * Formats a day of the week string. This is either just the name of the day or a combination of yesterday/today/tomorrow and the day of the week.
      *
      * @param julianDay      The julian day to get the string for
      * @param todayJulianDay The julian day for today's date
@@ -1121,8 +1115,7 @@ public class Utils {
      *                       formatting
      * @return
      */
-    public static String getDayOfWeekString(int julianDay, int todayJulianDay, long millis,
-                                            Context context) {
+    public static String getDayOfWeekString(int julianDay, int todayJulianDay, long millis, Context context) {
         getTimeZone(context, null);
         int flags = DateUtils.FORMAT_SHOW_WEEKDAY;
         String dayViewText;
@@ -1139,8 +1132,7 @@ public class Utils {
         return dayViewText;
     }
 
-    // Calculate the time until midnight + 1 second and set the handler to
-    // do run the runnable
+    // Calculate the time until midnight + 1 second and set the handler to do run the runnable
     public static void setMidnightUpdater(Handler h, Runnable r, String timezone) {
         if (h == null || r == null || timezone == null) {
             return;
@@ -1164,8 +1156,7 @@ public class Utils {
     /**
      * Returns a string description of the specified time interval.
      */
-    public static String getDisplayedDatetime(long startMillis, long endMillis, long currentMillis,
-                                              String localTimezone, boolean allDay, Context context) {
+    public static String getDisplayedDatetime(long startMillis, long endMillis, long currentMillis, String localTimezone, boolean allDay, Context context) {
         // Configure date/time formatting.
         int flagsDate = DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_WEEKDAY;
         int flagsTime = DateUtils.FORMAT_SHOW_TIME;

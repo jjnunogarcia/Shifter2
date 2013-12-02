@@ -22,7 +22,6 @@ import android.text.format.Time;
 import android.util.Log;
 import android.view.*;
 import android.widget.AbsListView.LayoutParams;
-import com.example.calendarview.CalendarController.EventType;
 import com.example.calendarview.CalendarController.ViewType;
 import es.android.TurnosAndroid.R;
 

@@ -40,7 +40,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 // TODO: should Event be Parcelable so it can be passed via Intents?
 public class Event implements Cloneable {
 
-    private static final String  TAG     = "CalEvent";
+    private static final String  TAG     = Event.class.getSimpleName();
     private static final boolean PROFILE = false;
 
     /**
@@ -53,10 +53,8 @@ public class Event implements Cloneable {
      * sorted correctly with respect to events that are >24 hours (and
      * therefore show up in the allday area).
      */
-    private static final String SORT_EVENTS_BY    =
-            "begin ASC, end DESC, title ASC";
-    private static final String SORT_ALLDAY_BY    =
-            "startDay ASC, endDay DESC, title ASC";
+    private static final String SORT_EVENTS_BY    = "begin ASC, end DESC, title ASC";
+    private static final String SORT_ALLDAY_BY    = "startDay ASC, endDay DESC, title ASC";
     private static final String DISPLAY_AS_ALLDAY = "dispAllday";
 
     private static final String EVENTS_WHERE = DISPLAY_AS_ALLDAY + "=0";
@@ -196,7 +194,7 @@ public class Event implements Cloneable {
         dest.guestsCanModify = guestsCanModify;
     }
 
-    public static final Event newInstance() {
+    public static Event newInstance() {
         Event e = new Event();
 
         e.id = 0;
@@ -220,8 +218,7 @@ public class Event implements Cloneable {
     /**
      * Loads <i>days</i> days worth of instances starting at <i>startDay</i>.
      */
-    public static void loadEvents(Context context, ArrayList<Event> events, int startDay, int days,
-                                  int requestId, AtomicInteger sequenceNumber) {
+    public static void loadEvents(Context context, ArrayList<Event> events, int startDay, int days, int requestId, AtomicInteger sequenceNumber) {
 
         if (PROFILE) {
             Debug.startMethodTracing("loadEvents");
@@ -246,26 +243,21 @@ public class Event implements Cloneable {
 
             // Respect the preference to show/hide declined events
 //            SharedPreferences prefs = GeneralPreferences.getSharedPreferences(context);
-//            boolean hideDeclined = prefs.getBoolean(GeneralPreferences.KEY_HIDE_DECLINED,
-//                    false);
+//            boolean hideDeclined = prefs.getBoolean(GeneralPreferences.KEY_HIDE_DECLINED, false);
             boolean hideDeclined = false;
 
             String where = EVENTS_WHERE;
             String whereAllday = ALLDAY_WHERE;
             if (hideDeclined) {
-                String hideString = " AND " + Instances.SELF_ATTENDEE_STATUS + "!="
-                                    + Attendees.ATTENDEE_STATUS_DECLINED;
+                String hideString = " AND " + Instances.SELF_ATTENDEE_STATUS + "!=" + Attendees.ATTENDEE_STATUS_DECLINED;
                 where += hideString;
                 whereAllday += hideString;
             }
 
-            cEvents = instancesQuery(context.getContentResolver(), EVENT_PROJECTION, startDay,
-                                     endDay, where, null, SORT_EVENTS_BY);
-            cAllday = instancesQuery(context.getContentResolver(), EVENT_PROJECTION, startDay,
-                                     endDay, whereAllday, null, SORT_ALLDAY_BY);
+            cEvents = instancesQuery(context.getContentResolver(), EVENT_PROJECTION, startDay, endDay, where, null, SORT_EVENTS_BY);
+            cAllday = instancesQuery(context.getContentResolver(), EVENT_PROJECTION, startDay, endDay, whereAllday, null, SORT_ALLDAY_BY);
 
-            // Check if we should return early because there are more recent
-            // load requests waiting.
+            // Check if we should return early because there are more recent load requests waiting.
             if (requestId != sequenceNumber.get()) {
                 return;
             }
@@ -287,25 +279,20 @@ public class Event implements Cloneable {
     }
 
     /**
-     * Performs a query to return all visible instances in the given range
-     * that match the given selection. This is a blocking function and
-     * should not be done on the UI thread. This will cause an expansion of
-     * recurring events to fill this time range if they are not already
-     * expanded and will slow down for larger time ranges with many
-     * recurring events.
+     * Performs a query to return all visible instances in the given range that match the given selection. This is a blocking function and
+     * should not be done on the UI thread. This will cause an expansion of recurring events to fill this time range if they are not already
+     * expanded and will slow down for larger time ranges with many recurring events.
      *
      * @param cr            The ContentResolver to use for the query
      * @param projection    The columns to return
-     * @param startDay      The start of the time range to query in UTC millis since
-     *                      epoch
-     * @param endDay        The end of the time range to query in UTC millis since
-     *                      epoch
+     * @param startDay      The start of the time range to query in UTC millis since epoch
+     * @param endDay        The end of the time range to query in UTC millis since epoch
      * @param selection     Filter on the query as an SQL WHERE statement
      * @param selectionArgs Args to replace any '?'s in the selection
      * @param orderBy       How to order the rows as an SQL ORDER BY statement
      * @return A Cursor of instances matching the selection
      */
-    private static final Cursor instancesQuery(ContentResolver cr, String[] projection, int startDay, int endDay, String selection, String[] selectionArgs, String orderBy) {
+    private static Cursor instancesQuery(ContentResolver cr, String[] projection, int startDay, int endDay, String selection, String[] selectionArgs, String orderBy) {
         String WHERE_CALENDARS_SELECTED = Calendars.VISIBLE + "=?";
         String[] WHERE_CALENDARS_ARGS = {"1"};
         String DEFAULT_SORT_ORDER = "begin ASC";
@@ -325,8 +312,7 @@ public class Event implements Cloneable {
                 selectionArgs = WHERE_CALENDARS_ARGS;
             }
         }
-        return cr.query(builder.build(), projection, selection, selectionArgs,
-                        orderBy == null ? DEFAULT_SORT_ORDER : orderBy);
+        return cr.query(builder.build(), projection, selection, selectionArgs, orderBy == null ? DEFAULT_SORT_ORDER : orderBy);
     }
 
     /**
@@ -338,8 +324,7 @@ public class Event implements Cloneable {
      * @param startDay
      * @param endDay
      */
-    public static void buildEventsFromCursor(
-            ArrayList<Event> events, Cursor cEvents, Context context, int startDay, int endDay) {
+    public static void buildEventsFromCursor(ArrayList<Event> events, Cursor cEvents, Context context, int startDay, int endDay) {
         if (cEvents == null || events == null) {
             Log.e(TAG, "buildEventsFromCursor: null cursor or null events list!");
             return;
@@ -430,15 +415,10 @@ public class Event implements Cloneable {
     }
 
     /**
-     * Computes a position for each event.  Each event is displayed
-     * as a non-overlapping rectangle.  For normal events, these rectangles
-     * are displayed in separate columns in the week view and day view.  For
-     * all-day events, these rectangles are displayed in separate rows along
-     * the top.  In both cases, each event is assigned two numbers: N, and
-     * Max, that specify that this event is the Nth event of Max number of
-     * events that are displayed in a group. The width and position of each
-     * rectangle depend on the maximum number of rectangles that occur at
-     * the same time.
+     * Computes a position for each event.  Each event is displayed as a non-overlapping rectangle.  For normal events, these rectangles
+     * are displayed in separate columns in the week view and day view. For all-day events, these rectangles are displayed in separate rows along
+     * the top.  In both cases, each event is assigned two numbers: N, and Max, that specify that this event is the Nth event of Max number of
+     * events that are displayed in a group. The width and position of each rectangle depend on the maximum number of rectangles that occur at the same time.
      *
      * @param eventsList            the list of events, sorted into increasing time order
      * @param minimumDurationMillis minimum duration acceptable as cell height of each event
@@ -523,8 +503,7 @@ public class Event implements Cloneable {
         return colMask;
     }
 
-    private static long removeNonAlldayActiveEvents(
-            Event event, Iterator<Event> iter, long minDurationMillis, long colMask) {
+    private static long removeNonAlldayActiveEvents(Event event, Iterator<Event> iter, long minDurationMillis, long colMask) {
         long start = event.getStartMillis();
         // Remove the inactive events. An event on the active list
         // becomes inactive when its end time is less than or equal to
@@ -532,8 +511,7 @@ public class Event implements Cloneable {
         while (iter.hasNext()) {
             final Event active = iter.next();
 
-            final long duration = Math.max(
-                    active.getEndMillis() - active.getStartMillis(), minDurationMillis);
+            final long duration = Math.max(active.getEndMillis() - active.getStartMillis(), minDurationMillis);
             if ((active.getStartMillis() + duration) <= start) {
                 colMask &= ~(1L << active.getColumn());
                 iter.remove();
@@ -566,8 +544,7 @@ public class Event implements Cloneable {
         Log.e("Cal", "+  guestwrt = " + guestsCanModify);
     }
 
-    public final boolean intersects(int julianDay, int startMinute,
-                                    int endMinute) {
+    public final boolean intersects(int julianDay, int startMinute, int endMinute) {
         if (endDay < julianDay) {
             return false;
         }
@@ -597,8 +574,7 @@ public class Event implements Cloneable {
     }
 
     /**
-     * Returns the event title and location separated by a comma.  If the
-     * location is already part of the title (at the end of the title), then
+     * Returns the event title and location separated by a comma.  If the location is already part of the title (at the end of the title), then
      * just the title is returned.
      *
      * @return the event title and location as a String

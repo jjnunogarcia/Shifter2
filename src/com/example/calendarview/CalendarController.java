@@ -37,220 +37,61 @@ import java.util.Map.Entry;
 import java.util.WeakHashMap;
 
 public class CalendarController {
-    private static final boolean  DEBUG             = false;
-    private static final String   TAG               = "CalendarController";
-    private static final String   REFRESH_SELECTION = Calendars.SYNC_EVENTS + "=?";
-    private static final String[] REFRESH_ARGS      = new String[]{"1"};
-    private static final String   REFRESH_ORDER     = Calendars.ACCOUNT_NAME + "," + Calendars.ACCOUNT_TYPE;
-
-    public static final String EVENT_EDIT_ON_LAUNCH = "editMode";
-
-    public static final int MIN_CALENDAR_YEAR = 1970;
-    public static final int MAX_CALENDAR_YEAR = 2036;
-    public static final int MIN_CALENDAR_WEEK = 0;
-    public static final int MAX_CALENDAR_WEEK = 3497; // weeks between 1/1/1970 and 1/1/2037
-
-
-    // This uses a LinkedHashMap so that we can replace fragments based on the
-    // view id they are being expanded into since we can't guarantee a reference
-    // to the handler will be findable
-    private final LinkedHashMap<Integer, EventHandler> eventHandlers             = new LinkedHashMap<Integer, EventHandler>(5);
-    private final LinkedList<Integer>                  mToBeRemovedEventHandlers = new LinkedList<Integer>();
-    private final LinkedHashMap<Integer, EventHandler> mToBeAddedEventHandlers   = new LinkedHashMap<Integer, EventHandler>();
-    private Pair<Integer, EventHandler> mFirstEventHandler;
-    private Pair<Integer, EventHandler> mToBeAddedFirstEventHandler;
-    private volatile int mDispatchInProgressCounter = 0;
-
-    private static WeakHashMap<Context, CalendarController> instances = new WeakHashMap<Context, CalendarController>();
-
-    private final WeakHashMap<Object, Long> filters = new WeakHashMap<Object, Long>(1);
-
-    private final Context mContext;
-    private       int  mViewType         = -1;
-    private       int  mDetailViewType   = -1;
-    private       int  mPreviousViewType = -1;
-    private       long mEventId          = -1;
-    private final Time mTime             = new Time();
-    private       long mDateFlags        = 0;
-
-    private final Runnable mUpdateTimezone = new Runnable() {
-        @Override
-        public void run() {
-            mTime.switchTimezone(Utils.getTimeZone(mContext, this));
-        }
-    };
-
-    /**
-     * One of the event types that are sent to or from the controller
-     */
-    public interface EventType {
-        final long CREATE_EVENT = 1L;
-
-        // Simple view of an event
-        final long VIEW_EVENT = 1L << 1;
-
-        // Full detail view in read only mode
-        final long VIEW_EVENT_DETAILS = 1L << 2;
-
-        // full detail view in edit mode
-        final long EDIT_EVENT = 1L << 3;
-
-        final long DELETE_EVENT = 1L << 4;
-
-        final long GO_TO = 1L << 5;
-
-        final long LAUNCH_SETTINGS = 1L << 6;
-
-        final long EVENTS_CHANGED = 1L << 7;
-
-        final long SEARCH = 1L << 8;
-
-        // User has pressed the home key
-        final long USER_HOME = 1L << 9;
-
-        // date range has changed, update the title
-        final long UPDATE_TITLE = 1L << 10;
-
-        // select which calendars to display
-        final long LAUNCH_SELECT_VISIBLE_CALENDARS = 1L << 11;
-    }
-
-    /**
-     * One of the Agenda/Day/Week/Month view types
-     */
-    public interface ViewType {
-        final int DETAIL  = -1;
-        final int CURRENT = 0;
-        final int AGENDA  = 1;
-        final int DAY     = 2;
-        final int WEEK    = 3;
-        final int MONTH   = 4;
-        final int EDIT    = 5;
-    }
-
-    public static class EventInfo {
-
-        private static final long ATTENTEE_STATUS_MASK           = 0xFF;
-        private static final long ALL_DAY_MASK                   = 0x100;
-        private static final int  ATTENDEE_STATUS_NONE_MASK      = 0x01;
-        private static final int  ATTENDEE_STATUS_ACCEPTED_MASK  = 0x02;
-        private static final int  ATTENDEE_STATUS_DECLINED_MASK  = 0x04;
-        private static final int  ATTENDEE_STATUS_TENTATIVE_MASK = 0x08;
-
-        public long          eventType; // one of the EventType
-        public int           viewType; // one of the ViewType
-        public long          id; // event id
-        public Time          selectedTime; // the selected time in focus
-        public Time          startTime; // start of a range of time.
-        public Time          endTime; // end of a range of time.
-        public int           x; // x coordinate in the activity space
-        public int           y; // y coordinate in the activity space
-        public String        query; // query for a user search
-        public ComponentName componentName;  // used in combination with query
-
-        /**
-         * For EventType.VIEW_EVENT:
-         * It is the default attendee response and an all day event indicator.
-         * Set to Attendees.ATTENDEE_STATUS_NONE, Attendees.ATTENDEE_STATUS_ACCEPTED,
-         * Attendees.ATTENDEE_STATUS_DECLINED, or Attendees.ATTENDEE_STATUS_TENTATIVE.
-         * To signal the event is an all-day event, "or" ALL_DAY_MASK with the response.
-         * Alternatively, use buildViewExtraLong(), getResponse(), and isAllDay().
-         * <p/>
-         * For EventType.CREATE_EVENT:
-         * Set to {@link #EXTRA_CREATE_ALL_DAY} for creating an all-day event.
-         * <p/>
-         * For EventType.GO_TO:
-         * Set to {@link #EXTRA_GOTO_TIME} to go to the specified date/time.
-         * Set to {@link #EXTRA_GOTO_DATE} to consider the date but ignore the time.
-         * Set to {@link #EXTRA_GOTO_BACK_TO_PREVIOUS} if back should bring back previous view.
-         * Set to {@link #EXTRA_GOTO_TODAY} if this is a user request to go to the current time.
-         * <p/>
-         * For EventType.UPDATE_TITLE:
-         * Set formatting flags for Utils.formatDateRange
-         */
-        public long extraLong;
-
-        public boolean isAllDay() {
-            if (eventType != EventType.VIEW_EVENT) {
-                Log.wtf(TAG, "illegal call to isAllDay , wrong event type " + eventType);
-                return false;
-            }
-            return ((extraLong & ALL_DAY_MASK) != 0);
-        }
-
-        public int getResponse() {
-            if (eventType != EventType.VIEW_EVENT) {
-                Log.wtf(TAG, "illegal call to getResponse , wrong event type " + eventType);
-                return Attendees.ATTENDEE_STATUS_NONE;
-            }
-
-            int response = (int) (extraLong & ATTENTEE_STATUS_MASK);
-            switch (response) {
-                case ATTENDEE_STATUS_NONE_MASK:
-                    return Attendees.ATTENDEE_STATUS_NONE;
-                case ATTENDEE_STATUS_ACCEPTED_MASK:
-                    return Attendees.ATTENDEE_STATUS_ACCEPTED;
-                case ATTENDEE_STATUS_DECLINED_MASK:
-                    return Attendees.ATTENDEE_STATUS_DECLINED;
-                case ATTENDEE_STATUS_TENTATIVE_MASK:
-                    return Attendees.ATTENDEE_STATUS_TENTATIVE;
-                default:
-                    Log.wtf(TAG, "Unknown attendee response " + response);
-            }
-            return ATTENDEE_STATUS_NONE_MASK;
-        }
-
-        // Used to build the extra long for a VIEW event.
-        public static long buildViewExtraLong(int response, boolean allDay) {
-            long extra = allDay ? ALL_DAY_MASK : 0;
-
-            switch (response) {
-                case Attendees.ATTENDEE_STATUS_NONE:
-                    extra |= ATTENDEE_STATUS_NONE_MASK;
-                    break;
-                case Attendees.ATTENDEE_STATUS_ACCEPTED:
-                    extra |= ATTENDEE_STATUS_ACCEPTED_MASK;
-                    break;
-                case Attendees.ATTENDEE_STATUS_DECLINED:
-                    extra |= ATTENDEE_STATUS_DECLINED_MASK;
-                    break;
-                case Attendees.ATTENDEE_STATUS_TENTATIVE:
-                    extra |= ATTENDEE_STATUS_TENTATIVE_MASK;
-                    break;
-                default:
-                    Log.wtf(TAG, "Unknown attendee response " + response);
-                    extra |= ATTENDEE_STATUS_NONE_MASK;
-                    break;
-            }
-            return extra;
-        }
-    }
-
+    public static final  String                                   EVENT_EDIT_ON_LAUNCH        = "editMode";
+    public static final  int                                      MIN_CALENDAR_YEAR           = 1970;
+    public static final  int                                      MAX_CALENDAR_YEAR           = 2036;
+    public static final  int                                      MIN_CALENDAR_WEEK           = 0;
+    public static final  int                                      MAX_CALENDAR_WEEK           = 3497; // weeks between 1/1/1970 and 1/1/2037
     /**
      * Pass to the ExtraLong parameter for EventType.CREATE_EVENT to create
      * an all-day event
      */
-    public static final long EXTRA_CREATE_ALL_DAY = 0x10;
-
+    public static final  long                                     EXTRA_CREATE_ALL_DAY        = 0x10;
     /**
      * Pass to the ExtraLong parameter for EventType.GO_TO to signal the time
      * can be ignored
      */
-    public static final long EXTRA_GOTO_DATE             = 1;
-    public static final long EXTRA_GOTO_TIME             = 2;
-    public static final long EXTRA_GOTO_BACK_TO_PREVIOUS = 4;
-    public static final long EXTRA_GOTO_TODAY            = 8;
+    public static final  long                                     EXTRA_GOTO_DATE             = 1;
+    public static final  long                                     EXTRA_GOTO_TIME             = 2;
+    public static final  long                                     EXTRA_GOTO_BACK_TO_PREVIOUS = 4;
+    public static final  long                                     EXTRA_GOTO_TODAY            = 8;
+    private static final boolean                                  DEBUG                       = false;
+    private static final String                                   TAG                         = "CalendarController";
+    private static final String                                   REFRESH_SELECTION           = Calendars.SYNC_EVENTS + "=?";
+    private static final String[]                                 REFRESH_ARGS                = new String[]{"1"};
+    private static final String                                   REFRESH_ORDER               = Calendars.ACCOUNT_NAME + "," + Calendars.ACCOUNT_TYPE;
+    private static       WeakHashMap<Context, CalendarController> instances                   = new WeakHashMap<Context, CalendarController>();
+    // This uses a LinkedHashMap so that we can replace fragments based on the
+    // view id they are being expanded into since we can't guarantee a reference
+    // to the handler will be findable
+    private final        LinkedHashMap<Integer, EventHandler>     eventHandlers               = new LinkedHashMap<Integer, EventHandler>(5);
+    private final        LinkedList<Integer>                      mToBeRemovedEventHandlers   = new LinkedList<Integer>();
+    private final        LinkedHashMap<Integer, EventHandler>     mToBeAddedEventHandlers     = new LinkedHashMap<Integer, EventHandler>();
+    private final        WeakHashMap<Object, Long>                filters                     = new WeakHashMap<Object, Long>(1);
+    private final Context context;
+    private final Time     time           = new Time();
+    private final Runnable updateTimezone = new Runnable() {
+        @Override
+        public void run() {
+            time.switchTimezone(Utils.getTimeZone(context, this));
+        }
+    };
+    private Pair<Integer, EventHandler> mFirstEventHandler;
+    private Pair<Integer, EventHandler> mToBeAddedFirstEventHandler;
+    private volatile int  mDispatchInProgressCounter = 0;
+    private          int  viewType                   = -1;
+    private          int  detailViewType             = -1;
+    private          int  previousViewType           = -1;
+    private          long eventId                    = -1;
+    private          long dateFlags                  = 0;
 
-    public interface EventHandler {
-        long getSupportedEventTypes();
-
-        void handleEvent(EventInfo event);
-
-        /**
-         * This notifies the handler that the database has changed and it should
-         * update its view.
-         */
-        void eventsChanged();
+    private CalendarController(Context context) {
+        this.context = context;
+        updateTimezone.run();
+        time.setToNow();
+//        detailViewType = Utils.getSharedPreference(context,
+//                GeneralPreferences.KEY_DETAILED_VIEW,
+//                GeneralPreferences.DEFAULT_DETAILED_VIEW);
     }
 
     /**
@@ -270,34 +111,11 @@ public class CalendarController {
         }
     }
 
-    /**
-     * Removes an instance when it is no longer needed. This should be called in
-     * an activity's onDestroy method.
-     *
-     * @param context The activity used to create the controller
-     */
-    public static void removeInstance(Context context) {
-        instances.remove(context);
-    }
-
-    private CalendarController(Context context) {
-        mContext = context;
-        mUpdateTimezone.run();
-        mTime.setToNow();
-//        mDetailViewType = Utils.getSharedPreference(mContext,
-//                GeneralPreferences.KEY_DETAILED_VIEW,
-//                GeneralPreferences.DEFAULT_DETAILED_VIEW);
-    }
-
-    public void sendEventRelatedEvent(Object sender, long eventType, long eventId, long startMillis,
-                                      long endMillis, int x, int y, long selectedMillis) {
+    public void sendEventRelatedEvent(Object sender, long eventType, long eventId, long startMillis, long endMillis, int x, int y, long selectedMillis) {
         // TODO: pass the real allDay status or at least a status that says we don't know the
         // status and have the receiver query the data.
-        // The current use of this method for VIEW_EVENT is by the day view to show an EventInfo
-        // so currently the missing allDay status has no effect.
-        sendEventRelatedEventWithExtra(sender, eventType, eventId, startMillis, endMillis, x, y,
-                                       EventInfo.buildViewExtraLong(Attendees.ATTENDEE_STATUS_NONE, false),
-                                       selectedMillis);
+        // The current use of this method for VIEW_EVENT is by the day view to show an EventInfo so currently the missing allDay status has no effect.
+        sendEventRelatedEventWithExtra(sender, eventType, eventId, startMillis, endMillis, x, y, EventInfo.buildViewExtraLong(Attendees.ATTENDEE_STATUS_NONE, false), selectedMillis);
     }
 
     /**
@@ -321,15 +139,15 @@ public class CalendarController {
             info.viewType = ViewType.CURRENT;
         }
         info.id = eventId;
-        info.startTime = new Time(Utils.getTimeZone(mContext, mUpdateTimezone));
+        info.startTime = new Time(Utils.getTimeZone(context, updateTimezone));
         info.startTime.set(startMillis);
         if (selectedMillis != -1) {
-            info.selectedTime = new Time(Utils.getTimeZone(mContext, mUpdateTimezone));
+            info.selectedTime = new Time(Utils.getTimeZone(context, updateTimezone));
             info.selectedTime.set(selectedMillis);
         } else {
             info.selectedTime = info.startTime;
         }
-        info.endTime = new Time(Utils.getTimeZone(mContext, mUpdateTimezone));
+        info.endTime = new Time(Utils.getTimeZone(context, updateTimezone));
         info.endTime.set(endMillis);
         info.x = x;
         info.y = y;
@@ -369,10 +187,10 @@ public class CalendarController {
         info.query = query;
         info.componentName = componentName;
         info.extraLong = extraLong;
-        this.sendEvent(sender, info);
+        sendEvent(sender, info);
     }
 
-    public void sendEvent(Object sender, final EventInfo event) {
+    private void sendEvent(Object sender, final EventInfo event) {
         // TODO Throw exception on invalid events
 
         if (DEBUG) {
@@ -388,19 +206,19 @@ public class CalendarController {
             return;
         }
 
-        mPreviousViewType = mViewType;
+        previousViewType = viewType;
 
         // Fix up view if not specified
         if (event.viewType == ViewType.DETAIL) {
-            event.viewType = mDetailViewType;
-            mViewType = mDetailViewType;
+            event.viewType = detailViewType;
+            viewType = detailViewType;
         } else if (event.viewType == ViewType.CURRENT) {
-            event.viewType = mViewType;
+            event.viewType = viewType;
         } else if (event.viewType != ViewType.EDIT) {
-            mViewType = event.viewType;
+            viewType = event.viewType;
 
             if (event.viewType == ViewType.AGENDA || event.viewType == ViewType.DAY || (Utils.getAllowWeekForDetailView() && event.viewType == ViewType.WEEK)) {
-                mDetailViewType = mViewType;
+                detailViewType = viewType;
             }
         }
 
@@ -409,7 +227,7 @@ public class CalendarController {
             Log.e(TAG, "Start  " + (event.startTime == null ? "null" : event.startTime.toString()));
             Log.e(TAG, "End    " + (event.endTime == null ? "null" : event.endTime.toString()));
             Log.e(TAG, "Select " + (event.selectedTime == null ? "null" : event.selectedTime.toString()));
-            Log.e(TAG, "mTime  " + (mTime == null ? "null" : mTime.toString()));
+            Log.e(TAG, "time  " + (time == null ? "null" : time.toString()));
         }
 
         long startMillis = 0;
@@ -417,44 +235,44 @@ public class CalendarController {
             startMillis = event.startTime.toMillis(false);
         }
 
-        // Set mTime if selectedTime is set
+        // Set time if selectedTime is set
         if (event.selectedTime != null && event.selectedTime.toMillis(false) != 0) {
-            mTime.set(event.selectedTime);
+            time.set(event.selectedTime);
         } else {
             if (startMillis != 0) {
-                // selectedTime is not set so set mTime to startTime iff it is not
+                // selectedTime is not set so set time to startTime iff it is not
                 // within start and end times
-                long mtimeMillis = mTime.toMillis(false);
+                long mtimeMillis = time.toMillis(false);
                 if (mtimeMillis < startMillis
                     || (event.endTime != null && mtimeMillis > event.endTime.toMillis(false))) {
-                    mTime.set(event.startTime);
+                    time.set(event.startTime);
                 }
             }
-            event.selectedTime = mTime;
+            event.selectedTime = time;
         }
         // Store the formatting flags if this is an update to the title
         if (event.eventType == EventType.UPDATE_TITLE) {
-            mDateFlags = event.extraLong;
+            dateFlags = event.extraLong;
         }
 
         // Fix up start time if not specified
         if (startMillis == 0) {
-            event.startTime = mTime;
+            event.startTime = time;
         }
         if (DEBUG) {
             Log.e(TAG, "Start  " + (event.startTime == null ? "null" : event.startTime.toString()));
             Log.e(TAG, "End    " + (event.endTime == null ? "null" : event.endTime.toString()));
             Log.e(TAG, "Select " + (event.selectedTime == null ? "null" : event.selectedTime.toString()));
-            Log.e(TAG, "mTime  " + (mTime == null ? "null" : mTime.toString()));
+            Log.e(TAG, "time  " + (time == null ? "null" : time.toString()));
             Log.e(TAG, "^^^^^^^^^^^^^^^");
         }
 
         // Store the eventId if we're entering edit event
         if ((event.eventType & (EventType.CREATE_EVENT | EventType.EDIT_EVENT | EventType.VIEW_EVENT_DETAILS)) != 0) {
             if (event.id > 0) {
-                mEventId = event.id;
+                eventId = event.id;
             } else {
-                mEventId = -1;
+                eventId = -1;
             }
         }
 
@@ -536,8 +354,7 @@ public class CalendarController {
             if (event.eventType == EventType.CREATE_EVENT) {
 //                launchCreateEvent(event.startTime.toMillis(false), endTime, event.extraLong == EXTRA_CREATE_ALL_DAY);
             } else if (event.eventType == EventType.VIEW_EVENT) {
-//                launchViewEvent(event.id, event.startTime.toMillis(false), endTime,
-//                        event.getResponse());
+//                launchViewEvent(event.id, event.startTime.toMillis(false), endTime, event.getResponse());
             } else if (event.eventType == EventType.EDIT_EVENT) {
 //                launchEditEvent(event.id, event.startTime.toMillis(false), endTime, true);
             } else if (event.eventType == EventType.VIEW_EVENT_DETAILS) {
@@ -613,15 +430,7 @@ public class CalendarController {
      * @return the time that this controller is currently pointed at
      */
     public long getTime() {
-        return mTime.toMillis(false);
-    }
-
-    /**
-     * @return the last set of date flags sent with
-     *         {@link EventType#UPDATE_TITLE}
-     */
-    public long getDateFlags() {
-        return mDateFlags;
+        return time.toMillis(false);
     }
 
     /**
@@ -630,58 +439,75 @@ public class CalendarController {
      * @param millisTime Time since epoch in millis
      */
     public void setTime(long millisTime) {
-        mTime.set(millisTime);
+        time.set(millisTime);
+    }
+
+    /**
+     * @return the last set of date flags sent with {@link EventType#UPDATE_TITLE}
+     */
+    public long getDateFlags() {
+        return dateFlags;
     }
 
     /**
      * @return the last event ID the edit view was launched with
      */
     public long getEventId() {
-        return mEventId;
+        return eventId;
+    }
+
+    // Sets the eventId. Should only be used for initialization.
+    public void setEventId(long eventId) {
+        this.eventId = eventId;
     }
 
     public int getViewType() {
-        return mViewType;
+        return viewType;
+    }
+
+    // Forces the viewType. Should only be used for initialization.
+    public void setViewType(int viewType) {
+        this.viewType = viewType;
     }
 
     public int getPreviousViewType() {
-        return mPreviousViewType;
+        return previousViewType;
     }
 
 //    private void launchSelectVisibleCalendars() {
 //        Intent intent = new Intent(Intent.ACTION_VIEW);
-//        intent.setClass(mContext, SelectVisibleCalendarsActivity.class);
+//        intent.setClass(context, SelectVisibleCalendarsActivity.class);
 //        intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-//        mContext.startActivity(intent);
+//        context.startActivity(intent);
 //    }
 //
 //    private void launchSettings() {
 //        Intent intent = new Intent(Intent.ACTION_VIEW);
-//        intent.setClass(mContext, CalendarSettingsActivity.class);
+//        intent.setClass(context, CalendarSettingsActivity.class);
 //        intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-//        mContext.startActivity(intent);
+//        context.startActivity(intent);
 //    }
 //
 //    private void launchCreateEvent(long startMillis, long endMillis, boolean allDayEvent) {
 //        Intent intent = new Intent(Intent.ACTION_VIEW);
-//        intent.setClass(mContext, EditEventActivity.class);
+//        intent.setClass(context, EditEventActivity.class);
 //        intent.putExtra(EXTRA_EVENT_BEGIN_TIME, startMillis);
 //        intent.putExtra(EXTRA_EVENT_END_TIME, endMillis);
 //        intent.putExtra(EXTRA_EVENT_ALL_DAY, allDayEvent);
-//        mEventId = -1;
-//        mContext.startActivity(intent);
+//        eventId = -1;
+//        context.startActivity(intent);
 //    }
 //
 //    public void launchViewEvent(long eventId, long startMillis, long endMillis, int response) {
 //        Intent intent = new Intent(Intent.ACTION_VIEW);
 //        Uri eventUri = ContentUris.withAppendedId(Events.CONTENT_URI, eventId);
 //        intent.setData(eventUri);
-//        intent.setClass(mContext, AllInOneActivity.class);
+//        intent.setClass(context, AllInOneActivity.class);
 //        intent.putExtra(EXTRA_EVENT_BEGIN_TIME, startMillis);
 //        intent.putExtra(EXTRA_EVENT_END_TIME, endMillis);
 //        intent.putExtra(ATTENDEE_STATUS, response);
 //        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-//        mContext.startActivity(intent);
+//        context.startActivity(intent);
 //    }
 //
 //    private void launchEditEvent(long eventId, long startMillis, long endMillis, boolean edit) {
@@ -689,17 +515,17 @@ public class CalendarController {
 //        Intent intent = new Intent(Intent.ACTION_EDIT, uri);
 //        intent.putExtra(EXTRA_EVENT_BEGIN_TIME, startMillis);
 //        intent.putExtra(EXTRA_EVENT_END_TIME, endMillis);
-//        intent.setClass(mContext, EditEventActivity.class);
+//        intent.setClass(context, EditEventActivity.class);
 //        intent.putExtra(EVENT_EDIT_ON_LAUNCH, edit);
-//        mEventId = eventId;
-//        mContext.startActivity(intent);
+//        eventId = eventId;
+//        context.startActivity(intent);
 //    }
 
 //    private void launchAlerts() {
 //        Intent intent = new Intent();
-//        intent.setClass(mContext, AlertActivity.class);
+//        intent.setClass(context, AlertActivity.class);
 //        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-//        mContext.startActivity(intent);
+//        context.startActivity(intent);
 //    }
 
 //    private void launchDeleteEvent(long eventId, long startMillis, long endMillis) {
@@ -708,27 +534,26 @@ public class CalendarController {
 
 //    private void launchDeleteEventAndFinish(Activity parentActivity, long eventId, long startMillis,
 //            long endMillis, int deleteWhich) {
-//        DeleteEventHelper deleteEventHelper = new DeleteEventHelper(mContext, parentActivity,
+//        DeleteEventHelper deleteEventHelper = new DeleteEventHelper(context, parentActivity,
 //                parentActivity != null /* exit when done */);
 //        deleteEventHelper.delete(startMillis, endMillis, eventId, deleteWhich);
 //    }
 
     private void launchSearch(long eventId, String query, ComponentName componentName) {
-        final SearchManager searchManager =
-                (SearchManager) mContext.getSystemService(Context.SEARCH_SERVICE);
+        final SearchManager searchManager = (SearchManager) context.getSystemService(Context.SEARCH_SERVICE);
         final SearchableInfo searchableInfo = searchManager.getSearchableInfo(componentName);
         final Intent intent = new Intent(Intent.ACTION_SEARCH);
         intent.putExtra(SearchManager.QUERY, query);
         intent.setComponent(searchableInfo.getSearchActivity());
         intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        mContext.startActivity(intent);
+        context.startActivity(intent);
     }
 
     /**
      * Performs a manual refresh of calendars in all known accounts.
      */
     public void refreshCalendars() {
-        Account[] accounts = AccountManager.get(mContext).getAccounts();
+        Account[] accounts = AccountManager.get(context).getAccounts();
         Log.d(TAG, "Refreshing " + accounts.length + " accounts");
 
         String authority = Calendars.CONTENT_URI.getAuthority();
@@ -742,20 +567,10 @@ public class CalendarController {
         }
     }
 
-    // Forces the viewType. Should only be used for initialization.
-    public void setViewType(int viewType) {
-        mViewType = viewType;
-    }
-
-    // Sets the eventId. Should only be used for initialization.
-    public void setEventId(long eventId) {
-        mEventId = eventId;
-    }
-
     private String eventInfoToString(EventInfo eventInfo) {
         String tmp = "Unknown";
-
         StringBuilder builder = new StringBuilder();
+
         if ((eventInfo.eventType & EventType.GO_TO) != 0) {
             tmp = "Go to time/event";
         } else if ((eventInfo.eventType & EventType.CREATE_EVENT) != 0) {
@@ -781,6 +596,7 @@ public class CalendarController {
         } else if ((eventInfo.eventType & EventType.UPDATE_TITLE) != 0) {
             tmp = "Update title";
         }
+
         builder.append(tmp);
         builder.append(": id=");
         builder.append(eventInfo.id);
@@ -796,6 +612,7 @@ public class CalendarController {
         builder.append(eventInfo.x);
         builder.append(", y=");
         builder.append(eventInfo.y);
+
         return builder.toString();
     }
 }

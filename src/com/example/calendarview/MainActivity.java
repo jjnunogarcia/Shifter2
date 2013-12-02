@@ -6,34 +6,32 @@ import android.app.FragmentTransaction;
 import android.os.Bundle;
 import android.view.Menu;
 import com.example.calendarview.CalendarController.EventHandler;
-import com.example.calendarview.CalendarController.EventInfo;
-import com.example.calendarview.CalendarController.EventType;
 import es.android.TurnosAndroid.R;
 
 public class MainActivity extends Activity implements EventHandler {
 
-    private CalendarController mController;
-    Fragment monthFrag;
-    Fragment dayFrag;
-    private EventInfo event;
-    private boolean   dayView;
-    private long      time;
-    private long      eventID;
-    boolean eventView;
+    private Fragment           monthFrag;
+    private Fragment           dayFrag;
+    private boolean            eventView;
+    private CalendarController calendarController;
+    private EventInfo          event;
+    private boolean            dayView;
+    private long               time;
+    private long               eventID;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        new ImportEntries().execute(this);
-        mController = CalendarController.getInstance(this);
+        new ImportEntries(getApplicationContext()).execute();
+        calendarController = CalendarController.getInstance(getApplicationContext());
         setContentView(R.layout.cal_layout);
-        FragmentTransaction ft = getFragmentManager().beginTransaction();
 
+        FragmentTransaction ft = getFragmentManager().beginTransaction();
         monthFrag = new MonthByWeekFragment(System.currentTimeMillis(), false);
         ft.replace(R.id.cal_frame, monthFrag).commit();
-        mController.registerEventHandler(R.id.cal_frame, (EventHandler) monthFrag);
+        calendarController.registerEventHandler(R.id.cal_frame, (EventHandler) monthFrag);
 
-        mController.registerFirstEventHandler(0, this);
+        calendarController.registerFirstEventHandler(0, this);
     }
 
     @Override

@@ -29,34 +29,20 @@ import android.view.animation.AnimationUtils;
 import android.widget.ProgressBar;
 import android.widget.ViewSwitcher;
 import android.widget.ViewSwitcher.ViewFactory;
-import com.example.calendarview.CalendarController.EventInfo;
-import com.example.calendarview.CalendarController.EventType;
 import es.android.TurnosAndroid.R;
 
 /**
  * This is the base class for Day and Week Activities.
  */
 public class DayFragment extends Fragment implements CalendarController.EventHandler, ViewFactory {
+    protected static final String   BUNDLE_KEY_RESTORE_TIME = "key_restore_time";
     /**
      * The view id used for all the views we create. It's OK to have all child
      * views have the same ID. This ID is used to pick which view receives
      * focus when a view hierarchy is saved / restore
      */
-    private static final int VIEW_ID = 1;
-
-    protected static final String BUNDLE_KEY_RESTORE_TIME = "key_restore_time";
-
-    protected ProgressBar  mProgressBar;
-    protected ViewSwitcher mViewSwitcher;
-    protected Animation    mInAnimationForward;
-    protected Animation    mOutAnimationForward;
-    protected Animation    mInAnimationBackward;
-    protected Animation    mOutAnimationBackward;
-    EventLoader mEventLoader;
-
-    Time mSelectedDay = new Time();
-
-    private final Runnable mTZUpdater = new Runnable() {
+    private static final   int      VIEW_ID                 = 1;
+    private final          Runnable mTZUpdater              = new Runnable() {
         @Override
         public void run() {
             if (!DayFragment.this.isAdded()) {
@@ -66,7 +52,14 @@ public class DayFragment extends Fragment implements CalendarController.EventHan
             mSelectedDay.normalize(true);
         }
     };
-
+    protected ProgressBar  mProgressBar;
+    protected ViewSwitcher mViewSwitcher;
+    protected Animation    mInAnimationForward;
+    protected Animation    mOutAnimationForward;
+    protected Animation    mInAnimationBackward;
+    protected Animation    mOutAnimationBackward;
+    EventLoader mEventLoader;
+    Time mSelectedDay = new Time();
     private int mNumDays;
 
     public DayFragment() {

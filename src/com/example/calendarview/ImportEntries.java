@@ -12,13 +12,16 @@ import java.util.Calendar;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
-public class ImportEntries extends AsyncTask<Context, Void, Void> {
+public class ImportEntries extends AsyncTask<Void, Void, Void> {
 
-    Context context;
+    private Context context;
+
+    public ImportEntries(Context context) {
+        this.context = context;
+    }
 
     @Override
-    protected Void doInBackground(Context... arg0) {
-        context = arg0[0];
+    protected Void doInBackground(Void... arg0) {
         importEntries();
         return null;
     }
@@ -56,8 +59,9 @@ public class ImportEntries extends AsyncTask<Context, Void, Void> {
 //		Long[] times = new Long[2];
 //		if(add){
 //			long time = System.currentTimeMillis();
-        String[] eventHolder = {BaseColumns._ID, Events.CALENDAR_ID, Events.TITLE, Events.EVENT_LOCATION, Events.DESCRIPTION, Events.DTSTART, Events.DTEND};
-        Cursor c = context.getContentResolver().query(Events.CONTENT_URI, eventHolder, null, null, null);
+        String[] eventHolder = {DBConstants.ID, DBConstants.EVENT, DBConstants.LOCATION, DBConstants.DESCRIPTION, DBConstants.START, DBConstants.END, DBConstants.CALENDAR_ID, DBConstants.START_DAY, DBConstants.END_DAY, DBConstants.START_TIME, DBConstants.END_TIME, DBConstants.EVENT_ID};
+//        Cursor c = context.getContentResolver().query(Events.CONTENT_URI, eventHolder, null, null, null);
+        Cursor c = context.getContentResolver().query(CalendarProvider.CONTENT_ID_URI_BASE, eventHolder, null, null, null);
         if (c != null && c.moveToFirst()) {
             do {
                 long eventID = c.getLong(0);
@@ -66,8 +70,7 @@ public class ImportEntries extends AsyncTask<Context, Void, Void> {
                 String dblocation = c.getString(3);
                 String dbdesc = c.getString(4);
 //		            times = checkTimes(eventID);
-                Cursor e = context.getContentResolver().query(CalendarProvider.CONTENT_URI, new String[]{CalendarProvider.CALENDAR_ID},
-                                                              CalendarProvider.EVENT_ID + "=?", new String[]{String.valueOf(eventID)}, null);
+                Cursor e = context.getContentResolver().query(CalendarProvider.CONTENT_URI, new String[]{DBConstants.CALENDAR_ID}, DBConstants.EVENT_ID + "=?", new String[]{String.valueOf(eventID)}, null);
                 if (e == null || !e.moveToFirst()) {
                     ContentValues values = new ContentValues();
                     Calendar cal = Calendar.getInstance();
@@ -88,17 +91,17 @@ public class ImportEntries extends AsyncTask<Context, Void, Void> {
                     cal = Calendar.getInstance();
                     cal.setTimeInMillis(c.getLong(6));
                     int endMin = (cal.get(Calendar.HOUR_OF_DAY) * 60) + cal.get(Calendar.MINUTE);
-                    values.put(CalendarProvider.DESCRIPTION, dbdesc);
-                    values.put(CalendarProvider.END, c.getLong(6));
-                    values.put(CalendarProvider.START, c.getLong(5));
-                    values.put(CalendarProvider.EVENT, dbEvent);
-                    values.put(CalendarProvider.EVENT_ID, eventID);
-                    values.put(CalendarProvider.LOCATION, dblocation);
-                    values.put(CalendarProvider.CALENDAR_ID, calID);
-                    values.put(CalendarProvider.START_DAY, startDay);
-                    values.put(CalendarProvider.END_DAY, endDay);
-                    values.put(CalendarProvider.START_TIME, startMin);
-                    values.put(CalendarProvider.END_TIME, endMin);
+                    values.put(DBConstants.DESCRIPTION, dbdesc);
+                    values.put(DBConstants.END, c.getLong(6));
+                    values.put(DBConstants.START, c.getLong(5));
+                    values.put(DBConstants.EVENT, dbEvent);
+                    values.put(DBConstants.EVENT_ID, eventID);
+                    values.put(DBConstants.LOCATION, dblocation);
+                    values.put(DBConstants.CALENDAR_ID, calID);
+                    values.put(DBConstants.START_DAY, startDay);
+                    values.put(DBConstants.END_DAY, endDay);
+                    values.put(DBConstants.START_TIME, startMin);
+                    values.put(DBConstants.END_TIME, endMin);
                     context.getContentResolver().insert(CalendarProvider.CONTENT_URI, values);
                 }
                 if (e != null) {

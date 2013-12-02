@@ -35,8 +35,6 @@ import android.view.*;
 import android.view.View.OnTouchListener;
 import android.widget.AbsListView;
 import android.widget.AbsListView.OnScrollListener;
-import com.example.calendarview.CalendarController.EventInfo;
-import com.example.calendarview.CalendarController.EventType;
 import com.example.calendarview.CalendarController.ViewType;
 import es.android.TurnosAndroid.R;
 
@@ -314,9 +312,9 @@ public class MonthByWeekFragment extends SimpleDayPickerFragment implements Cale
             String where = updateWhere();
 
             loader = new CursorLoader(
-                    getActivity(), mEventUri, new String[]{CalendarProvider.ID, CalendarProvider.EVENT, CalendarProvider.LOCATION, CalendarProvider.DESCRIPTION,
-                    CalendarProvider.START, CalendarProvider.END, CalendarProvider.CALENDAR_ID, CalendarProvider.EVENT_ID, CalendarProvider.START_DAY, CalendarProvider.END_DAY,
-                    CalendarProvider.START_TIME, CalendarProvider.END_TIME}/*Event.EVENT_PROJECTION*/, /*where*/null,
+                    getActivity(), mEventUri, new String[]{DBConstants.ID, DBConstants.EVENT, DBConstants.LOCATION, DBConstants.DESCRIPTION,
+                    DBConstants.START, DBConstants.END, DBConstants.CALENDAR_ID, DBConstants.EVENT_ID, DBConstants.START_DAY, DBConstants.END_DAY,
+                    DBConstants.START_TIME, DBConstants.END_TIME}/*Event.EVENT_PROJECTION*/, /*where*/null,
                     null /* WHERE_CALENDARS_SELECTED_ARGS */, null/*INSTANCES_SORT_ORDER*/);
             loader.setUpdateThrottle(LOADER_THROTTLE_DELAY);
         }

@@ -1,63 +1,48 @@
 package com.example.calendarview;
 
-import android.content.*;
+import android.content.ContentProvider;
+import android.content.ContentUris;
+import android.content.ContentValues;
+import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.text.TextUtils;
-import android.util.Log;
 
 import java.util.HashMap;
 import java.util.List;
 
 public class CalendarProvider extends ContentProvider {
 
-    private static final String DATABASE_NAME       = "Calendar";
-    private static final String EVENTS_TABLE        = "events";
-    private static final int    DATABASE_VERSION    = 4;
     private static final String AUTHORITY           = "com.example.calendarview.calendarprovider";
     public static final  Uri    CONTENT_URI         = Uri.parse("content://" + AUTHORITY + "/events");
     public static final  Uri    CONTENT_ID_URI_BASE = Uri.parse("content://" + AUTHORITY + "/event/");
     private static final UriMatcher uriMatcher;
 
-    public static final String EVENT       = "event";
-    public static final String LOCATION    = "location";
-    public static final String DESCRIPTION = "description";
-    public static final String START       = "start";
-    public static final String END         = "end";
-    public static final String ID          = "_id";
-    public static final String CALENDAR_ID = "calendar_id";
-    public static final String EVENT_ID    = "event_id";
-    public static final String START_DAY   = "start_day";
-    public static final String END_DAY     = "end_day";
-    public static final String END_TIME    = "end_time";
-    public static final String START_TIME  = "start_time";
-
     private static final HashMap<String, String> mMap;
 
     static {
         uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
-        uriMatcher.addURI(AUTHORITY, EVENTS_TABLE, 1);
-        uriMatcher.addURI(AUTHORITY, EVENTS_TABLE + "/#", 2);
-        uriMatcher.addURI(AUTHORITY, EVENTS_TABLE + "/#/#", 3);
+        uriMatcher.addURI(AUTHORITY, DBConstants.EVENTS_TABLE, 1);
+        uriMatcher.addURI(AUTHORITY, DBConstants.EVENTS_TABLE + "/#", 2);
+        uriMatcher.addURI(AUTHORITY, DBConstants.EVENTS_TABLE + "/#/#", 3);
 
         mMap = new HashMap<String, String>();
-        mMap.put(ID, ID);
-        mMap.put(EVENT, EVENT);
-        mMap.put(START, START);
-        mMap.put(LOCATION, LOCATION);
-        mMap.put(DESCRIPTION, DESCRIPTION);
-        mMap.put(END, END);
-        mMap.put(CALENDAR_ID, CALENDAR_ID);
-        mMap.put(EVENT_ID, EVENT_ID);
-        mMap.put(START_DAY, START_DAY);
-        mMap.put(END_DAY, END_DAY);
-        mMap.put(START_TIME, START_TIME);
-        mMap.put(END_TIME, END_TIME);
+        mMap.put(DBConstants.ID, DBConstants.ID);
+        mMap.put(DBConstants.EVENT, DBConstants.EVENT);
+        mMap.put(DBConstants.START, DBConstants.START);
+        mMap.put(DBConstants.LOCATION, DBConstants.LOCATION);
+        mMap.put(DBConstants.DESCRIPTION, DBConstants.DESCRIPTION);
+        mMap.put(DBConstants.END, DBConstants.END);
+        mMap.put(DBConstants.CALENDAR_ID, DBConstants.CALENDAR_ID);
+        mMap.put(DBConstants.EVENT_ID, DBConstants.EVENT_ID);
+        mMap.put(DBConstants.START_DAY, DBConstants.START_DAY);
+        mMap.put(DBConstants.END_DAY, DBConstants.END_DAY);
+        mMap.put(DBConstants.START_TIME, DBConstants.START_TIME);
+        mMap.put(DBConstants.END_TIME, DBConstants.END_TIME);
     }
 
     private DatabaseHelper DBHelper;
@@ -75,10 +60,10 @@ public class CalendarProvider extends ContentProvider {
         int count = 0;
         int num = uriMatcher.match(uri);
         if (num == 1) {
-            count = db.delete(EVENTS_TABLE, selection, selectionArgs);
+            count = db.delete(DBConstants.EVENTS_TABLE, selection, selectionArgs);
         } else if (num == 2) {
             String id = uri.getPathSegments().get(1);
-            count = db.delete(EVENTS_TABLE, ID + " = " + id + (!TextUtils.isEmpty(selection) ? " AND (" + selection + ')' : ""), selectionArgs);
+            count = db.delete(DBConstants.EVENTS_TABLE, DBConstants.ID + " = " + id + (!TextUtils.isEmpty(selection) ? " AND (" + selection + ')' : ""), selectionArgs);
         }
         getContext().getContentResolver().notifyChange(uri, null);
         return count;
@@ -91,12 +76,11 @@ public class CalendarProvider extends ContentProvider {
 
     @Override
     public Uri insert(Uri uri, ContentValues values) {
-        long rowID = db.insert(EVENTS_TABLE, null, values);
+        long rowID = db.insert(DBConstants.EVENTS_TABLE, null, values);
         Uri _uri;
         if (rowID > 0) {
             _uri = ContentUris.withAppendedId(CONTENT_ID_URI_BASE, rowID);
             getContext().getContentResolver().notifyChange(uri, null);
-
         } else {
             throw new SQLException("Failed to insert row into " + uri);
         }
@@ -106,18 +90,18 @@ public class CalendarProvider extends ContentProvider {
     @Override
     public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
         SQLiteQueryBuilder sqlBuilder = new SQLiteQueryBuilder();
-        sqlBuilder.setTables(EVENTS_TABLE);
+        sqlBuilder.setTables(DBConstants.EVENTS_TABLE);
 
         if (uriMatcher.match(uri) == 1) {
             sqlBuilder.setProjectionMap(mMap);
         } else if (uriMatcher.match(uri) == 2) {
             sqlBuilder.setProjectionMap(mMap);
-            sqlBuilder.appendWhere(ID + "=?");
+            sqlBuilder.appendWhere(DBConstants.ID + "=?");
             selectionArgs = DatabaseUtils.appendSelectionArgs(selectionArgs, new String[]{uri.getLastPathSegment()});
         } else if (uriMatcher.match(uri) == 3) {
             sqlBuilder.setProjectionMap(mMap);
-            sqlBuilder.appendWhere(START + ">=? OR ");
-            sqlBuilder.appendWhere(END + "<=?");
+            sqlBuilder.appendWhere(DBConstants.START + ">=? OR ");
+            sqlBuilder.appendWhere(DBConstants.END + "<=?");
             List<String> list = uri.getPathSegments();
             String start = list.get(1);
             String end = list.get(2);
@@ -125,7 +109,7 @@ public class CalendarProvider extends ContentProvider {
         }
 
         if (sortOrder == null || sortOrder.equals("")) {
-            sortOrder = START + " COLLATE LOCALIZED ASC";
+            sortOrder = DBConstants.START + " COLLATE LOCALIZED ASC";
         }
 
         Cursor c = sqlBuilder.query(db, projection, selection, selectionArgs, null, null, sortOrder);
@@ -139,37 +123,13 @@ public class CalendarProvider extends ContentProvider {
         int num = uriMatcher.match(uri);
 
         if (num == 1) {
-            count = db.update(EVENTS_TABLE, values, selection, selectionArgs);
+            count = db.update(DBConstants.EVENTS_TABLE, values, selection, selectionArgs);
         } else if (num == 2) {
-            count = db.update(EVENTS_TABLE, values, ID + " = " + uri.getPathSegments().get(1) + (!TextUtils.isEmpty(selection) ? " AND (" + selection + ')' : ""), selectionArgs);
+            count = db.update(DBConstants.EVENTS_TABLE, values, DBConstants.ID + " = " + uri.getPathSegments().get(1) + (!TextUtils.isEmpty(selection) ? " AND (" + selection + ')' : ""), selectionArgs);
         } else {
             throw new IllegalArgumentException("Unknown URI " + uri);
         }
         getContext().getContentResolver().notifyChange(uri, null);
         return count;
-    }
-
-    private static class DatabaseHelper extends SQLiteOpenHelper {
-        DatabaseHelper(Context context) {
-            super(context, DATABASE_NAME, null, DATABASE_VERSION);
-        }
-
-        @Override
-        public void onCreate(SQLiteDatabase db) {
-            createTables(db);
-        }
-
-
-        @Override
-        public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-            Log.w("CalendarProvider", "Upgrading database from version " + oldVersion + " to " + newVersion + ", which will destroy all old data");
-            db.execSQL("DROP TABLE IF EXISTS events");
-            onCreate(db);
-        }
-
-        private void createTables(SQLiteDatabase db) {
-            db.execSQL("CREATE TABLE " + EVENTS_TABLE + "(" + ID + " integer primary key autoincrement, " + EVENT + " TEXT, " + LOCATION + " TEXT, " + DESCRIPTION + " TEXT, "
-                       + START + " INTEGER, " + END + " INTEGER, " + CALENDAR_ID + " INTEGER, " + START_DAY + " INTEGER, " + END_DAY + " INTEGER, " + START_TIME + " INTEGER, " + END_TIME + " INTEGER, " + EVENT_ID + " INTEGER);");
-        }
     }
 }

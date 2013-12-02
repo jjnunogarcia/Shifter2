@@ -61,7 +61,6 @@ import android.view.animation.Animation;
 import android.view.animation.Interpolator;
 import android.view.animation.TranslateAnimation;
 import android.widget.*;
-import com.example.calendarview.CalendarController.EventType;
 import com.example.calendarview.CalendarController.ViewType;
 import es.android.TurnosAndroid.R;
 
