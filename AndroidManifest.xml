@@ -1,28 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="es.android.TurnosAndroid"
-    android:versionCode="1"
-    android:versionName="1.0">
+          package="es.android.TurnosAndroid"
+          android:versionCode="1"
+          android:versionName="1.0">
 
     <uses-sdk
-        android:minSdkVersion="10"
-        android:targetSdkVersion="19" />
+            android:minSdkVersion="10"
+            android:targetSdkVersion="19"/>
     <application
-        android:allowBackup="true"
-        android:label="@string/app_name"
-        android:icon="@drawable/ic_launcher"
-        android:theme="@style/AppTheme">
+            android:allowBackup="true"
+            android:label="@string/app_name"
+            android:icon="@drawable/ic_launcher"
+            android:theme="@style/AppTheme">
         <activity
-            android:name="com.example.calendarview.MainActivity"
-            android:label="@string/app_name" >
+                android:name="es.android.TurnosAndroid.MainActivity"
+                android:label="@string/app_name">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+                <action android:name="android.intent.action.MAIN"/>
 
-                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
 
         <provider
-            android:name="com.example.calendarview.CalendarProvider"
-            android:authorities="com.example.calendarview.calendarprovider" /></application>
+                android:name="es.android.TurnosAndroid.CalendarProvider"
+                android:authorities="es.android.TurnosAndroid.calendarprovider"/>
+    </application>
 </manifest>

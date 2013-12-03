@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.calendarview;
+package es.android.TurnosAndroid;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;

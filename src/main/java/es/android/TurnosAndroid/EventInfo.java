@@ -1,4 +1,4 @@
-package com.example.calendarview;
+package es.android.TurnosAndroid;
 
 import android.content.ComponentName;
 import android.provider.CalendarContract;

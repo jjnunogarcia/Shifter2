@@ -1,11 +1,9 @@
-package com.example.calendarview;
+package es.android.TurnosAndroid;
 
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.os.AsyncTask;
-import android.provider.BaseColumns;
-import android.provider.CalendarContract.Events;
 import android.text.format.Time;
 
 import java.util.Calendar;
@@ -14,17 +12,17 @@ import java.util.concurrent.TimeUnit;
 
 public class ImportEntries extends AsyncTask<Void, Void, Void> {
 
-    private Context context;
+  private Context context;
 
-    public ImportEntries(Context context) {
-        this.context = context;
-    }
+  public ImportEntries(Context context) {
+    this.context = context;
+  }
 
-    @Override
-    protected Void doInBackground(Void... arg0) {
-        importEntries();
-        return null;
-    }
+  @Override
+  protected Void doInBackground(Void... arg0) {
+    importEntries();
+    return null;
+  }
 
 //	private Long[] checkTimes(long id){
 //		Cursor cur = null;
@@ -55,64 +53,66 @@ public class ImportEntries extends AsyncTask<Void, Void, Void> {
 //		return times;
 //	}
 
-    private void importEntries() {
+  private void importEntries() {
 //		Long[] times = new Long[2];
 //		if(add){
 //			long time = System.currentTimeMillis();
-        String[] eventHolder = {DBConstants.ID, DBConstants.EVENT, DBConstants.LOCATION, DBConstants.DESCRIPTION, DBConstants.START, DBConstants.END, DBConstants.CALENDAR_ID, DBConstants.START_DAY, DBConstants.END_DAY, DBConstants.START_TIME, DBConstants.END_TIME, DBConstants.EVENT_ID};
+    String[] eventHolder = {DBConstants.ID, DBConstants.EVENT, DBConstants.LOCATION, DBConstants.DESCRIPTION, DBConstants.START, DBConstants.END, DBConstants.CALENDAR_ID,
+                            DBConstants.START_DAY, DBConstants.END_DAY, DBConstants.START_TIME, DBConstants.END_TIME, DBConstants.EVENT_ID};
 //        Cursor c = context.getContentResolver().query(Events.CONTENT_URI, eventHolder, null, null, null);
-        Cursor c = context.getContentResolver().query(CalendarProvider.CONTENT_ID_URI_BASE, eventHolder, null, null, null);
-        if (c != null && c.moveToFirst()) {
-            do {
-                long eventID = c.getLong(0);
-                String calID = c.getString(1);
-                String dbEvent = c.getString(2);
-                String dblocation = c.getString(3);
-                String dbdesc = c.getString(4);
+    Cursor c = context.getContentResolver().query(CalendarProvider.CONTENT_ID_URI_BASE, eventHolder, null, null, null);
+    if (c != null && c.moveToFirst()) {
+      do {
+        long eventID = c.getLong(0);
+        String calID = c.getString(1);
+        String dbEvent = c.getString(2);
+        String dblocation = c.getString(3);
+        String dbdesc = c.getString(4);
 //		            times = checkTimes(eventID);
-                Cursor e = context.getContentResolver().query(CalendarProvider.CONTENT_URI, new String[]{DBConstants.CALENDAR_ID}, DBConstants.EVENT_ID + "=?", new String[]{String.valueOf(eventID)}, null);
-                if (e == null || !e.moveToFirst()) {
-                    ContentValues values = new ContentValues();
-                    Calendar cal = Calendar.getInstance();
-                    TimeZone tz = TimeZone.getDefault();
-                    cal.setTimeZone(tz);
-                    long offset2 = tz.getRawOffset();
-                    long offset3 = (tz.getOffset(c.getLong(5)) / 1000) % 60;
-                    long offset = 3600000 * 4;
-                    cal.setTimeInMillis(c.getLong(5));
+        Cursor e = context.getContentResolver().query(CalendarProvider.CONTENT_URI, new String[] {DBConstants.CALENDAR_ID}, DBConstants.EVENT_ID + "=?",
+                                                      new String[] {String.valueOf(eventID)}, null);
+        if (e == null || !e.moveToFirst()) {
+          ContentValues values = new ContentValues();
+          Calendar cal = Calendar.getInstance();
+          TimeZone tz = TimeZone.getDefault();
+          cal.setTimeZone(tz);
+          long offset2 = tz.getRawOffset();
+          long offset3 = (tz.getOffset(c.getLong(5)) / 1000) % 60;
+          long offset = 3600000 * 4;
+          cal.setTimeInMillis(c.getLong(5));
 
-                    long offset4 = TimeUnit.MILLISECONDS.toSeconds(tz.getOffset(c.getLong(5)));
+          long offset4 = TimeUnit.MILLISECONDS.toSeconds(tz.getOffset(c.getLong(5)));
 
-                    int hours = cal.get(Calendar.HOUR_OF_DAY);
-                    int min = cal.get(Calendar.MINUTE);
-                    int startDay = Time.getJulianDay(c.getLong(5), offset4);
-                    int endDay = Time.getJulianDay(c.getLong(6), TimeUnit.MILLISECONDS.toSeconds(tz.getOffset(c.getLong(6))));
-                    int startMin = (cal.get(Calendar.HOUR_OF_DAY) * 60) + cal.get(Calendar.MINUTE);
-                    cal = Calendar.getInstance();
-                    cal.setTimeInMillis(c.getLong(6));
-                    int endMin = (cal.get(Calendar.HOUR_OF_DAY) * 60) + cal.get(Calendar.MINUTE);
-                    values.put(DBConstants.DESCRIPTION, dbdesc);
-                    values.put(DBConstants.END, c.getLong(6));
-                    values.put(DBConstants.START, c.getLong(5));
-                    values.put(DBConstants.EVENT, dbEvent);
-                    values.put(DBConstants.EVENT_ID, eventID);
-                    values.put(DBConstants.LOCATION, dblocation);
-                    values.put(DBConstants.CALENDAR_ID, calID);
-                    values.put(DBConstants.START_DAY, startDay);
-                    values.put(DBConstants.END_DAY, endDay);
-                    values.put(DBConstants.START_TIME, startMin);
-                    values.put(DBConstants.END_TIME, endMin);
-                    context.getContentResolver().insert(CalendarProvider.CONTENT_URI, values);
-                }
-                if (e != null) {
-                    e.close();
-                }
-            } while (c.moveToNext());
-
+          int hours = cal.get(Calendar.HOUR_OF_DAY);
+          int min = cal.get(Calendar.MINUTE);
+          int startDay = Time.getJulianDay(c.getLong(5), offset4);
+          int endDay = Time.getJulianDay(c.getLong(6), TimeUnit.MILLISECONDS.toSeconds(tz.getOffset(c.getLong(6))));
+          int startMin = (cal.get(Calendar.HOUR_OF_DAY) * 60) + cal.get(Calendar.MINUTE);
+          cal = Calendar.getInstance();
+          cal.setTimeInMillis(c.getLong(6));
+          int endMin = (cal.get(Calendar.HOUR_OF_DAY) * 60) + cal.get(Calendar.MINUTE);
+          values.put(DBConstants.DESCRIPTION, dbdesc);
+          values.put(DBConstants.END, c.getLong(6));
+          values.put(DBConstants.START, c.getLong(5));
+          values.put(DBConstants.EVENT, dbEvent);
+          values.put(DBConstants.EVENT_ID, eventID);
+          values.put(DBConstants.LOCATION, dblocation);
+          values.put(DBConstants.CALENDAR_ID, calID);
+          values.put(DBConstants.START_DAY, startDay);
+          values.put(DBConstants.END_DAY, endDay);
+          values.put(DBConstants.START_TIME, startMin);
+          values.put(DBConstants.END_TIME, endMin);
+          context.getContentResolver().insert(CalendarProvider.CONTENT_URI, values);
         }
-        if (c != null) {
-            c.close();
+        if (e != null) {
+          e.close();
         }
+      } while (c.moveToNext());
+
+    }
+    if (c != null) {
+      c.close();
+    }
 //		}else{
 //			String[] eventHolder = {Events._ID,Events.CALENDAR_ID,Events.TITLE,Events.EVENT_LOCATION,Events.DESCRIPTION,Events.DTSTART,Events.DTEND};
 //			Cursor c = getContentResolver().query(Events.CONTENT_URI,eventHolder,null,null,null);
@@ -174,6 +174,6 @@ public class ImportEntries extends AsyncTask<Void, Void, Void> {
 //			c.close();
 //		}
 
-    }
+  }
 
 }

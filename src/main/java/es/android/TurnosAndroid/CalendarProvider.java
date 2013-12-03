@@ -1,4 +1,4 @@
-package com.example.calendarview;
+package es.android.TurnosAndroid;
 
 import android.content.ContentProvider;
 import android.content.ContentUris;
@@ -17,7 +17,7 @@ import java.util.List;
 
 public class CalendarProvider extends ContentProvider {
 
-    private static final String AUTHORITY           = "com.example.calendarview.calendarprovider";
+    private static final String AUTHORITY           = "es.android.TurnosAndroid.calendarprovider";
     public static final  Uri    CONTENT_URI         = Uri.parse("content://" + AUTHORITY + "/events");
     public static final  Uri    CONTENT_ID_URI_BASE = Uri.parse("content://" + AUTHORITY + "/event/");
     private static final UriMatcher uriMatcher;
