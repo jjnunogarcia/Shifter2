@@ -27,8 +27,8 @@ public class MainActivity extends Activity implements EventHandler {
     FragmentTransaction ft = getFragmentManager().beginTransaction();
     monthFrag = new MonthByWeekFragment(System.currentTimeMillis(), false);
     ft.replace(R.id.cal_frame, monthFrag).commit();
-    calendarController.registerEventHandler(R.id.cal_frame, (EventHandler) monthFrag);
 
+    calendarController.registerEventHandler(R.id.cal_frame, (EventHandler) monthFrag);
     calendarController.registerFirstEventHandler(0, this);
   }
 
@@ -61,10 +61,7 @@ public class MainActivity extends Activity implements EventHandler {
 //					FragmentTransaction ft = getFragmentManager().beginTransaction();
 //					edit = new EditEvent(event.id);
 //					ft.replace(R.id.cal_frame, edit).addToBackStack(null).commit();
-
-
     }
-
   }
 
   @Override
