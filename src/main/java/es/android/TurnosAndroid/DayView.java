@@ -752,7 +752,7 @@ public class DayView extends View implements View.OnCreateContextMenuListener,
     mGestureDetector = new GestureDetector(context, new CalendarGestureListener());
     mScaleGestureDetector = new ScaleGestureDetector(getContext(), this);
     if (mCellHeight == 0) {
-//            mCellHeight = Utils.getSharedPreference(mContext,
+//            mCellHeight = Utils.getSharedPreference(context,
 //                    GeneralPreferences.KEY_DEFAULT_CELL_HEIGHT, DEFAULT_CELL_HEIGHT);
       mCellHeight = DEFAULT_CELL_HEIGHT;
     }
@@ -920,7 +920,7 @@ public class DayView extends View implements View.OnCreateContextMenuListener,
 
   public void handleOnResume() {
     initAccessibilityVariables();
-//        if(Utils.getSharedPreference(mContext, OtherPreferences.KEY_OTHER_1, false)) {
+//        if(Utils.getSharedPreference(context, OtherPreferences.KEY_OTHER_1, false)) {
 //            mFutureBgColor = 0;
 //        } else {
     mFutureBgColor = mFutureBgColorRes;
@@ -1500,7 +1500,7 @@ public class DayView extends View implements View.OnCreateContextMenuListener,
 //            case KeyEvent.KEYCODE_BACK:
 //                if (event.isTracking() && !event.isCanceled()) {
 //                    mPopup.dismiss();
-//                    mContext.finish();
+//                    context.finish();
 //                    return true;
 //                }
 //                break;
@@ -2002,7 +2002,7 @@ public class DayView extends View implements View.OnCreateContextMenuListener,
   /* package */ void reloadEvents() {
     // Protect against this being called before this view has been
     // initialized.
-//        if (mContext == null) {
+//        if (context == null) {
 //            return;
 //        }
 
@@ -2028,7 +2028,7 @@ public class DayView extends View implements View.OnCreateContextMenuListener,
     mLastReloadMillis = millis;
 
     // load events in the background
-//        mContext.startProgressSpinner();
+//        context.startProgressSpinner();
     final ArrayList<Event> events = new ArrayList<Event>();
     mEventLoader.loadEventsInBackground(mNumDays, events, mFirstJulianDay, new Runnable() {
       public void run() {
@@ -3245,10 +3245,10 @@ public class DayView extends View implements View.OnCreateContextMenuListener,
 //            if (false) {
 //                int flags = DateUtils.FORMAT_SHOW_TIME | DateUtils.FORMAT_ABBREV_ALL
 //                        | DateUtils.FORMAT_CAP_NOON_MIDNIGHT;
-//                if (DateFormat.is24HourFormat(mContext)) {
+//                if (DateFormat.is24HourFormat(context)) {
 //                    flags |= DateUtils.FORMAT_24HOUR;
 //                }
-//                String timeRange = DateUtils.formatDateRange(mContext, ev.startMillis,
+//                String timeRange = DateUtils.formatDateRange(context, ev.startMillis,
 //                        ev.endMillis, flags);
 //                Log.i("Cal", "left: " + left + " right: " + right + " top: " + top + " bottom: "
 //                        + bottom + " ev: " + timeRange + " " + ev.title);
@@ -4368,7 +4368,7 @@ public class DayView extends View implements View.OnCreateContextMenuListener,
 //        int flags = DateUtils.FORMAT_SHOW_TIME
 //                | DateUtils.FORMAT_CAP_NOON_MIDNIGHT
 //                | DateUtils.FORMAT_SHOW_WEEKDAY;
-//        final String title = Utils.formatDateRange(mContext, startMillis, startMillis, flags);
+//        final String title = Utils.formatDateRange(context, startMillis, startMillis, flags);
 //        menu.setHeaderTitle(title);
 //
 //        int numSelectedEvents = mSelectedEvents.size();
@@ -4382,7 +4382,7 @@ public class DayView extends View implements View.OnCreateContextMenuListener,
 //                item.setOnMenuItemClickListener(mContextMenuHandler);
 //                item.setIcon(android.R.drawable.ic_menu_info_details);
 //
-//                int accessLevel = getEventAccessLevel(mContext, mSelectedEvent);
+//                int accessLevel = getEventAccessLevel(context, mSelectedEvent);
 //                if (accessLevel == ACCESS_LEVEL_EDIT) {
 //                    item = menu.add(0, MENU_EVENT_EDIT, 0, R.string.event_edit);
 //                    item.setOnMenuItemClickListener(mContextMenuHandler);
@@ -4418,7 +4418,7 @@ public class DayView extends View implements View.OnCreateContextMenuListener,
 //                item.setOnMenuItemClickListener(mContextMenuHandler);
 //                item.setIcon(android.R.drawable.ic_menu_info_details);
 //
-//                int accessLevel = getEventAccessLevel(mContext, mSelectedEvent);
+//                int accessLevel = getEventAccessLevel(context, mSelectedEvent);
 //                if (accessLevel == ACCESS_LEVEL_EDIT) {
 //                    item = menu.add(0, MENU_EVENT_EDIT, 0, R.string.event_edit);
 //                    item.setOnMenuItemClickListener(mContextMenuHandler);
@@ -4626,7 +4626,7 @@ public class DayView extends View implements View.OnCreateContextMenuListener,
 //            for (Event ev : mSelectedEvents) {
 //                int flags = DateUtils.FORMAT_SHOW_TIME | DateUtils.FORMAT_ABBREV_ALL
 //                        | DateUtils.FORMAT_CAP_NOON_MIDNIGHT;
-//                String timeRange = formatDateRange(mContext, ev.startMillis, ev.endMillis, flags);
+//                String timeRange = formatDateRange(context, ev.startMillis, ev.endMillis, flags);
 //
 //                Log.i("Cal", "  " + timeRange + " " + ev.title);
 //            }
@@ -4833,7 +4833,7 @@ public class DayView extends View implements View.OnCreateContextMenuListener,
       mHandler.removeCallbacks(mUpdateCurrentTime);
     }
 
-//        Utils.setSharedPreference(mContext, GeneralPreferences.KEY_DEFAULT_CELL_HEIGHT,
+//        Utils.setSharedPreference(context, GeneralPreferences.KEY_DEFAULT_CELL_HEIGHT,
 //            mCellHeight);
     // Clear all click animations
     eventClickCleanup();

@@ -17,10 +17,10 @@
 package es.android.TurnosAndroid;
 
 import android.app.Activity;
-import android.app.LoaderManager;
+import android.support.v4.app.LoaderManager;
 import android.content.ContentUris;
-import android.content.CursorLoader;
-import android.content.Loader;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.net.Uri;
@@ -42,136 +42,135 @@ import java.util.HashMap;
 import java.util.List;
 
 public class MonthByWeekFragment extends SimpleDayPickerFragment implements EventHandler, LoaderManager.LoaderCallbacks<Cursor>, OnScrollListener, OnTouchListener {
-  private static final String TAG = "MonthFragment";
+    private static final String TAG = "MonthFragment";
 
-  // Selection and selection args for adding event queries
-  private static final String  WHERE_CALENDARS_VISIBLE = Calendars.VISIBLE + "=1";
-  private static final String  INSTANCES_SORT_ORDER    = Instances.START_DAY + "," + Instances.START_MINUTE + "," + Instances.TITLE;
-  protected static     boolean mShowDetailsInMonth     = false;
+    // Selection and selection args for adding event queries
+    private static final String  WHERE_CALENDARS_VISIBLE = Calendars.VISIBLE + "=1";
+    private static final String  INSTANCES_SORT_ORDER    = Instances.START_DAY + "," + Instances.START_MINUTE + "," + Instances.TITLE;
+    protected static     boolean mShowDetailsInMonth     = false;
 
-  protected float   mMinimumTwoMonthFlingVelocity;
-  protected boolean mIsMiniMonth;
-  protected boolean mHideDeclined;
+    protected float   mMinimumTwoMonthFlingVelocity;
+    protected boolean mIsMiniMonth;
+    protected boolean mHideDeclined;
 
-  protected int mFirstLoadedJulianDay;
-  protected int mLastLoadedJulianDay;
+    protected int mFirstLoadedJulianDay;
+    protected int mLastLoadedJulianDay;
 
-  private static final int WEEKS_BUFFER          = 1;
-  // How long to wait after scroll stops before starting the loader
-  // Using scroll duration because scroll state changes don't update correctly when a scroll is triggered programmatically.
-  private static final int LOADER_DELAY          = 200;
-  // The minimum time between requeries of the data if the db is
-  // changing
-  private static final int LOADER_THROTTLE_DELAY = 500;
+    private static final int WEEKS_BUFFER          = 1;
+    // How long to wait after scroll stops before starting the loader
+    // Using scroll duration because scroll state changes don't update correctly when a scroll is triggered programmatically.
+    private static final int LOADER_DELAY          = 200;
+    // The minimum time between requeries of the data if the db is
+    // changing
+    private static final int LOADER_THROTTLE_DELAY = 500;
 
-  private CursorLoader mLoader;
-  private Uri          mEventUri;
-  private final Time mDesiredDay = new Time();
+    private CursorLoader mLoader;
+    private Uri          mEventUri;
+    private final Time mDesiredDay = new Time();
 
-  private volatile boolean mShouldLoad   = true;
-  private          boolean mUserScrolled = false;
+    private volatile boolean mShouldLoad   = true;
+    private          boolean mUserScrolled = false;
 
-  private int     mEventsLoadingDelay;
-  private boolean mShowCalendarControls;
-  private boolean mIsDetached;
-
-
-  private final Runnable mTZUpdater = new Runnable() {
-    @Override
-    public void run() {
-      String tz = Utils.getTimeZone(mContext, mTZUpdater);
-      mSelectedDay.timezone = tz;
-      mSelectedDay.normalize(true);
-      mTempTime.timezone = tz;
-      mFirstDayOfMonth.timezone = tz;
-      mFirstDayOfMonth.normalize(true);
-      mFirstVisibleDay.timezone = tz;
-      mFirstVisibleDay.normalize(true);
-      if (mAdapter != null) {
-        mAdapter.refresh();
-      }
-    }
-  };
+    private int     mEventsLoadingDelay;
+    private boolean mShowCalendarControls;
+    private boolean mIsDetached;
 
 
-  private final Runnable mUpdateLoader = new Runnable() {
-    @Override
-    public void run() {
-      synchronized (this) {
-        if (!mShouldLoad || mLoader == null) {
-          return;
+    private final Runnable mTZUpdater = new Runnable() {
+        @Override
+        public void run() {
+            String tz = Utils.getTimeZone(context, mTZUpdater);
+            selectedDay.timezone = tz;
+            selectedDay.normalize(true);
+            tempTime.timezone = tz;
+            firstDayOfMonth.timezone = tz;
+            firstDayOfMonth.normalize(true);
+            firstVisibleDay.timezone = tz;
+            firstVisibleDay.normalize(true);
+            if (adapter != null) {
+                adapter.refresh();
+            }
         }
-        // Stop any previous loads while we update the uri
-        stopLoader();
+    };
 
-        // Start the loader again
-        mEventUri = updateUri();
 
-        mLoader.setUri(mEventUri);
-        mLoader.startLoading();
-        mLoader.onContentChanged();
-        if (Log.isLoggable(TAG, Log.DEBUG)) {
-          Log.d(TAG, "Started loader with uri: " + mEventUri);
+    private final Runnable mUpdateLoader = new Runnable() {
+        @Override
+        public void run() {
+            synchronized (this) {
+                if (!mShouldLoad || mLoader == null) {
+                    return;
+                }
+                // Stop any previous loads while we update the uri
+                stopLoader();
+
+                // Start the loader again
+                mEventUri = updateUri();
+
+                mLoader.setUri(mEventUri);
+                mLoader.startLoading();
+                mLoader.onContentChanged();
+                if (Log.isLoggable(TAG, Log.DEBUG)) {
+                    Log.d(TAG, "Started loader with uri: " + mEventUri);
+                }
+            }
         }
-      }
+    };
+    // Used to load the events when a delay is needed
+    Runnable mLoadingRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (!mIsDetached) {
+                mLoader = (CursorLoader) getLoaderManager().initLoader(0, null, MonthByWeekFragment.this);
+            }
+        }
+    };
+
+
+    /**
+     * Updates the uri used by the loader according to the current position of
+     * the listview.
+     *
+     * @return The new Uri to use
+     */
+    private Uri updateUri() {
+        SimpleWeekView child = (SimpleWeekView) listView.getChildAt(0);
+        if (child != null) {
+            mFirstLoadedJulianDay = child.getFirstJulianDay();
+        }
+        // -1 to ensure we get all day events from any time zone
+        tempTime.setJulianDay(mFirstLoadedJulianDay - 1);
+        long start = tempTime.toMillis(true);
+        mLastLoadedJulianDay = mFirstLoadedJulianDay + (numWeeks + 2 * WEEKS_BUFFER) * 7;
+        // +1 to ensure we get all day events from any time zone
+        tempTime.setJulianDay(mLastLoadedJulianDay + 1);
+        long end = tempTime.toMillis(true);
+
+        // Create a new uri with the updated times
+        Uri.Builder builder = CalendarProvider.CONTENT_URI.buildUpon();
+        ContentUris.appendId(builder, start);
+        ContentUris.appendId(builder, end);
+        return builder.build();
     }
-  };
-  // Used to load the events when a delay is needed
-  Runnable mLoadingRunnable = new Runnable() {
-    @Override
-    public void run() {
-      if (!mIsDetached) {
-        mLoader = (CursorLoader) getLoaderManager().initLoader(0, null,
-                                                               MonthByWeekFragment.this);
-      }
+
+    // Extract range of julian days from URI
+    private void updateLoadedDays() {
+        List<String> pathSegments = mEventUri.getPathSegments();
+        int size = pathSegments.size();
+        if (size <= 2) {
+            return;
+        }
+        long first = Long.parseLong(pathSegments.get(size - 2));
+        long last = Long.parseLong(pathSegments.get(size - 1));
+        tempTime.set(first);
+        mFirstLoadedJulianDay = Time.getJulianDay(first, tempTime.gmtoff);
+        tempTime.set(last);
+        mLastLoadedJulianDay = Time.getJulianDay(last, tempTime.gmtoff);
     }
-  };
 
-
-  /**
-   * Updates the uri used by the loader according to the current position of
-   * the listview.
-   *
-   * @return The new Uri to use
-   */
-  private Uri updateUri() {
-    SimpleWeekView child = (SimpleWeekView) mListView.getChildAt(0);
-    if (child != null) {
-      mFirstLoadedJulianDay = child.getFirstJulianDay();
-    }
-    // -1 to ensure we get all day events from any time zone
-    mTempTime.setJulianDay(mFirstLoadedJulianDay - 1);
-    long start = mTempTime.toMillis(true);
-    mLastLoadedJulianDay = mFirstLoadedJulianDay + (mNumWeeks + 2 * WEEKS_BUFFER) * 7;
-    // +1 to ensure we get all day events from any time zone
-    mTempTime.setJulianDay(mLastLoadedJulianDay + 1);
-    long end = mTempTime.toMillis(true);
-
-    // Create a new uri with the updated times
-    Uri.Builder builder = CalendarProvider.CONTENT_URI.buildUpon();
-    ContentUris.appendId(builder, start);
-    ContentUris.appendId(builder, end);
-    return builder.build();
-  }
-
-  // Extract range of julian days from URI
-  private void updateLoadedDays() {
-    List<String> pathSegments = mEventUri.getPathSegments();
-    int size = pathSegments.size();
-    if (size <= 2) {
-      return;
-    }
-    long first = Long.parseLong(pathSegments.get(size - 2));
-    long last = Long.parseLong(pathSegments.get(size - 1));
-    mTempTime.set(first);
-    mFirstLoadedJulianDay = Time.getJulianDay(first, mTempTime.gmtoff);
-    mTempTime.set(last);
-    mLastLoadedJulianDay = Time.getJulianDay(last, mTempTime.gmtoff);
-  }
-
-  protected String updateWhere() {
-    // TODO fix selection/selection args after b/3206641 is fixed
-    String where = WHERE_CALENDARS_VISIBLE;
+    protected String updateWhere() {
+        // TODO fix selection/selection args after b/3206641 is fixed
+        String where = WHERE_CALENDARS_VISIBLE;
     if (mHideDeclined || !mShowDetailsInMonth) {
       where += " AND " + Instances.SELF_ATTENDEE_STATUS + "!=" + Attendees.ATTENDEE_STATUS_DECLINED;
     }
@@ -180,7 +179,7 @@ public class MonthByWeekFragment extends SimpleDayPickerFragment implements Even
 
   private void stopLoader() {
     synchronized (mUpdateLoader) {
-      mHandler.removeCallbacks(mUpdateLoader);
+      handler.removeCallbacks(mUpdateLoader);
       if (mLoader != null) {
         mLoader.stopLoading();
         if (Log.isLoggable(TAG, Log.DEBUG)) {
@@ -194,8 +193,8 @@ public class MonthByWeekFragment extends SimpleDayPickerFragment implements Even
   public void onAttach(Activity activity) {
     super.onAttach(activity);
     mTZUpdater.run();
-    if (mAdapter != null) {
-      mAdapter.setSelectedDay(mSelectedDay);
+    if (adapter != null) {
+      adapter.setSelectedDay(selectedDay);
     }
     mIsDetached = false;
 
@@ -216,32 +215,32 @@ public class MonthByWeekFragment extends SimpleDayPickerFragment implements Even
     mIsDetached = true;
     super.onDetach();
     if (mShowCalendarControls) {
-      if (mListView != null) {
-        mListView.removeCallbacks(mLoadingRunnable);
+      if (listView != null) {
+        listView.removeCallbacks(mLoadingRunnable);
       }
     }
   }
 
   @Override
   protected void setUpAdapter() {
-    mFirstDayOfWeek = Utils.getFirstDayOfWeek(mContext);
-    mShowWeekNumber = Utils.getShowWeekNumber(mContext);
+    firstDayOfWeek = Utils.getFirstDayOfWeek(context);
+    showWeekNumber = Utils.getShowWeekNumber(context);
 
     HashMap<String, Integer> weekParams = new HashMap<String, Integer>();
-    weekParams.put(SimpleWeeksAdapter.WEEK_PARAMS_NUM_WEEKS, mNumWeeks);
-    weekParams.put(SimpleWeeksAdapter.WEEK_PARAMS_SHOW_WEEK, mShowWeekNumber ? 1 : 0);
-    weekParams.put(SimpleWeeksAdapter.WEEK_PARAMS_WEEK_START, mFirstDayOfWeek);
+    weekParams.put(SimpleWeeksAdapter.WEEK_PARAMS_NUM_WEEKS, numWeeks);
+    weekParams.put(SimpleWeeksAdapter.WEEK_PARAMS_SHOW_WEEK, showWeekNumber ? 1 : 0);
+    weekParams.put(SimpleWeeksAdapter.WEEK_PARAMS_WEEK_START, firstDayOfWeek);
     weekParams.put(MonthByWeekAdapter.WEEK_PARAMS_IS_MINI, mIsMiniMonth ? 1 : 0);
     weekParams.put(SimpleWeeksAdapter.WEEK_PARAMS_JULIAN_DAY,
-                   Time.getJulianDay(mSelectedDay.toMillis(true), mSelectedDay.gmtoff));
-    weekParams.put(SimpleWeeksAdapter.WEEK_PARAMS_DAYS_PER_WEEK, mDaysPerWeek);
-    if (mAdapter == null) {
-      mAdapter = new MonthByWeekAdapter(getActivity(), weekParams);
-      mAdapter.registerDataSetObserver(mObserver);
+                   Time.getJulianDay(selectedDay.toMillis(true), selectedDay.gmtoff));
+    weekParams.put(SimpleWeeksAdapter.WEEK_PARAMS_DAYS_PER_WEEK, daysPerWeek);
+    if (adapter == null) {
+      adapter = new MonthByWeekAdapter(getActivity(), weekParams);
+      adapter.registerDataSetObserver(mObserver);
     } else {
-      mAdapter.updateParams(weekParams);
+      adapter.updateParams(weekParams);
     }
-    mAdapter.notifyDataSetChanged();
+    adapter.notifyDataSetChanged();
   }
 
   @Override
@@ -253,26 +252,26 @@ public class MonthByWeekFragment extends SimpleDayPickerFragment implements Even
 //        } else {
     v = inflater.inflate(R.layout.full_month_by_week, container, false);
 //        }
-    mDayNamesHeader = (ViewGroup) v.findViewById(R.id.day_names);
+    dayNamesHeader = (ViewGroup) v.findViewById(R.id.day_names);
     return v;
   }
 
   @Override
   public void onActivityCreated(Bundle savedInstanceState) {
     super.onActivityCreated(savedInstanceState);
-    mListView.setOnTouchListener(this);
+    listView.setOnTouchListener(this);
     if (!mIsMiniMonth) {
-      mListView.setBackgroundColor(getResources().getColor(R.color.month_bgcolor));
+      listView.setBackgroundColor(getResources().getColor(R.color.month_bgcolor));
     }
 
     // To get a smoother transition when showing this fragment, delay loading of events until
     // the fragment is expended fully and the calendar controls are gone.
     if (mShowCalendarControls) {
-      mListView.postDelayed(mLoadingRunnable, mEventsLoadingDelay);
+      listView.postDelayed(mLoadingRunnable, mEventsLoadingDelay);
     } else {
       mLoader = (CursorLoader) getLoaderManager().initLoader(0, null, this);
     }
-    mAdapter.setListView(mListView);
+    adapter.setListView(listView);
   }
 
   public MonthByWeekFragment() {
@@ -291,9 +290,9 @@ public class MonthByWeekFragment extends SimpleDayPickerFragment implements Even
       return;
     }
 
-    mDayLabels = new String[7];
+    dayLabels = new String[7];
     for (int i = Calendar.SUNDAY; i <= Calendar.SATURDAY; i++) {
-      mDayLabels[i - Calendar.SUNDAY] = DateUtils.getDayOfWeekString(i,
+      dayLabels[i - Calendar.SUNDAY] = DateUtils.getDayOfWeekString(i,
                                                                      DateUtils.LENGTH_MEDIUM).toUpperCase();
     }
   }
@@ -303,7 +302,7 @@ public class MonthByWeekFragment extends SimpleDayPickerFragment implements Even
   public Loader<Cursor> onCreateLoader(int id, Bundle args) {
     CursorLoader loader;
     synchronized (mUpdateLoader) {
-      mFirstLoadedJulianDay = Time.getJulianDay(mSelectedDay.toMillis(true), mSelectedDay.gmtoff) - (mNumWeeks * 7 / 2);
+      mFirstLoadedJulianDay = Time.getJulianDay(selectedDay.toMillis(true), selectedDay.gmtoff) - (numWeeks * 7 / 2);
       mEventUri = updateUri();
       String where = updateWhere();
 
@@ -322,19 +321,19 @@ public class MonthByWeekFragment extends SimpleDayPickerFragment implements Even
 
   @Override
   public void doResumeUpdates() {
-    mFirstDayOfWeek = Utils.getFirstDayOfWeek(mContext);
-    mShowWeekNumber = Utils.getShowWeekNumber(mContext);
+    firstDayOfWeek = Utils.getFirstDayOfWeek(context);
+    showWeekNumber = Utils.getShowWeekNumber(context);
     boolean prevHideDeclined = mHideDeclined;
-    mHideDeclined = Utils.getHideDeclinedEvents(mContext);
+    mHideDeclined = Utils.getHideDeclinedEvents(context);
     if (prevHideDeclined != mHideDeclined && mLoader != null) {
       mLoader.setSelection(updateWhere());
     }
-    mDaysPerWeek = Utils.getDaysPerWeek(mContext);
+    daysPerWeek = Utils.getDaysPerWeek(context);
     updateHeader();
-    mAdapter.setSelectedDay(mSelectedDay);
+    adapter.setSelectedDay(selectedDay);
     mTZUpdater.run();
     mTodayUpdater.run();
-    goTo(mSelectedDay.toMillis(true), false, true, false);
+    goTo(selectedDay.toMillis(true), false, true, false);
   }
 
   @Override
@@ -354,8 +353,8 @@ public class MonthByWeekFragment extends SimpleDayPickerFragment implements Even
         return;
       }
       ArrayList<Event> events = new ArrayList<Event>();
-      Event.buildEventsFromCursor(events, data, mContext, mFirstLoadedJulianDay, mLastLoadedJulianDay);
-      ((MonthByWeekAdapter) mAdapter).setEvents(mFirstLoadedJulianDay, mLastLoadedJulianDay - mFirstLoadedJulianDay + 1, events);
+      Event.buildEventsFromCursor(events, data, context, mFirstLoadedJulianDay, mLastLoadedJulianDay);
+      ((MonthByWeekAdapter) adapter).setEvents(mFirstLoadedJulianDay, mLastLoadedJulianDay - mFirstLoadedJulianDay + 1, events);
     }
   }
 
@@ -382,22 +381,22 @@ public class MonthByWeekFragment extends SimpleDayPickerFragment implements Even
     if (!mIsMiniMonth) {
       boolean useSelected = false;
       if (time.year == mDesiredDay.year && time.month == mDesiredDay.month) {
-        mSelectedDay.set(mDesiredDay);
-        mAdapter.setSelectedDay(mDesiredDay);
+        selectedDay.set(mDesiredDay);
+        adapter.setSelectedDay(mDesiredDay);
         useSelected = true;
       } else {
-        mSelectedDay.set(time);
-        mAdapter.setSelectedDay(time);
+        selectedDay.set(time);
+        adapter.setSelectedDay(time);
       }
-      CalendarController controller = CalendarController.getInstance(mContext);
-      if (mSelectedDay.minute >= 30) {
-        mSelectedDay.minute = 30;
+      CalendarController controller = CalendarController.getInstance(context);
+      if (selectedDay.minute >= 30) {
+        selectedDay.minute = 30;
       } else {
-        mSelectedDay.minute = 0;
+        selectedDay.minute = 0;
       }
-      long newTime = mSelectedDay.normalize(true);
+      long newTime = selectedDay.normalize(true);
       if (newTime != controller.getTime() && mUserScrolled) {
-        long offset = useSelected ? 0 : DateUtils.WEEK_IN_MILLIS * mNumWeeks / 3;
+        long offset = useSelected ? 0 : DateUtils.WEEK_IN_MILLIS * numWeeks / 3;
         controller.setTime(newTime + offset);
       }
       controller.sendEvent(this, EventType.UPDATE_TITLE, time, time, time, -1,
@@ -415,9 +414,9 @@ public class MonthByWeekFragment extends SimpleDayPickerFragment implements Even
         stopLoader();
         mDesiredDay.setToNow();
       } else {
-        mHandler.removeCallbacks(mUpdateLoader);
+        handler.removeCallbacks(mUpdateLoader);
         mShouldLoad = true;
-        mHandler.postDelayed(mUpdateLoader, LOADER_DELAY);
+        handler.postDelayed(mUpdateLoader, LOADER_DELAY);
       }
     }
     if (scrollState == OnScrollListener.SCROLL_STATE_TOUCH_SCROLL) {
@@ -440,10 +439,10 @@ public class MonthByWeekFragment extends SimpleDayPickerFragment implements Even
   public void handleEvent(EventInfo event) {
     if (event.eventType == EventType.GO_TO) {
       boolean animate = true;
-      if (mDaysPerWeek * mNumWeeks * 2 < Math.abs(
+      if (daysPerWeek * numWeeks * 2 < Math.abs(
           Time.getJulianDay(event.selectedTime.toMillis(true), event.selectedTime.gmtoff)
-          - Time.getJulianDay(mFirstVisibleDay.toMillis(true), mFirstVisibleDay.gmtoff)
-          - mDaysPerWeek * mNumWeeks / 2)) {
+          - Time.getJulianDay(firstVisibleDay.toMillis(true), firstVisibleDay.gmtoff)
+          - daysPerWeek * numWeeks / 2)) {
         animate = false;
       }
       mDesiredDay.set(event.selectedTime);
@@ -453,11 +452,11 @@ public class MonthByWeekFragment extends SimpleDayPickerFragment implements Even
       if (animateToday) {
         // If we need to flash today start the animation after any
         // movement from listView has ended.
-        mHandler.postDelayed(new Runnable() {
+        handler.postDelayed(new Runnable() {
           @Override
           public void run() {
-            ((MonthByWeekAdapter) mAdapter).animateToday();
-            mAdapter.notifyDataSetChanged();
+            ((MonthByWeekAdapter) adapter).animateToday();
+            adapter.notifyDataSetChanged();
           }
         }, delayAnimation ? GOTO_SCROLL_DURATION : 0);
       }

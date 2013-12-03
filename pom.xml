@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>es.android.turnos</groupId>
@@ -11,137 +11,69 @@
         <dependency>
             <groupId>com.google.android</groupId>
             <artifactId>android</artifactId>
-            <version>4.2.2</version>
+            <version>4.1.1.4</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.google.android</groupId>
             <artifactId>support-v4</artifactId>
-            <version>r12</version>
+            <version>r13</version>
         </dependency>
     </dependencies>
 
     <build>
-        <sourceDirectory>./src/main/java</sourceDirectory>
-        <testSourceDirectory>./src/test/java</testSourceDirectory>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>com.jayway.maven.plugins.android.generation2</groupId>
-                    <artifactId>android-maven-plugin</artifactId>
-                    <version>3.7.0</version>
-                    <extensions>true</extensions>
-                </plugin>
-            </plugins>
-        </pluginManagement>
+        <sourceDirectory>src/main/java</sourceDirectory>
+        <testSourceDirectory>src/test/java</testSourceDirectory>
         <plugins>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                </configuration>
+            </plugin>
+
             <plugin>
                 <groupId>com.jayway.maven.plugins.android.generation2</groupId>
                 <artifactId>android-maven-plugin</artifactId>
+                <version>3.7.0</version>
                 <configuration>
-                    <sourceDirectories>
-                        <sourceDirectory>${project.basedir}/src/main/java</sourceDirectory>
-                    </sourceDirectories>
-                    <androidManifestFile>${project.basedir}/AndroidManifest.xml</androidManifestFile>
-                    <assetsDirectory>${project.basedir}/assets</assetsDirectory>
-                    <resourceDirectory>${project.basedir}/res</resourceDirectory>
-                    <nativeLibrariesDirectory>${project.basedir}/src/main/native</nativeLibrariesDirectory>
                     <sdk>
                         <path>${env.ANDROID_HOME}</path>
                         <platform>19</platform>
                     </sdk>
-                    <undeployBeforeDeploy>false</undeployBeforeDeploy>
                 </configuration>
-            </plugin>
-
-            <plugin>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.5.1</version>
-                <configuration>
-                    <source>1.6</source>
-                    <target>1.6</target>
-                    <encoding>UTF-8</encoding>
-                </configuration>
+                <extensions>true</extensions>
             </plugin>
 
             <!--<plugin>-->
-                <!--<artifactId>maven-resources-plugin</artifactId>-->
-                <!--<version>2.4.3</version>-->
-                <!--<executions>-->
-                    <!--<execution>-->
-                        <!--<id>copy-config-xml</id>-->
-                        <!--&lt;!&ndash; here the phase you need &ndash;&gt;-->
-                        <!--<phase>initialize</phase>-->
-                        <!--<goals>-->
-                            <!--<goal>copy-resources</goal>-->
-                        <!--</goals>-->
-                        <!--<configuration>-->
-                            <!--<encoding>UTF-8</encoding>-->
-                            <!--<outputDirectory>${project.basedir}/res/values/</outputDirectory>-->
-                            <!--<resources>-->
-                                <!--<resource>-->
-                                    <!--<includes>-->
-                                        <!--<include>configs.xml</include>-->
-                                    <!--</includes>-->
-                                    <!--<directory>${project.basedir}/config/</directory>-->
-                                    <!--<filtering>true</filtering>-->
-                                <!--</resource>-->
-                            <!--</resources>-->
-                        <!--</configuration>-->
-                    <!--</execution>-->
-                    <!--<execution>-->
-                        <!--<id>copy-android-manifest</id>-->
-                        <!--&lt;!&ndash; here the phase you need &ndash;&gt;-->
-                        <!--<phase>initialize</phase>-->
-                        <!--<goals>-->
-                            <!--<goal>copy-resources</goal>-->
-                        <!--</goals>-->
-                        <!--<configuration>-->
-                            <!--<useDefaultDelimiters>false</useDefaultDelimiters>-->
-                            <!--<delimiters>-->
-                                <!--<delimiter>${*}</delimiter>-->
-                            <!--</delimiters>-->
-                            <!--<encoding>UTF-8</encoding>-->
-                            <!--<outputDirectory>${project.basedir}/</outputDirectory>-->
-                            <!--<resources>-->
-                                <!--<resource>-->
-                                    <!--<includes>-->
-                                        <!--<include>AndroidManifest.xml</include>-->
-                                    <!--</includes>-->
-                                    <!--<directory>${project.basedir}/config/</directory>-->
-                                    <!--<filtering>true</filtering>-->
-                                <!--</resource>-->
-                            <!--</resources>-->
-                        <!--</configuration>-->
-                    <!--</execution>-->
-                <!--</executions>-->
-            <!--</plugin>-->
-
-            <!--<plugin>-->
-                <!--<artifactId>maven-jarsigner-plugin</artifactId>-->
-                <!--<version>1.2</version>-->
-                <!--<executions>-->
-                    <!--<execution>-->
-                        <!--<id>sign-application-apk</id>-->
-                        <!--<phase>package</phase>-->
-                        <!--<goals>-->
-                            <!--<goal>sign</goal>-->
-                            <!--<goal>verify</goal>-->
-                        <!--</goals>-->
-                    <!--</execution>-->
-                <!--</executions>-->
-                <!--<inherited>true</inherited>-->
-                <!--<configuration>-->
-                    <!--<removeExistingSignatures>true</removeExistingSignatures>-->
-                    <!--<archiveDirectory/>-->
-                    <!--<includes>-->
-                        <!--<include>${project.build.directory}/${project.artifactId}-${project.version}.apk</include>-->
-                    <!--</includes>-->
-                    <!--<verbose>true</verbose>-->
-                    <!--<keystore>certificate-android.keystore</keystore>-->
-                    <!--<storepass>f(P*FUEW#%hF(*Erpw3f</storepass>-->
-                    <!--<alias>sz_android</alias>-->
-                    <!--<aliaspass>f(P*FUEW#%hF(*Erpw3f</aliaspass>-->
-                <!--</configuration>-->
+            <!--<artifactId>maven-jarsigner-plugin</artifactId>-->
+            <!--<version>1.2</version>-->
+            <!--<executions>-->
+            <!--<execution>-->
+            <!--<id>sign-application-apk</id>-->
+            <!--<phase>package</phase>-->
+            <!--<goals>-->
+            <!--<goal>sign</goal>-->
+            <!--<goal>verify</goal>-->
+            <!--</goals>-->
+            <!--</execution>-->
+            <!--</executions>-->
+            <!--<inherited>true</inherited>-->
+            <!--<configuration>-->
+            <!--<removeExistingSignatures>true</removeExistingSignatures>-->
+            <!--<archiveDirectory/>-->
+            <!--<includes>-->
+            <!--<include>${project.build.directory}/${project.artifactId}-${project.version}.apk</include>-->
+            <!--</includes>-->
+            <!--<verbose>true</verbose>-->
+            <!--<keystore>certificate-android.keystore</keystore>-->
+            <!--<storepass>f(P*FUEW#%hF(*Erpw3f</storepass>-->
+            <!--<alias>sz_android</alias>-->
+            <!--<aliaspass>f(P*FUEW#%hF(*Erpw3f</aliaspass>-->
+            <!--</configuration>-->
             <!--</plugin>-->
         </plugins>
     </build>

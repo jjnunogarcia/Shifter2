@@ -1,12 +1,12 @@
 package es.android.TurnosAndroid;
 
-import android.app.Activity;
-import android.app.Fragment;
-import android.app.FragmentTransaction;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
 import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
 import android.view.Menu;
 
-public class MainActivity extends Activity implements EventHandler {
+public class MainActivity extends FragmentActivity implements EventHandler {
 
   private Fragment           monthFrag;
   private Fragment           dayFrag;
@@ -24,7 +24,7 @@ public class MainActivity extends Activity implements EventHandler {
     calendarController = CalendarController.getInstance(getApplicationContext());
     setContentView(R.layout.cal_layout);
 
-    FragmentTransaction ft = getFragmentManager().beginTransaction();
+    FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
     monthFrag = new MonthByWeekFragment(System.currentTimeMillis(), false);
     ft.replace(R.id.cal_frame, monthFrag).commit();
 
@@ -49,7 +49,7 @@ public class MainActivity extends Activity implements EventHandler {
     if (event.eventType == EventType.GO_TO) {
       this.event = event;
       dayView = true;
-      FragmentTransaction ft = getFragmentManager().beginTransaction();
+      FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
       dayFrag = new DayFragment(event.startTime.toMillis(true), 1);
       ft.replace(R.id.cal_frame, dayFrag).addToBackStack(null).commit();
     }
