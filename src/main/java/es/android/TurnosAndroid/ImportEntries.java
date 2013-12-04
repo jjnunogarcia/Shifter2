@@ -24,34 +24,33 @@ public class ImportEntries extends AsyncTask<Void, Void, Void> {
     return null;
   }
 
-//	private Long[] checkTimes(long id){
-//		Cursor cur = null;
-// 		Long[] times = new Long[2];
-//		java.util.Calendar c = java.util.Calendar.getInstance();
-//	 	long now = c.getTimeInMillis();
-//			String[] projection = {Instances.BEGIN,Instances.END};
-//			Uri.Builder builder = Instances.CONTENT_URI.buildUpon();
-//			ContentUris.appendId(builder,now - DateUtils.YEAR_IN_MILLIS);
-//			ContentUris.appendId(builder,now + DateUtils.YEAR_IN_MILLIS);
-//			cur = context.getContentResolver().query(builder.build(),projection,Instances.EVENT_ID + "=" + id
-//					,null,null);
-//			if(cur != null && cur.moveToFirst()){
+//  private Long[] checkTimes(long id) {
+//    Cursor cur = null;
+//    Long[] times = new Long[2];
+//    java.util.Calendar c = java.util.Calendar.getInstance();
+//    long now = c.getTimeInMillis();
+//    String[] projection = {Instances.BEGIN, Instances.END};
+//    Uri.Builder builder = Instances.CONTENT_URI.buildUpon();
+//    ContentUris.appendId(builder, now - DateUtils.YEAR_IN_MILLIS);
+//    ContentUris.appendId(builder, now + DateUtils.YEAR_IN_MILLIS);
+//    cur = context.getContentResolver().query(builder.build(), projection, Instances.EVENT_ID + "=" + id, null, null);
+//    if (cur != null && cur.moveToFirst()) {
 ////	 			do{
-//	 				long start = Long.parseLong(cur.getString(0));
-//	 				long end = cur.getLong(1);
+//      long start = Long.parseLong(cur.getString(0));
+//      long end = cur.getLong(1);
 ////	 				long newStart = start - (Long.parseLong(reminders) * (60*1000));
-//	 				long current = System.currentTimeMillis();
+//      long current = System.currentTimeMillis();
 ////	 				if(start > current){
-//	 					times[0] = start;
-//	 					times[1] = end;
+//      times[0] = start;
+//      times[1] = end;
 ////	 					break;
 ////	 				}
 ////	 			}while(cur.moveToNext());
-//			}
-//		
-//		cur.close();
-//		return times;
-//	}
+//    }
+//
+//    cur.close();
+//    return times;
+//  }
 
   private void importEntries() {
 //		Long[] times = new Long[2];
@@ -61,6 +60,7 @@ public class ImportEntries extends AsyncTask<Void, Void, Void> {
                             DBConstants.START_DAY, DBConstants.END_DAY, DBConstants.START_TIME, DBConstants.END_TIME, DBConstants.EVENT_ID};
 //        Cursor c = context.getContentResolver().query(Events.CONTENT_URI, eventHolder, null, null, null);
     Cursor c = context.getContentResolver().query(CalendarProvider.CONTENT_ID_URI_BASE, eventHolder, null, null, null);
+
     if (c != null && c.moveToFirst()) {
       do {
         long eventID = c.getLong(0);

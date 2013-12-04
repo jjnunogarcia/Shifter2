@@ -25,6 +25,7 @@ public class MainActivity extends FragmentActivity implements EventHandler {
     setContentView(R.layout.cal_layout);
 
     FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+    // TODO pass arguments in bundle
     monthFrag = new MonthByWeekFragment(System.currentTimeMillis(), false);
     ft.replace(R.id.cal_frame, monthFrag).commit();
 
@@ -34,7 +35,6 @@ public class MainActivity extends FragmentActivity implements EventHandler {
 
   @Override
   public boolean onCreateOptionsMenu(Menu menu) {
-    // Inflate the menu; this adds items to the action bar if it is present.
     getMenuInflater().inflate(R.menu.activity_main, menu);
     return true;
   }
@@ -50,9 +50,11 @@ public class MainActivity extends FragmentActivity implements EventHandler {
       this.event = event;
       dayView = true;
       FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+      // TODO pass arguments in bundle
       dayFrag = new DayFragment(event.startTime.toMillis(true), 1);
       ft.replace(R.id.cal_frame, dayFrag).addToBackStack(null).commit();
     }
+
     if (event.eventType == EventType.VIEW_EVENT) {
       //TODO do something when an event is clicked
       dayView = false;

@@ -37,85 +37,80 @@ import java.util.Map.Entry;
 import java.util.WeakHashMap;
 
 public class CalendarController {
-    public static final  String                                   EVENT_EDIT_ON_LAUNCH        = "editMode";
-    public static final  int                                      MIN_CALENDAR_YEAR           = 1970;
-    public static final  int                                      MAX_CALENDAR_YEAR           = 2036;
-    public static final  int                                      MIN_CALENDAR_WEEK           = 0;
-    public static final  int                                      MAX_CALENDAR_WEEK           = 3497; // weeks between 1/1/1970 and 1/1/2037
-    /**
-     * Pass to the ExtraLong parameter for EventType.CREATE_EVENT to create
-     * an all-day event
-     */
-    public static final  long                                     EXTRA_CREATE_ALL_DAY        = 0x10;
-    /**
-     * Pass to the ExtraLong parameter for EventType.GO_TO to signal the time
-     * can be ignored
-     */
-    public static final  long                                     EXTRA_GOTO_DATE             = 1;
-    public static final  long                                     EXTRA_GOTO_TIME             = 2;
-    public static final  long                                     EXTRA_GOTO_BACK_TO_PREVIOUS = 4;
-    public static final  long                                     EXTRA_GOTO_TODAY            = 8;
-    private static final boolean                                  DEBUG                       = false;
-    private static final String                                   TAG                         = "CalendarController";
-    private static final String                                   REFRESH_SELECTION           = Calendars.SYNC_EVENTS + "=?";
-    private static final String[]                                 REFRESH_ARGS                = new String[]{"1"};
-    private static final String                                   REFRESH_ORDER               = Calendars.ACCOUNT_NAME + "," + Calendars.ACCOUNT_TYPE;
-    private static       WeakHashMap<Context, CalendarController> instances                   = new WeakHashMap<Context, CalendarController>();
-    // This uses a LinkedHashMap so that we can replace fragments based on the
-    // view id they are being expanded into since we can't guarantee a reference
-    // to the handler will be findable
-    private final        LinkedHashMap<Integer, EventHandler>     eventHandlers               = new LinkedHashMap<Integer, EventHandler>(5);
-    private final        LinkedList<Integer>                      mToBeRemovedEventHandlers   = new LinkedList<Integer>();
-    private final        LinkedHashMap<Integer, EventHandler>     mToBeAddedEventHandlers     = new LinkedHashMap<Integer, EventHandler>();
-    private final        WeakHashMap<Object, Long>                filters                     = new WeakHashMap<Object, Long>(1);
-    private final Context context;
-    private final Time     time           = new Time();
-    private final Runnable updateTimezone = new Runnable() {
-        @Override
-        public void run() {
-            time.switchTimezone(Utils.getTimeZone(context, this));
-        }
-    };
-    private Pair<Integer, EventHandler> mFirstEventHandler;
-    private Pair<Integer, EventHandler> mToBeAddedFirstEventHandler;
-    private volatile int  mDispatchInProgressCounter = 0;
-    private          int  viewType                   = -1;
-    private          int  detailViewType             = -1;
-    private          int  previousViewType           = -1;
-    private          long eventId                    = -1;
-    private          long dateFlags                  = 0;
-
-    private CalendarController(Context context) {
-        this.context = context;
-        updateTimezone.run();
-        time.setToNow();
-//        detailViewType = Utils.getSharedPreference(context,
-//                GeneralPreferences.KEY_DETAILED_VIEW,
-//                GeneralPreferences.DEFAULT_DETAILED_VIEW);
+  public static final  String                                   EVENT_EDIT_ON_LAUNCH        = "editMode";
+  public static final  int                                      MIN_CALENDAR_YEAR           = 1970;
+  public static final  int                                      MAX_CALENDAR_YEAR           = 2036;
+  public static final  int                                      MIN_CALENDAR_WEEK           = 0;
+  public static final  int                                      MAX_CALENDAR_WEEK           = 3497; // weeks between 1/1/1970 and 1/1/2037
+  /**
+   * Pass to the ExtraLong parameter for EventType.CREATE_EVENT to create an all-day event
+   */
+  public static final  long                                     EXTRA_CREATE_ALL_DAY        = 0x10;
+  /**
+   * Pass to the ExtraLong parameter for EventType.GO_TO to signal the time
+   * can be ignored
+   */
+  public static final  long                                     EXTRA_GOTO_DATE             = 1;
+  public static final  long                                     EXTRA_GOTO_TIME             = 2;
+  public static final  long                                     EXTRA_GOTO_BACK_TO_PREVIOUS = 4;
+  public static final  long                                     EXTRA_GOTO_TODAY            = 8;
+  private static final boolean                                  DEBUG                       = false;
+  private static final String                                   TAG                         = "CalendarController";
+  private static final String                                   REFRESH_SELECTION           = Calendars.SYNC_EVENTS + "=?";
+  private static final String[]                                 REFRESH_ARGS                = new String[] {"1"};
+  private static final String                                   REFRESH_ORDER               = Calendars.ACCOUNT_NAME + "," + Calendars.ACCOUNT_TYPE;
+  private static       WeakHashMap<Context, CalendarController> instances                   = new WeakHashMap<Context, CalendarController>();
+  // This uses a LinkedHashMap so that we can replace fragments based on the view id they are being expanded into since we can't guarantee a reference to the handler will be findable
+  private final        LinkedHashMap<Integer, EventHandler>     eventHandlers               = new LinkedHashMap<Integer, EventHandler>(5);
+  private final        LinkedList<Integer>                      toBeRemovedEventHandlers    = new LinkedList<Integer>();
+  private final        LinkedHashMap<Integer, EventHandler>     toBeAddedEventHandlers      = new LinkedHashMap<Integer, EventHandler>();
+  private final        WeakHashMap<Object, Long>                filters                     = new WeakHashMap<Object, Long>(1);
+  private final Context context;
+  private final Time     time           = new Time();
+  private final Runnable updateTimezone = new Runnable() {
+    @Override
+    public void run() {
+      time.switchTimezone(Utils.getTimeZone(context, this));
     }
+  };
+  private Pair<Integer, EventHandler> firstEventHandler;
+  private Pair<Integer, EventHandler> toBeAddedFirstEventHandler;
+  private volatile int  dispatchInProgressCounter = 0;
+  private          int  viewType                  = -1;
+  private          int  detailViewType            = -1;
+  private          int  previousViewType          = -1;
+  private          long eventId                   = -1;
+  private          long dateFlags                 = 0;
 
-    /**
-     * Creates and/or returns an instance of CalendarController associated with
-     * the supplied context. It is best to pass in the current Activity.
-     *
-     * @param context The activity if at all possible.
-     */
-    public static CalendarController getInstance(Context context) {
-        synchronized (instances) {
-            CalendarController controller = instances.get(context);
-            if (controller == null) {
-                controller = new CalendarController(context);
-                instances.put(context, controller);
-            }
-            return controller;
-        }
+  private CalendarController(Context context) {
+    this.context = context;
+    updateTimezone.run();
+    time.setToNow();
+//        detailViewType = Utils.getSharedPreference(context, GeneralPreferences.KEY_DETAILED_VIEW, GeneralPreferences.DEFAULT_DETAILED_VIEW);
+  }
+
+  /**
+   * Creates and/or returns an instance of CalendarController associated with
+   * the supplied context. It is best to pass in the current Activity.
+   *
+   * @param context The activity if at all possible.
+   */
+  public static CalendarController getInstance(Context context) {
+    synchronized (instances) {
+      CalendarController controller = instances.get(context);
+      if (controller == null) {
+        controller = new CalendarController(context);
+        instances.put(context, controller);
+      }
+      return controller;
     }
+  }
 
-    public void sendEventRelatedEvent(Object sender, long eventType, long eventId, long startMillis, long endMillis, int x, int y, long selectedMillis) {
-        // TODO: pass the real allDay status or at least a status that says we don't know the
-        // status and have the receiver query the data.
-        // The current use of this method for VIEW_EVENT is by the day view to show an EventInfo so currently the missing allDay status has no effect.
-        sendEventRelatedEventWithExtra(sender, eventType, eventId, startMillis, endMillis, x, y, EventInfo.buildViewExtraLong(Attendees.ATTENDEE_STATUS_NONE, false), selectedMillis);
+  public void sendEventRelatedEvent(Object sender, long eventType, long eventId, long startMillis, long endMillis, int x, int y, long selectedMillis) {
+    // TODO: pass the real allDay status or at least a status that says we don't know the
+    // status and have the receiver query the data.
+    // The current use of this method for VIEW_EVENT is by the day view to show an EventInfo so currently the missing allDay status has no effect.
+    sendEventRelatedEventWithExtra(sender, eventType, eventId, startMillis, endMillis, x, y, EventInfo.buildViewExtraLong(Attendees.ATTENDEE_STATUS_NONE, false), selectedMillis);
     }
 
     /**
@@ -278,58 +273,56 @@ public class CalendarController {
 
         boolean handled = false;
         synchronized (this) {
-            mDispatchInProgressCounter++;
+            dispatchInProgressCounter++;
 
             if (DEBUG) {
                 Log.d(TAG, "sendEvent: Dispatching to " + eventHandlers.size() + " handlers");
             }
             // Dispatch to event handler(s)
-            if (mFirstEventHandler != null) {
+            if (firstEventHandler != null) {
                 // Handle the 'first' one before handling the others
-                EventHandler handler = mFirstEventHandler.second;
-                if (handler != null && (handler.getSupportedEventTypes() & event.eventType) != 0
-                    && !mToBeRemovedEventHandlers.contains(mFirstEventHandler.first)) {
+                EventHandler handler = firstEventHandler.second;
+                if (handler != null && (handler.getSupportedEventTypes() & event.eventType) != 0 && !toBeRemovedEventHandlers.contains(firstEventHandler.first)) {
                     handler.handleEvent(event);
                     handled = true;
                 }
             }
             for (Entry<Integer, EventHandler> entry : eventHandlers.entrySet()) {
                 int key = entry.getKey();
-                if (mFirstEventHandler != null && key == mFirstEventHandler.first) {
+                if (firstEventHandler != null && key == firstEventHandler.first) {
                     // If this was the 'first' handler it was already handled
                     continue;
                 }
                 EventHandler eventHandler = entry.getValue();
                 if (eventHandler != null && (eventHandler.getSupportedEventTypes() & event.eventType) != 0) {
-                    if (mToBeRemovedEventHandlers.contains(key)) {
-                        continue;
-                    }
+                  if (!toBeRemovedEventHandlers.contains(key)) {
                     eventHandler.handleEvent(event);
                     handled = true;
+                  }
                 }
             }
 
-            mDispatchInProgressCounter--;
+            dispatchInProgressCounter--;
 
-            if (mDispatchInProgressCounter == 0) {
+            if (dispatchInProgressCounter == 0) {
 
                 // Deregister removed handlers
-                if (mToBeRemovedEventHandlers.size() > 0) {
-                    for (Integer zombie : mToBeRemovedEventHandlers) {
+                if (toBeRemovedEventHandlers.size() > 0) {
+                    for (Integer zombie : toBeRemovedEventHandlers) {
                         eventHandlers.remove(zombie);
-                        if (mFirstEventHandler != null && zombie.equals(mFirstEventHandler.first)) {
-                            mFirstEventHandler = null;
+                        if (firstEventHandler != null && zombie.equals(firstEventHandler.first)) {
+                            firstEventHandler = null;
                         }
                     }
-                    mToBeRemovedEventHandlers.clear();
+                    toBeRemovedEventHandlers.clear();
                 }
                 // Add new handlers
-                if (mToBeAddedFirstEventHandler != null) {
-                    mFirstEventHandler = mToBeAddedFirstEventHandler;
-                    mToBeAddedFirstEventHandler = null;
+                if (toBeAddedFirstEventHandler != null) {
+                    firstEventHandler = toBeAddedFirstEventHandler;
+                    toBeAddedFirstEventHandler = null;
                 }
-                if (mToBeAddedEventHandlers.size() > 0) {
-                    for (Entry<Integer, EventHandler> food : mToBeAddedEventHandlers.entrySet()) {
+                if (toBeAddedEventHandlers.size() > 0) {
+                    for (Entry<Integer, EventHandler> food : toBeAddedEventHandlers.entrySet()) {
                         eventHandlers.put(food.getKey(), food.getValue());
                     }
                 }
@@ -376,8 +369,8 @@ public class CalendarController {
      */
     public void registerEventHandler(int key, EventHandler eventHandler) {
         synchronized (this) {
-            if (mDispatchInProgressCounter > 0) {
-                mToBeAddedEventHandlers.put(key, eventHandler);
+            if (dispatchInProgressCounter > 0) {
+                toBeAddedEventHandlers.put(key, eventHandler);
             } else {
                 eventHandlers.put(key, eventHandler);
             }
@@ -387,23 +380,23 @@ public class CalendarController {
     public void registerFirstEventHandler(int key, EventHandler eventHandler) {
         synchronized (this) {
             registerEventHandler(key, eventHandler);
-            if (mDispatchInProgressCounter > 0) {
-                mToBeAddedFirstEventHandler = new Pair<Integer, EventHandler>(key, eventHandler);
+            if (dispatchInProgressCounter > 0) {
+                toBeAddedFirstEventHandler = new Pair<Integer, EventHandler>(key, eventHandler);
             } else {
-                mFirstEventHandler = new Pair<Integer, EventHandler>(key, eventHandler);
+                firstEventHandler = new Pair<Integer, EventHandler>(key, eventHandler);
             }
         }
     }
 
     public void deregisterEventHandler(Integer key) {
         synchronized (this) {
-            if (mDispatchInProgressCounter > 0) {
+            if (dispatchInProgressCounter > 0) {
                 // To avoid ConcurrencyException, stash away the event handler for now.
-                mToBeRemovedEventHandlers.add(key);
+                toBeRemovedEventHandlers.add(key);
             } else {
                 eventHandlers.remove(key);
-                if (mFirstEventHandler != null && mFirstEventHandler.first.equals(key)) {
-                    mFirstEventHandler = null;
+                if (firstEventHandler != null && firstEventHandler.first.equals(key)) {
+                    firstEventHandler = null;
                 }
             }
         }
@@ -411,12 +404,12 @@ public class CalendarController {
 
     public void deregisterAllEventHandlers() {
         synchronized (this) {
-            if (mDispatchInProgressCounter > 0) {
+            if (dispatchInProgressCounter > 0) {
                 // To avoid ConcurrencyException, stash away the event handler for now.
-                mToBeRemovedEventHandlers.addAll(eventHandlers.keySet());
+                toBeRemovedEventHandlers.addAll(eventHandlers.keySet());
             } else {
                 eventHandlers.clear();
-                mFirstEventHandler = null;
+                firstEventHandler = null;
             }
         }
     }
