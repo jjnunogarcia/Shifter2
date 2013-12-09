@@ -55,7 +55,7 @@ public class DayFragment extends Fragment implements EventHandler, ViewFactory {
     @Override
     public void run() {
       if (DayFragment.this.isAdded()) {
-        selectedDay.timezone = Utils.getTimeZone(getActivity(), mTZUpdater);
+        selectedDay.timezone = Utils.getTimeZone(getActivity().getApplicationContext(), mTZUpdater);
         selectedDay.normalize(true);
       }
     }
@@ -99,7 +99,7 @@ public class DayFragment extends Fragment implements EventHandler, ViewFactory {
     outAnimationBackward = AnimationUtils.loadAnimation(context, R.anim.slide_right_out);
 
     eventLoader = new EventLoader(context);
-    view = new DayView(getActivity().getApplicationContext(), CalendarController.getInstance(getActivity().getApplicationContext()), viewSwitcher, eventLoader, numDays);
+    view = new DayView(context, CalendarController.getInstance(context), viewSwitcher, eventLoader, numDays);
     view.setId(VIEW_ID);
     view.setLayoutParams(new ViewSwitcher.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
   }

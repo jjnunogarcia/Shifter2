@@ -19,5 +19,5 @@ public class DBConstants {
     public static final String EVENT        = "event";
     public static final String START        = "start";
     static final String DATABASE_NAME       = "Calendar";
-    static final int    DATABASE_VERSION    = 4;
+    static final int    DATABASE_VERSION    = 1;
 }

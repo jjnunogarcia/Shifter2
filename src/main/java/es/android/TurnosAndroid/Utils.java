@@ -89,10 +89,8 @@ public class Utils {
   static       int     CONFLICT_COLOR         = 0xFF000000;
   static       boolean mMinutesLoaded         = false;
 
-  // The name of the shared preferences file. This name must be maintained for
-  // historical
-  // reasons, as it's what PreferenceManager assigned the first time the file
-  // was created.
+  // The name of the shared preferences file. This name must be maintained for historical
+  // reasons, as it's what PreferenceManager assigned the first time the file was created.
   static final String SHARED_PREFS_NAME = "com.android.calendar_preferences";
 
   public static final String KEY_QUICK_RESPONSES = "preferences_quick_responses";
@@ -104,7 +102,6 @@ public class Utils {
   private static final TimeZoneUtils mTZUtils                = new TimeZoneUtils(SHARED_PREFS_NAME);
   private static       boolean       mAllowWeekForDetailView = false;
   private static       long          mTardis                 = 0;
-  private static       String        sVersion                = null;
 
   /**
    * Returns whether the SDK is the Jellybean release or later.
@@ -184,7 +181,7 @@ public class Utils {
    * @param callback The runnable that should execute if a query returns new
    *                 values
    * @return The string value representing the time zone Calendar should
-   *         display
+   * display
    */
   public static String getTimeZone(Context context, Runnable callback) {
     return mTZUtils.getTimeZone(context, callback);
@@ -324,7 +321,7 @@ public class Utils {
    * Compares two cursors to see if they contain the same data.
    *
    * @return Returns true of the cursors contain the same data and are not
-   *         null, false otherwise
+   * null, false otherwise
    */
   public static boolean compareCursors(Cursor c1, Cursor c2) {
     if (c1 == null || c2 == null) {
@@ -596,13 +593,6 @@ public class Utils {
     }
   }
 
-  /**
-   * Null-safe object comparison
-   *
-   * @param o1
-   * @param o2
-   * @return
-   */
   public static boolean equals(Object o1, Object o2) {
     return o1 == null ? o2 == null : o1.equals(o2);
   }
@@ -692,8 +682,7 @@ public class Utils {
    * @param conflictColor  the color to use for conflicts
    * @return
    */
-  public static HashMap<Integer, DNAStrand> createDNAStrands(int firstJulianDay, ArrayList<Event> events, int top, int bottom, int minPixels, int[] dayXs,
-                                                             Context context) {
+  public static HashMap<Integer, DNAStrand> createDNAStrands(int firstJulianDay, ArrayList<Event> events, int top, int bottom, int minPixels, int[] dayXs, Context context) {
 
     if (!mMinutesLoaded) {
       if (context == null) {
@@ -931,8 +920,7 @@ public class Utils {
 
   // This processes all the segments, sorts them by color, and generates a
   // list of points to draw
-  private static void weaveDNAStrands(LinkedList<DNASegment> segments, int firstJulianDay, HashMap<Integer, DNAStrand> strands, int top, int bottom,
-                                      int[] dayXs) {
+  private static void weaveDNAStrands(LinkedList<DNASegment> segments, int firstJulianDay, HashMap<Integer, DNAStrand> strands, int top, int bottom, int[] dayXs) {
     // First, get rid of any colors that ended up with no segments
     Iterator<DNAStrand> strandIterator = strands.values().iterator();
     while (strandIterator.hasNext()) {
@@ -991,8 +979,7 @@ public class Utils {
   /**
    * Add a new segment based on the event provided. This will handle splitting segments across day boundaries and ensures a minimum size for segments.
    */
-  private static void addNewSegment(LinkedList<DNASegment> segments, Event event, HashMap<Integer, DNAStrand> strands, int firstJulianDay, int minStart,
-                                    int minMinutes) {
+  private static void addNewSegment(LinkedList<DNASegment> segments, Event event, HashMap<Integer, DNAStrand> strands, int firstJulianDay, int minStart, int minMinutes) {
     if (event.startDay > event.endDay) {
       Log.wtf(TAG, "Event starts after it ends: " + event.toString());
     }
@@ -1467,19 +1454,14 @@ public class Utils {
 //        return s;
 //    }
 
-  /**
-   * Return the app version code.
-   */
   public static String getVersionCode(Context context) {
-    if (sVersion == null) {
-      try {
-        sVersion = context.getPackageManager().getPackageInfo(
-            context.getPackageName(), 0).versionName;
-      } catch (PackageManager.NameNotFoundException e) {
-        // Can't find version; just leave it blank.
-        Log.e(TAG, "Error finding package " + context.getApplicationInfo().packageName);
-      }
+    String version = null;
+    try {
+      version = context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionName;
+    } catch (PackageManager.NameNotFoundException e) {
+      // Can't find version; just leave it blank.
+      Log.e(TAG, "Error finding package " + context.getApplicationInfo().packageName);
     }
-    return sVersion;
+    return version;
   }
 }

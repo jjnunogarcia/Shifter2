@@ -291,9 +291,11 @@ public class Event implements Cloneable {
     String[] WHERE_CALENDARS_ARGS = {"1"};
     String DEFAULT_SORT_ORDER = "begin ASC";
 
-    Uri.Builder builder = Instances.CONTENT_BY_DAY_URI.buildUpon();
+//    Uri.Builder builder = Instances.CONTENT_BY_DAY_URI.buildUpon();
+    Uri.Builder builder = CalendarProvider.CONTENT_URI.buildUpon();
     ContentUris.appendId(builder, startDay);
     ContentUris.appendId(builder, endDay);
+
     if (TextUtils.isEmpty(selection)) {
       selection = WHERE_CALENDARS_SELECTED;
       selectionArgs = WHERE_CALENDARS_ARGS;
@@ -417,13 +419,11 @@ public class Event implements Cloneable {
    */
     /* package */
   static void computePositions(ArrayList<Event> eventsList, long minimumDurationMillis) {
-    if (eventsList == null) {
-      return;
+    if (eventsList != null) {
+      // Compute the column positions separately for the all-day events
+      doComputePositions(eventsList, minimumDurationMillis, false);
+      doComputePositions(eventsList, minimumDurationMillis, true);
     }
-
-    // Compute the column positions separately for the all-day events
-    doComputePositions(eventsList, minimumDurationMillis, false);
-    doComputePositions(eventsList, minimumDurationMillis, true);
   }
 
   private static void doComputePositions(ArrayList<Event> eventsList, long minimumDurationMillis, boolean doAlldayEvents) {

@@ -36,8 +36,8 @@ public class EventLoader {
   private Handler       mHandler        = new Handler();
   private AtomicInteger mSequenceNumber = new AtomicInteger();
 
-  private LinkedBlockingQueue<LoadRequest> mLoaderQueue;
-  private LoaderThread                     mLoaderThread;
+  private LinkedBlockingQueue<LoadRequest> loaderQueue;
+  private LoaderThread                     loaderThread;
   private ContentResolver                  mResolver;
 
   private static interface LoadRequest {
@@ -57,8 +57,7 @@ public class EventLoader {
   }
 
   /**
-   * Code for handling requests to get whether days have an event or not
-   * and filling in the eventDays array.
+   * Code for handling requests to get whether days have an event or not and filling in the eventDays array.
    */
   private static class LoadEventDaysRequest implements LoadRequest {
     public int       startDay;
@@ -165,9 +164,7 @@ public class EventLoader {
       try {
         queue.put(new ShutdownRequest());
       } catch (InterruptedException ex) {
-        // The put() method fails with InterruptedException if the
-        // queue is full. This should never happen because the queue
-        // has no limit.
+        // The put() method fails with InterruptedException if the queue is full. This should never happen because the queue has no limit.
         Log.e("Cal", "LoaderThread.shutdown() interrupted!");
       }
     }
@@ -180,8 +177,7 @@ public class EventLoader {
           // Wait for the next request
           LoadRequest request = queue.take();
 
-          // If there are a bunch of requests already waiting, then
-          // skip all but the most recent request.
+          // If there are a bunch of requests already waiting, then skip all but the most recent request.
           while (!queue.isEmpty()) {
             // Let the request know that it was skipped
             request.skipRequest(eventLoader);
@@ -203,7 +199,7 @@ public class EventLoader {
 
   public EventLoader(Context context) {
     mContext = context;
-    mLoaderQueue = new LinkedBlockingQueue<LoadRequest>();
+    loaderQueue = new LinkedBlockingQueue<LoadRequest>();
     mResolver = context.getContentResolver();
   }
 
@@ -211,15 +207,15 @@ public class EventLoader {
    * Call this from the activity's onResume()
    */
   public void startBackgroundThread() {
-    mLoaderThread = new LoaderThread(mLoaderQueue, this);
-    mLoaderThread.start();
+    loaderThread = new LoaderThread(loaderQueue, this);
+    loaderThread.start();
   }
 
   /**
    * Call this from the activity's onPause()
    */
   public void stopBackgroundThread() {
-    mLoaderThread.shutdown();
+    loaderThread.shutdown();
   }
 
   /**
@@ -239,11 +235,10 @@ public class EventLoader {
     int id = mSequenceNumber.incrementAndGet();
 
     // Send the load request to the background thread
-    LoadEventsRequest request = new LoadEventsRequest(id, startDay, numDays,
-                                                      events, successCallback, cancelCallback);
+    LoadEventsRequest request = new LoadEventsRequest(id, startDay, numDays, events, successCallback, cancelCallback);
 
     try {
-      mLoaderQueue.put(request);
+      loaderQueue.put(request);
     } catch (InterruptedException ex) {
       // The put() method fails with InterruptedException if the
       // queue is full. This should never happen because the queue
@@ -266,7 +261,7 @@ public class EventLoader {
     // Send load request to the background thread
     LoadEventDaysRequest request = new LoadEventDaysRequest(startDay, numDays, eventDays, uiCallback);
     try {
-      mLoaderQueue.put(request);
+      loaderQueue.put(request);
     } catch (InterruptedException ex) {
       // The put() method fails with InterruptedException if the
       // queue is full. This should never happen because the queue

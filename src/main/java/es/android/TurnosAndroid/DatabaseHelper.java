@@ -27,8 +27,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     private void createTables(SQLiteDatabase db) {
-        db.execSQL("CREATE TABLE " + DBConstants.EVENTS_TABLE + "(" + DBConstants.ID + " integer primary key autoincrement, " + DBConstants.EVENT + " TEXT, " + DBConstants.LOCATION + " TEXT, " + DBConstants.DESCRIPTION + " TEXT, "
-                   + DBConstants.START + " INTEGER, " + DBConstants.END + " INTEGER, " + DBConstants.CALENDAR_ID + " INTEGER, " + DBConstants.START_DAY + " INTEGER, " + DBConstants.END_DAY + " INTEGER, " + DBConstants.START_TIME + " INTEGER, "
-                   + DBConstants.END_TIME + " INTEGER, " + DBConstants.EVENT_ID + " INTEGER);");
+        db.execSQL("CREATE TABLE " + DBConstants.EVENTS_TABLE + "(" +
+                   DBConstants.ID + " integer primary key autoincrement, " +
+                   DBConstants.EVENT + " TEXT, " +
+                   DBConstants.LOCATION + " TEXT, " +
+                   DBConstants.DESCRIPTION + " TEXT, " +
+                   DBConstants.START + " INTEGER, " +
+                   DBConstants.END + " INTEGER, " +
+                   DBConstants.CALENDAR_ID + " INTEGER, " +
+                   DBConstants.START_DAY + " INTEGER, " +
+                   DBConstants.END_DAY + " INTEGER, " +
+                   DBConstants.START_TIME + " INTEGER, " +
+                   DBConstants.END_TIME + " INTEGER, " +
+                   DBConstants.EVENT_ID + " INTEGER);");
     }
 }

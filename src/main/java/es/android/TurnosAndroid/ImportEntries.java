@@ -59,7 +59,7 @@ public class ImportEntries extends AsyncTask<Void, Void, Void> {
     String[] eventHolder = {DBConstants.ID, DBConstants.EVENT, DBConstants.LOCATION, DBConstants.DESCRIPTION, DBConstants.START, DBConstants.END, DBConstants.CALENDAR_ID,
                             DBConstants.START_DAY, DBConstants.END_DAY, DBConstants.START_TIME, DBConstants.END_TIME, DBConstants.EVENT_ID};
 //        Cursor c = context.getContentResolver().query(Events.CONTENT_URI, eventHolder, null, null, null);
-    Cursor c = context.getContentResolver().query(CalendarProvider.CONTENT_ID_URI_BASE, eventHolder, null, null, null);
+    Cursor c = context.getContentResolver().query(CalendarProvider.CONTENT_URI, eventHolder, null, null, null);
 
     if (c != null && c.moveToFirst()) {
       do {
