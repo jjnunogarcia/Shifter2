@@ -39,7 +39,7 @@ import java.util.Locale;
  * This is a specialized adapter for creating a list of weeks with selectable
  * days. It can be configured to display the week number, start the week on a
  * given day, show a reduced number of days, or display an arbitrary number of
- * weeks at a time. See {@link SimpleDayPickerFragment} for usage.
+ * weeks at a time. See {@link MonthFragment} for usage.
  * </p>
  */
 public class SimpleWeeksAdapter extends BaseAdapter implements OnTouchListener {

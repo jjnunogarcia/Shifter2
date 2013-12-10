@@ -172,7 +172,7 @@ public class MonthListView extends ListView {
     firstView.getLocalVisibleRect(mFirstViewRect);
     int topViewVisiblePart = mFirstViewRect.bottom - mFirstViewRect.top;
     int viewsToFling = (scrollToDay - day) / 7 - ((monthsToJump <= 0) ? 1 : 0);
-    int offset = (viewsToFling > 0) ? -(firstViewHeight - topViewVisiblePart + SimpleDayPickerFragment.LIST_TOP_OFFSET) : (topViewVisiblePart - SimpleDayPickerFragment.LIST_TOP_OFFSET);
+    int offset = (viewsToFling > 0) ? -(firstViewHeight - topViewVisiblePart + MonthFragment.LIST_TOP_OFFSET) : (topViewVisiblePart - MonthFragment.LIST_TOP_OFFSET);
     // Fling
     smoothScrollBy(viewsToFling * firstViewHeight + offset, FLING_TIME);
   }
@@ -183,6 +183,6 @@ public class MonthListView extends ListView {
     if (child == null) {
       return -1;
     }
-    return child.getFirstJulianDay() + SimpleDayPickerFragment.DAYS_PER_WEEK - 1;
+    return child.getFirstJulianDay() + MonthFragment.DAYS_PER_WEEK - 1;
   }
 }

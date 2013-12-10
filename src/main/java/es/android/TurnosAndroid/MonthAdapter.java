@@ -39,7 +39,7 @@ public class MonthAdapter extends SimpleWeeksAdapter {
   protected Time               today;
   protected int                mFirstJulianDay;
   protected int                mQueryDays;
-  //    protected boolean mIsMiniMonth = false;
+  //    protected boolean isMiniMonth = false;
   protected int mOrientation = Configuration.ORIENTATION_LANDSCAPE;
   private final boolean mShowAgendaWithMonth;
 
@@ -66,7 +66,7 @@ public class MonthAdapter extends SimpleWeeksAdapter {
   public MonthAdapter(Context context, HashMap<String, Integer> params) {
     super(context, params);
     if (params.containsKey(WEEK_PARAMS_IS_MINI)) {
-//            mIsMiniMonth = params.get(WEEK_PARAMS_IS_MINI) != 0;
+//            isMiniMonth = params.get(WEEK_PARAMS_IS_MINI) != 0;
     }
     mShowAgendaWithMonth = Utils.getConfigBool(context, R.bool.show_agenda_with_month);
     ViewConfiguration vc = ViewConfiguration.get(context);
@@ -110,7 +110,7 @@ public class MonthAdapter extends SimpleWeeksAdapter {
   }
 
   public void setEvents(int firstJulianDay, int numDays, ArrayList<Event> events) {
-//        if (mIsMiniMonth) {
+//        if (isMiniMonth) {
 //            if (Log.isLoggable(TAG, Log.ERROR)) {
 //                Log.e(TAG, "Attempted to set events for mini view. Events only supported in full"
 //                        + " view.");
@@ -167,7 +167,7 @@ public class MonthAdapter extends SimpleWeeksAdapter {
 
   @Override
   public View getView(int position, View convertView, ViewGroup parent) {
-//        if (mIsMiniMonth) {
+//        if (isMiniMonth) {
 //            return super.getView(position, convertView, parent);
 //        }
     MonthWeekEventsView v;
