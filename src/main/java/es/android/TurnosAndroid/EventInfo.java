@@ -11,7 +11,6 @@ import android.util.Log;
  */
 public class EventInfo {
   private static final String TAG                            = EventInfo.class.getSimpleName();
-  private static final long   ATTENTEE_STATUS_MASK           = 0xFF;
   private static final long   ALL_DAY_MASK                   = 0x100;
   private static final int    ATTENDEE_STATUS_NONE_MASK      = 0x01;
   private static final int    ATTENDEE_STATUS_ACCEPTED_MASK  = 0x02;
@@ -69,40 +68,10 @@ public class EventInfo {
         extra |= ATTENDEE_STATUS_TENTATIVE_MASK;
         break;
       default:
-        Log.wtf(TAG, "Unknown attendee response " + response);
+        Log.e(TAG, "Unknown attendee response " + response);
         extra |= ATTENDEE_STATUS_NONE_MASK;
         break;
     }
     return extra;
-  }
-
-  public boolean isAllDay() {
-    if (eventType != EventType.VIEW_EVENT) {
-      Log.wtf(TAG, "illegal call to isAllDay , wrong event type " + eventType);
-      return false;
-    }
-    return ((extraLong & ALL_DAY_MASK) != 0);
-  }
-
-  public int getResponse() {
-    if (eventType != EventType.VIEW_EVENT) {
-      Log.wtf(TAG, "illegal call to getResponse , wrong event type " + eventType);
-      return CalendarContract.Attendees.ATTENDEE_STATUS_NONE;
-    }
-
-    int response = (int) (extraLong & ATTENTEE_STATUS_MASK);
-    switch (response) {
-      case ATTENDEE_STATUS_NONE_MASK:
-        return CalendarContract.Attendees.ATTENDEE_STATUS_NONE;
-      case ATTENDEE_STATUS_ACCEPTED_MASK:
-        return CalendarContract.Attendees.ATTENDEE_STATUS_ACCEPTED;
-      case ATTENDEE_STATUS_DECLINED_MASK:
-        return CalendarContract.Attendees.ATTENDEE_STATUS_DECLINED;
-      case ATTENDEE_STATUS_TENTATIVE_MASK:
-        return CalendarContract.Attendees.ATTENDEE_STATUS_TENTATIVE;
-      default:
-        Log.wtf(TAG, "Unknown attendee response " + response);
-    }
-    return ATTENDEE_STATUS_NONE_MASK;
   }
 }

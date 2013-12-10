@@ -26,7 +26,6 @@ import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.widget.ProgressBar;
 import android.widget.ViewSwitcher;
 import android.widget.ViewSwitcher.ViewFactory;
 
@@ -36,12 +35,10 @@ import android.widget.ViewSwitcher.ViewFactory;
 public class DayFragment extends Fragment implements EventHandler, ViewFactory {
   protected static final String BUNDLE_KEY_RESTORE_TIME = "key_restore_time";
   /**
-   * The view id used for all the views we create. It's OK to have all child
-   * views have the same ID. This ID is used to pick which view receives
+   * The view id used for all the views we create. It's OK to have all child views have the same ID. This ID is used to pick which view receives
    * focus when a view hierarchy is saved / restore
    */
   private static final   int    VIEW_ID                 = 1;
-  private ProgressBar  progressBar;
   private ViewSwitcher viewSwitcher;
   private DayView      view;
   private Animation    inAnimationForward;
@@ -51,11 +48,11 @@ public class DayFragment extends Fragment implements EventHandler, ViewFactory {
   private EventLoader  eventLoader;
   private Time         selectedDay;
   private int          numDays;
-  private final Runnable mTZUpdater = new Runnable() {
+  private final Runnable timeZoneUpdater = new Runnable() {
     @Override
     public void run() {
       if (DayFragment.this.isAdded()) {
-        selectedDay.timezone = Utils.getTimeZone(getActivity().getApplicationContext(), mTZUpdater);
+        selectedDay.timezone = Utils.getTimeZone(getActivity().getApplicationContext(), this);
         selectedDay.normalize(true);
       }
     }
@@ -99,14 +96,14 @@ public class DayFragment extends Fragment implements EventHandler, ViewFactory {
     outAnimationBackward = AnimationUtils.loadAnimation(context, R.anim.slide_right_out);
 
     eventLoader = new EventLoader(context);
-    view = new DayView(context, CalendarController.getInstance(context), viewSwitcher, eventLoader, numDays);
+    view = new DayView(context, new CalendarController(context), viewSwitcher, eventLoader, numDays);
     view.setId(VIEW_ID);
     view.setLayoutParams(new ViewSwitcher.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
   }
 
   @Override
   public View makeView() {
-    mTZUpdater.run();
+    timeZoneUpdater.run();
     view.setSelected(selectedDay, false, false);
     return view;
   }
@@ -115,7 +112,7 @@ public class DayFragment extends Fragment implements EventHandler, ViewFactory {
   public void onResume() {
     super.onResume();
     eventLoader.startBackgroundThread();
-    mTZUpdater.run();
+    timeZoneUpdater.run();
     eventsChanged();
     DayView view = (DayView) viewSwitcher.getCurrentView();
     view.handleOnResume();
@@ -148,16 +145,6 @@ public class DayFragment extends Fragment implements EventHandler, ViewFactory {
     // Stop events cross-fade animation
     view.stopEventsAnimation();
     ((DayView) viewSwitcher.getNextView()).stopEventsAnimation();
-  }
-
-  private void startProgressSpinner() {
-    // start the progress spinner
-    progressBar.setVisibility(View.VISIBLE);
-  }
-
-  private void stopProgressSpinner() {
-    // stop the progress spinner
-    progressBar.setVisibility(View.GONE);
   }
 
   private void goTo(Time goToTime, boolean ignoreTime, boolean animateToday) {
@@ -200,9 +187,7 @@ public class DayFragment extends Fragment implements EventHandler, ViewFactory {
   }
 
   /**
-   * Returns the selected time in milliseconds. The milliseconds are measured
-   * in UTC milliseconds from the epoch and uniquely specifies any selectable
-   * time.
+   * Returns the selected time in milliseconds. The milliseconds are measured in UTC milliseconds from the epoch and uniquely specifies any selectable time.
    *
    * @return the selected time in milliseconds
    */
@@ -219,15 +204,14 @@ public class DayFragment extends Fragment implements EventHandler, ViewFactory {
 
   @Override
   public void eventsChanged() {
-    if (viewSwitcher == null) {
-      return;
-    }
-    DayView view = (DayView) viewSwitcher.getCurrentView();
-    view.clearCachedEvents();
-    view.reloadEvents();
+    if (viewSwitcher != null) {
+      DayView view = (DayView) viewSwitcher.getCurrentView();
+      view.clearCachedEvents();
+      view.reloadEvents();
 
-    view = (DayView) viewSwitcher.getNextView();
-    view.clearCachedEvents();
+      view = (DayView) viewSwitcher.getNextView();
+      view.clearCachedEvents();
+    }
   }
 
   private Event getSelectedEvent() {

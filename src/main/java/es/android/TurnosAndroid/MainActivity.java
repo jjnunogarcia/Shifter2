@@ -1,9 +1,9 @@
 package es.android.TurnosAndroid;
 
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentTransaction;
 import android.view.Menu;
 
 public class MainActivity extends FragmentActivity implements EventHandler {
@@ -21,16 +21,14 @@ public class MainActivity extends FragmentActivity implements EventHandler {
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     new ImportEntries(getApplicationContext()).execute();
-    calendarController = CalendarController.getInstance(getApplicationContext());
+    calendarController = new CalendarController(getApplicationContext());
     setContentView(R.layout.cal_layout);
 
     FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
     // TODO pass arguments in bundle
-    monthFrag = new MonthByWeekFragment(System.currentTimeMillis(), false);
+    monthFrag = new MonthFragment(System.currentTimeMillis(), false);
     ft.replace(R.id.cal_frame, monthFrag).commit();
-
-    calendarController.registerEventHandler(R.id.cal_frame, (EventHandler) monthFrag);
-    calendarController.registerFirstEventHandler(0, this);
+    calendarController.registerEventHandler(this);
   }
 
   @Override

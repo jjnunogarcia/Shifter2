@@ -43,8 +43,7 @@ import java.util.Locale;
  * </p>
  */
 public class SimpleWeeksAdapter extends BaseAdapter implements OnTouchListener {
-
-  private static final String TAG = "MonthByWeek";
+  private static final String TAG = SimpleWeeksAdapter.class.getSimpleName();
 
   /**
    * The number of weeks to display at a time.
@@ -59,69 +58,60 @@ public class SimpleWeeksAdapter extends BaseAdapter implements OnTouchListener {
    */
   public static final String WEEK_PARAMS_SHOW_WEEK     = "week_numbers";
   /**
-   * Which day the week should start on. {@link android.text.format.Time#SUNDAY} through
-   * {@link android.text.format.Time#SATURDAY}.
+   * Which day the week should start on. {@link android.text.format.Time#SUNDAY} through {@link android.text.format.Time#SATURDAY}.
    */
   public static final String WEEK_PARAMS_WEEK_START    = "week_start";
   /**
    * The Julian day to highlight as selected.
    */
   public static final String WEEK_PARAMS_JULIAN_DAY    = "selected_day";
-  /**
-   * How many days of the week to display [1-7].
-   */
   public static final String WEEK_PARAMS_DAYS_PER_WEEK = "days_per_week";
 
-  protected static final int WEEK_COUNT             = 3497 - 0;
-  protected static       int DEFAULT_NUM_WEEKS      = 6;
-  protected static       int DEFAULT_MONTH_FOCUS    = 0;
-  protected static       int DEFAULT_DAYS_PER_WEEK  = 7;
-  protected static       int DEFAULT_WEEK_HEIGHT    = 32;
-  protected static       int WEEK_7_OVERHANG_HEIGHT = 7;
+  protected static int WEEK_COUNT             = 3497;
+  protected static int DEFAULT_NUM_WEEKS      = 6;
+  protected static int DEFAULT_MONTH_FOCUS    = 0;
+  protected static int DEFAULT_DAYS_PER_WEEK  = 7;
+  protected static int DEFAULT_WEEK_HEIGHT    = 32;
+  protected static int WEEK_7_OVERHANG_HEIGHT = 7;
 
-  protected static float mScale = 0;
-  protected Context mContext;
-  // The day to highlight as selected
-  protected Time    mSelectedDay;
-  // The week since 1970 that the selected day is in
-  protected int     mSelectedWeek;
-  // When the week starts; numbered like Time.<WEEKDAY> (e.g. SUNDAY=0).
-  protected int     mFirstDayOfWeek;
-  protected boolean mShowWeekNumber = false;
-  protected GestureDetector mGestureDetector;
-  protected int mNumWeeks    = DEFAULT_NUM_WEEKS;
-  protected int mDaysPerWeek = DEFAULT_DAYS_PER_WEEK;
-  protected int mFocusMonth  = DEFAULT_MONTH_FOCUS;
+  protected Context         context;
+  protected Time            selectedDay;
+  protected int             selectedWeek;
+  protected int             firstDayOfWeek;
+  protected boolean         showWeekNumber;
+  protected GestureDetector gestureDetector;
+  protected int             numWeeks;
+  protected int             daysPerWeek;
+  protected int             focusMonth;
+  protected ListView        listView;
 
   public SimpleWeeksAdapter(Context context, HashMap<String, Integer> params) {
-    mContext = context;
+    this.context = context;
 
     // Get default week start based on locale, subtracting one for use with android Time.
     Calendar cal = Calendar.getInstance(Locale.getDefault());
-    mFirstDayOfWeek = cal.getFirstDayOfWeek() - 1;
+    firstDayOfWeek = cal.getFirstDayOfWeek() - 1;
 
-    if (mScale == 0) {
-      mScale = context.getResources().getDisplayMetrics().density;
-      if (mScale != 1) {
-        WEEK_7_OVERHANG_HEIGHT *= mScale;
-      }
+    float scale = context.getResources().getDisplayMetrics().density;
+    if (scale != 1) {
+      WEEK_7_OVERHANG_HEIGHT *= scale;
     }
     init();
     updateParams(params);
   }
 
-  /**
-   * Set up the gesture detector and selected time
-   */
   protected void init() {
-    mGestureDetector = new GestureDetector(mContext, new CalendarGestureListener());
-    mSelectedDay = new Time();
-    mSelectedDay.setToNow();
+    gestureDetector = new GestureDetector(context, new CalendarGestureListener());
+    selectedDay = new Time();
+    selectedDay.setToNow();
+    showWeekNumber = false;
+    numWeeks = DEFAULT_NUM_WEEKS;
+    daysPerWeek = DEFAULT_DAYS_PER_WEEK;
+    focusMonth = DEFAULT_MONTH_FOCUS;
   }
 
   /**
-   * Parse the parameters and set any necessary fields. See
-   * {@link #WEEK_PARAMS_NUM_WEEKS} for parameter details.
+   * Parse the parameters and set any necessary fields. See {@link #WEEK_PARAMS_NUM_WEEKS} for parameter details.
    *
    * @param params A list of parameters for this adapter
    */
@@ -131,26 +121,26 @@ public class SimpleWeeksAdapter extends BaseAdapter implements OnTouchListener {
       return;
     }
     if (params.containsKey(WEEK_PARAMS_FOCUS_MONTH)) {
-      mFocusMonth = params.get(WEEK_PARAMS_FOCUS_MONTH);
+      focusMonth = params.get(WEEK_PARAMS_FOCUS_MONTH);
     }
     if (params.containsKey(WEEK_PARAMS_FOCUS_MONTH)) {
-      mNumWeeks = params.get(WEEK_PARAMS_NUM_WEEKS);
+      numWeeks = params.get(WEEK_PARAMS_NUM_WEEKS);
     }
     if (params.containsKey(WEEK_PARAMS_SHOW_WEEK)) {
-      mShowWeekNumber = params.get(WEEK_PARAMS_SHOW_WEEK) != 0;
+      showWeekNumber = params.get(WEEK_PARAMS_SHOW_WEEK) != 0;
     }
     if (params.containsKey(WEEK_PARAMS_WEEK_START)) {
-      mFirstDayOfWeek = params.get(WEEK_PARAMS_WEEK_START);
+      firstDayOfWeek = params.get(WEEK_PARAMS_WEEK_START);
     }
     if (params.containsKey(WEEK_PARAMS_JULIAN_DAY)) {
       int julianDay = params.get(WEEK_PARAMS_JULIAN_DAY);
-      mSelectedDay.setJulianDay(julianDay);
-      mSelectedWeek = getWeeksSinceEpochFromJulianDay(julianDay, mFirstDayOfWeek);
+      selectedDay.setJulianDay(julianDay);
+      selectedWeek = getWeeksSinceEpochFromJulianDay(julianDay, firstDayOfWeek);
     }
     if (params.containsKey(WEEK_PARAMS_DAYS_PER_WEEK)) {
-      mDaysPerWeek = params.get(WEEK_PARAMS_DAYS_PER_WEEK);
+      daysPerWeek = params.get(WEEK_PARAMS_DAYS_PER_WEEK);
     }
-    refresh();
+    notifyDataSetChanged();
   }
 
   /**
@@ -159,10 +149,9 @@ public class SimpleWeeksAdapter extends BaseAdapter implements OnTouchListener {
    * @param selectedTime The time to highlight
    */
   public void setSelectedDay(Time selectedTime) {
-    mSelectedDay.set(selectedTime);
-    long millis = mSelectedDay.normalize(true);
-    mSelectedWeek = getWeeksSinceEpochFromJulianDay(
-        Time.getJulianDay(millis, mSelectedDay.gmtoff), mFirstDayOfWeek);
+    selectedDay.set(selectedTime);
+    long millis = selectedDay.normalize(true);
+    selectedWeek = getWeeksSinceEpochFromJulianDay(Time.getJulianDay(millis, selectedDay.gmtoff), firstDayOfWeek);
     notifyDataSetChanged();
   }
 
@@ -175,20 +164,8 @@ public class SimpleWeeksAdapter extends BaseAdapter implements OnTouchListener {
     return (julianDay - refDay) / 7;
   }
 
-  /**
-   * Returns the currently highlighted day
-   *
-   * @return
-   */
   public Time getSelectedDay() {
-    return mSelectedDay;
-  }
-
-  /**
-   * updates any config options that may have changed and refreshes the view
-   */
-  protected void refresh() {
-    notifyDataSetChanged();
+    return selectedDay;
   }
 
   @Override
@@ -206,7 +183,6 @@ public class SimpleWeeksAdapter extends BaseAdapter implements OnTouchListener {
     return position;
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public View getView(int position, View convertView, ViewGroup parent) {
     SimpleWeekView v;
@@ -216,7 +192,7 @@ public class SimpleWeeksAdapter extends BaseAdapter implements OnTouchListener {
       // We store the drawing parameters in the view so it can be recycled
       drawingParams = (HashMap<String, Integer>) v.getTag();
     } else {
-      v = new SimpleWeekView(mContext);
+      v = new SimpleWeekView(context);
       // Set up the new view
       LayoutParams params = new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
       v.setLayoutParams(params);
@@ -229,19 +205,19 @@ public class SimpleWeeksAdapter extends BaseAdapter implements OnTouchListener {
     drawingParams.clear();
 
     int selectedDay = -1;
-    if (mSelectedWeek == position) {
-      selectedDay = mSelectedDay.weekDay;
+    if (selectedWeek == position) {
+      selectedDay = this.selectedDay.weekDay;
     }
 
     // pass in all the view parameters
-    drawingParams.put(SimpleWeekView.VIEW_PARAMS_HEIGHT, (parent.getHeight() - WEEK_7_OVERHANG_HEIGHT) / mNumWeeks);
+    drawingParams.put(SimpleWeekView.VIEW_PARAMS_HEIGHT, (parent.getHeight() - WEEK_7_OVERHANG_HEIGHT) / numWeeks);
     drawingParams.put(SimpleWeekView.VIEW_PARAMS_SELECTED_DAY, selectedDay);
-    drawingParams.put(SimpleWeekView.VIEW_PARAMS_SHOW_WK_NUM, mShowWeekNumber ? 1 : 0);
-    drawingParams.put(SimpleWeekView.VIEW_PARAMS_WEEK_START, mFirstDayOfWeek);
-    drawingParams.put(SimpleWeekView.VIEW_PARAMS_NUM_DAYS, mDaysPerWeek);
+    drawingParams.put(SimpleWeekView.VIEW_PARAMS_SHOW_WK_NUM, showWeekNumber ? 1 : 0);
+    drawingParams.put(SimpleWeekView.VIEW_PARAMS_WEEK_START, firstDayOfWeek);
+    drawingParams.put(SimpleWeekView.VIEW_PARAMS_NUM_DAYS, daysPerWeek);
     drawingParams.put(SimpleWeekView.VIEW_PARAMS_WEEK, position);
-    drawingParams.put(SimpleWeekView.VIEW_PARAMS_FOCUS_MONTH, mFocusMonth);
-    v.setWeekParams(drawingParams, mSelectedDay.timezone);
+    drawingParams.put(SimpleWeekView.VIEW_PARAMS_FOCUS_MONTH, focusMonth);
+    v.setWeekParams(drawingParams, this.selectedDay.timezone);
     v.invalidate();
 
     return v;
@@ -253,13 +229,13 @@ public class SimpleWeeksAdapter extends BaseAdapter implements OnTouchListener {
    * @param month The month to show as in focus [0-11]
    */
   public void updateFocusMonth(int month) {
-    mFocusMonth = month;
+    focusMonth = month;
     notifyDataSetChanged();
   }
 
   @Override
   public boolean onTouch(View v, MotionEvent event) {
-    if (mGestureDetector.onTouchEvent(event)) {
+    if (gestureDetector.onTouchEvent(event)) {
       SimpleWeekView view = (SimpleWeekView) v;
       Time day = ((SimpleWeekView) v).getDayFromLocation(event.getX());
       if (Log.isLoggable(TAG, Log.DEBUG)) {
@@ -279,9 +255,9 @@ public class SimpleWeeksAdapter extends BaseAdapter implements OnTouchListener {
    * @param day The day that was tapped
    */
   protected void onDayTapped(Time day) {
-    day.hour = mSelectedDay.hour;
-    day.minute = mSelectedDay.minute;
-    day.second = mSelectedDay.second;
+    day.hour = selectedDay.hour;
+    day.minute = selectedDay.minute;
+    day.second = selectedDay.second;
     setSelectedDay(day);
   }
 
@@ -296,9 +272,7 @@ public class SimpleWeeksAdapter extends BaseAdapter implements OnTouchListener {
     }
   }
 
-  ListView mListView;
-
   public void setListView(ListView lv) {
-    mListView = lv;
+    listView = lv;
   }
 }

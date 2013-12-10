@@ -32,9 +32,9 @@ public class TimeZoneUtils {
   private volatile static boolean mUseHomeTZ = false;
   private volatile static String  mHomeTZ    = Time.getCurrentTimezone();
 
-  private static HashSet<Runnable> mTZCallbacks = new HashSet<Runnable>();
-  private static int               mToken       = 1;
-  private static AsyncTZHandler mHandler;
+  private static HashSet<Runnable> timeZoneCallbacks = new HashSet<Runnable>();
+  private static int               mToken            = 1;
+  private static AsyncTimeZoneHandler asyncTimeZoneHandler;
 
   // The name of the shared preferences file. This name must be maintained for historical
   // reasons, as it's what PreferenceManager assigned the first time the file was created.
@@ -52,14 +52,14 @@ public class TimeZoneUtils {
   /**
    * This is a helper class for handling the async queries and updates for the time zone settings in Calendar.
    */
-  private class AsyncTZHandler extends AsyncQueryHandler {
-    public AsyncTZHandler(ContentResolver cr) {
+  private class AsyncTimeZoneHandler extends AsyncQueryHandler {
+    public AsyncTimeZoneHandler(ContentResolver cr) {
       super(cr);
     }
 
     @Override
     protected void onQueryComplete(int token, Object cookie, Cursor cursor) {
-      synchronized (mTZCallbacks) {
+      synchronized (timeZoneCallbacks) {
         if (cursor == null) {
           mTZQueryInProgress = false;
           mFirstTZRequest = true;
@@ -96,12 +96,12 @@ public class TimeZoneUtils {
         }
 
         mTZQueryInProgress = false;
-        for (Runnable callback : mTZCallbacks) {
+        for (Runnable callback : timeZoneCallbacks) {
           if (callback != null) {
             callback.run();
           }
         }
-        mTZCallbacks.clear();
+        timeZoneCallbacks.clear();
       }
     }
   }
@@ -167,7 +167,7 @@ public class TimeZoneUtils {
     }
 
     boolean updatePrefs = false;
-    synchronized (mTZCallbacks) {
+    synchronized (timeZoneCallbacks) {
       if (CalendarContract.CalendarCache.TIMEZONE_TYPE_AUTO.equals(timeZone)) {
         if (mUseHomeTZ) {
           updatePrefs = true;
@@ -190,11 +190,11 @@ public class TimeZoneUtils {
 
       // Update the db
       ContentValues values = new ContentValues();
-      if (mHandler != null) {
-        mHandler.cancelOperation(mToken);
+      if (asyncTimeZoneHandler != null) {
+        asyncTimeZoneHandler.cancelOperation(mToken);
       }
 
-      mHandler = new AsyncTZHandler(context.getContentResolver());
+      asyncTimeZoneHandler = new AsyncTimeZoneHandler(context.getContentResolver());
 
       // skip 0 so query can use it
       if (++mToken == 0) {
@@ -202,15 +202,14 @@ public class TimeZoneUtils {
       }
 
       // Write the use home tz setting
-      values.put(CalendarContract.CalendarCache.VALUE, mUseHomeTZ ? CalendarContract.CalendarCache.TIMEZONE_TYPE_HOME
-                                                                  : CalendarContract.CalendarCache.TIMEZONE_TYPE_AUTO);
-      mHandler.startUpdate(mToken, null, CalendarContract.CalendarCache.URI, values, "key=?", TIMEZONE_TYPE_ARGS);
+      values.put(CalendarContract.CalendarCache.VALUE, mUseHomeTZ ? CalendarContract.CalendarCache.TIMEZONE_TYPE_HOME : CalendarContract.CalendarCache.TIMEZONE_TYPE_AUTO);
+      asyncTimeZoneHandler.startUpdate(mToken, null, CalendarContract.CalendarCache.URI, values, "key=?", TIMEZONE_TYPE_ARGS);
 
       // If using a home tz write it to the db
       if (mUseHomeTZ) {
         ContentValues values2 = new ContentValues();
         values2.put(CalendarContract.CalendarCache.VALUE, mHomeTZ);
-        mHandler.startUpdate(mToken, null, CalendarContract.CalendarCache.URI, values2, "key=?", TIMEZONE_INSTANCES_ARGS);
+        asyncTimeZoneHandler.startUpdate(mToken, null, CalendarContract.CalendarCache.URI, values2, "key=?", TIMEZONE_INSTANCES_ARGS);
       }
     }
   }
@@ -230,7 +229,7 @@ public class TimeZoneUtils {
    * @return The string value representing the time zone Calendar should display
    */
   public String getTimeZone(Context context, Runnable callback) {
-    synchronized (mTZCallbacks) {
+    synchronized (timeZoneCallbacks) {
       if (mFirstTZRequest) {
         mTZQueryInProgress = true;
         mFirstTZRequest = false;
@@ -239,40 +238,20 @@ public class TimeZoneUtils {
         mUseHomeTZ = prefs.getBoolean(KEY_HOME_TZ_ENABLED, false);
         mHomeTZ = prefs.getString(KEY_HOME_TZ, Time.getCurrentTimezone());
 
-        // When the async query returns it should synchronize on mTZCallbacks, update mUseHomeTZ, mHomeTZ, and the
-        // preferences, set mTZQueryInProgress to false, and call all the runnables in mTZCallbacks.
-        if (mHandler == null) {
-          mHandler = new AsyncTZHandler(context.getContentResolver());
+        // When the async query returns it should synchronize on timeZoneCallbacks, update mUseHomeTZ, mHomeTZ, and the
+        // preferences, set mTZQueryInProgress to false, and call all the runnables in timeZoneCallbacks.
+        if (asyncTimeZoneHandler == null) {
+          asyncTimeZoneHandler = new AsyncTimeZoneHandler(context.getContentResolver());
         }
-        mHandler.startQuery(0, context, CalendarContract.CalendarCache.URI, CALENDAR_CACHE_POJECTION, null, null, null);
+        asyncTimeZoneHandler.startQuery(0, context, CalendarContract.CalendarCache.URI, CALENDAR_CACHE_POJECTION, null, null, null);
       }
 
       if (mTZQueryInProgress) {
-        mTZCallbacks.add(callback);
+        timeZoneCallbacks.add(callback);
       }
     }
 
     return mUseHomeTZ ? mHomeTZ : Time.getCurrentTimezone();
   }
 
-  /**
-   * Forces a query of the database to check for changes to the time zone.
-   * This should be called if another app may have modified the db. If a
-   * query is already in progress the callback will be added to the list
-   * of callbacks to be called when it returns.
-   *
-   * @param context  The calling activity
-   * @param callback The runnable that should execute if a query returns
-   *                 new values
-   */
-  public void forceDBRequery(Context context, Runnable callback) {
-    synchronized (mTZCallbacks) {
-      if (mTZQueryInProgress) {
-        mTZCallbacks.add(callback);
-        return;
-      }
-      mFirstTZRequest = true;
-      getTimeZone(context, callback);
-    }
-  }
 }

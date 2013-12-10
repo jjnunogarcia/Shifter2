@@ -61,28 +61,23 @@ public class SimpleWeekView extends View {
    */
   public static final String VIEW_PARAMS_HEIGHT       = "height";
   /**
-   * This specifies the position (or weeks since the epoch) of this week,
-   * calculated using {@link Utils#getWeeksSinceEpochFromJulianDay}
+   * This specifies the position (or weeks since the epoch) of this week, calculated using {@link Utils#getWeeksSinceEpochFromJulianDay}
    */
   public static final String VIEW_PARAMS_WEEK         = "week";
   /**
-   * This sets one of the days in this view as selected {@link android.text.format.Time#SUNDAY}
-   * through {@link android.text.format.Time#SATURDAY}.
+   * This sets one of the days in this view as selected {@link android.text.format.Time#SUNDAY} through {@link android.text.format.Time#SATURDAY}.
    */
   public static final String VIEW_PARAMS_SELECTED_DAY = "selected_day";
   /**
-   * Which day the week should start on. {@link android.text.format.Time#SUNDAY} through
-   * {@link android.text.format.Time#SATURDAY}.
+   * Which day the week should start on. {@link android.text.format.Time#SUNDAY} through {@link android.text.format.Time#SATURDAY}.
    */
   public static final String VIEW_PARAMS_WEEK_START   = "week_start";
   /**
-   * How many days to display at a time. Days will be displayed starting with
-   * {@link #mWeekStart}.
+   * How many days to display at a time. Days will be displayed starting with {@link #mWeekStart}.
    */
   public static final String VIEW_PARAMS_NUM_DAYS     = "num_days";
   /**
-   * Which month is currently in focus, as defined by {@link android.text.format.Time#month}
-   * [0-11].
+   * Which month is currently in focus, as defined by {@link android.text.format.Time#month} [0-11].
    */
   public static final String VIEW_PARAMS_FOCUS_MONTH  = "focus_month";
   /**
@@ -167,6 +162,7 @@ public class SimpleWeekView extends View {
   protected int mDaySeparatorColor;
   protected int mTodayOutlineColor;
   protected int mWeekNumColor;
+  protected Time mLastHoverTime = null;
 
   public SimpleWeekView(Context context) {
     super(context);
@@ -281,9 +277,7 @@ public class SimpleWeekView extends View {
     mHasToday = false;
     mToday = -1;
 
-    int focusMonth = params.containsKey(VIEW_PARAMS_FOCUS_MONTH) ? params.get(
-        VIEW_PARAMS_FOCUS_MONTH)
-                                                                 : DEFAULT_FOCUS_MONTH;
+    int focusMonth = params.containsKey(VIEW_PARAMS_FOCUS_MONTH) ? params.get(VIEW_PARAMS_FOCUS_MONTH) : DEFAULT_FOCUS_MONTH;
 
     for (; i < mNumCells; i++) {
       if (time.monthDay == 1) {
@@ -298,8 +292,7 @@ public class SimpleWeekView extends View {
       mDayNumbers[i] = Integer.toString(time.monthDay++);
       time.normalize(true);
     }
-    // We do one extra add at the end of the loop, if that pushed us to a
-    // new month undo it
+    // We do one extra add at the end of the loop, if that pushed us to a new month undo it
     if (time.monthDay == 1) {
       time.monthDay--;
       time.normalize(true);
@@ -310,8 +303,7 @@ public class SimpleWeekView extends View {
   }
 
   /**
-   * Sets up the text and style properties for painting. Override this if you
-   * want to use a different paint.
+   * Sets up the text and style properties for painting. Override this if you want to use a different paint.
    */
   protected void initView() {
     p.setFakeBoldText(false);
@@ -328,40 +320,23 @@ public class SimpleWeekView extends View {
     mMonthNumPaint.setTextAlign(Align.CENTER);
   }
 
-  /**
-   * Returns the month of the first day in this week
-   *
-   * @return The month the first day of this view is in
-   */
   public int getFirstMonth() {
     return mFirstMonth;
   }
 
-  /**
-   * Returns the month of the last day in this week
-   *
-   * @return The month the last day of this view is in
-   */
   public int getLastMonth() {
     return mLastMonth;
   }
 
-  /**
-   * Returns the julian day of the first day in this view.
-   *
-   * @return The julian day of the first day in the view.
-   */
   public int getFirstJulianDay() {
     return mFirstJulianDay;
   }
 
   /**
-   * Calculates the day that the given x position is in, accounting for week
-   * number. Returns a Time referencing that day or null if
+   * Calculates the day that the given x position is in, accounting for week number. Returns a Time referencing that day or null if
    *
    * @param x The x position of the touch event
-   * @return A time object for the tapped day or null if the position wasn't
-   *         in a day
+   * @return A time object for the tapped day or null if the position wasn't in a day
    */
   public Time getDayFromLocation(float x) {
     int dayStart = mShowWeekNum ? (mWidth - mPadding * 2) / mNumCells + mPadding : mPadding;
@@ -419,8 +394,7 @@ public class SimpleWeekView extends View {
   }
 
   /**
-   * Draws the week and month day numbers for this week. Override this method
-   * if you need different placement.
+   * Draws the week and month day numbers for this week. Override this method if you need different placement.
    *
    * @param canvas The canvas to draw on
    */
@@ -463,8 +437,7 @@ public class SimpleWeekView extends View {
   }
 
   /**
-   * Draws a horizontal line for separating the weeks. Override this method if
-   * you want custom separators.
+   * Draws a horizontal line for separating the weeks. Override this method if you want custom separators.
    *
    * @param canvas The canvas to draw on
    */
@@ -506,10 +479,8 @@ public class SimpleWeekView extends View {
       if (mShowWeekNum) {
         selectedPosition++;
       }
-      mSelectedLeft = selectedPosition * (mWidth - mPadding * 2) / mNumCells
-                      + mPadding;
-      mSelectedRight = (selectedPosition + 1) * (mWidth - mPadding * 2) / mNumCells
-                       + mPadding;
+      mSelectedLeft = selectedPosition * (mWidth - mPadding * 2) / mNumCells + mPadding;
+      mSelectedRight = (selectedPosition + 1) * (mWidth - mPadding * 2) / mNumCells + mPadding;
     }
   }
 
@@ -521,21 +492,17 @@ public class SimpleWeekView extends View {
   @Override
   public boolean onHoverEvent(MotionEvent event) {
     Context context = getContext();
-    // only send accessibility events if accessibility and exploration are
-    // on.
+    // only send accessibility events if accessibility and exploration are on.
     AccessibilityManager am = (AccessibilityManager) context.getSystemService(Context.ACCESSIBILITY_SERVICE);
     if (!am.isEnabled() || !am.isTouchExplorationEnabled()) {
       return super.onHoverEvent(event);
     }
     if (event.getAction() != MotionEvent.ACTION_HOVER_EXIT) {
       Time hover = getDayFromLocation(event.getX());
-      if (hover != null
-          && (mLastHoverTime == null || Time.compare(hover, mLastHoverTime) != 0)) {
+      if (hover != null && (mLastHoverTime == null || Time.compare(hover, mLastHoverTime) != 0)) {
         Long millis = hover.toMillis(true);
-        String date = formatDateRange(context, millis, millis,
-                                      DateUtils.FORMAT_SHOW_DATE);
-        AccessibilityEvent accessEvent =
-            AccessibilityEvent.obtain(AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED);
+        String date = formatDateRange(context, millis, millis, DateUtils.FORMAT_SHOW_DATE);
+        AccessibilityEvent accessEvent = AccessibilityEvent.obtain(AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED);
         accessEvent.getText().add(date);
         sendAccessibilityEventUnchecked(accessEvent);
         mLastHoverTime = hover;
@@ -544,22 +511,18 @@ public class SimpleWeekView extends View {
     return true;
   }
 
-  public String formatDateRange(Context context, long startMillis,
-                                long endMillis, int flags) {
+  public String formatDateRange(Context context, long startMillis, long endMillis, int flags) {
     String date;
-    String tz;
+    String timeZone;
     if ((flags & DateUtils.FORMAT_UTC) != 0) {
-      tz = Time.TIMEZONE_UTC;
+      timeZone = Time.TIMEZONE_UTC;
     } else {
-      tz = Time.getCurrentTimezone();
+      timeZone = Time.getCurrentTimezone();
     }
     synchronized (mSB) {
       mSB.setLength(0);
-      date = DateUtils.formatDateRange(context, mF, startMillis, endMillis, flags,
-                                       tz).toString();
+      date = DateUtils.formatDateRange(context, mF, startMillis, endMillis, flags, timeZone).toString();
     }
     return date;
   }
-
-  Time mLastHoverTime = null;
 }

@@ -26,7 +26,7 @@ import android.widget.AbsListView.LayoutParams;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class MonthByWeekAdapter extends SimpleWeeksAdapter {
+public class MonthAdapter extends SimpleWeeksAdapter {
   private static final String TAG = "MonthByWeek";
 
   public static final  String WEEK_PARAMS_IS_MINI   = "mini_month";
@@ -34,9 +34,9 @@ public class MonthByWeekAdapter extends SimpleWeeksAdapter {
   private static final long   ANIMATE_TODAY_TIMEOUT = 1000;
 
   protected CalendarController controller;
-  protected String             mHomeTimeZone;
+  protected String             homeTimeZone;
   protected Time               mTempTime;
-  protected Time               mToday;
+  protected Time               today;
   protected int                mFirstJulianDay;
   protected int                mQueryDays;
   //    protected boolean mIsMiniMonth = false;
@@ -63,7 +63,7 @@ public class MonthByWeekAdapter extends SimpleWeeksAdapter {
   // Minimal distance to move the finger in order to cancel the click animation
   private static float mMovedPixelToCancel;
 
-  public MonthByWeekAdapter(Context context, HashMap<String, Integer> params) {
+  public MonthAdapter(Context context, HashMap<String, Integer> params) {
     super(context, params);
     if (params.containsKey(WEEK_PARAMS_IS_MINI)) {
 //            mIsMiniMonth = params.get(WEEK_PARAMS_IS_MINI) != 0;
@@ -84,28 +84,28 @@ public class MonthByWeekAdapter extends SimpleWeeksAdapter {
   @Override
   protected void init() {
     super.init();
-    controller = CalendarController.getInstance(mContext);
-    mHomeTimeZone = Utils.getTimeZone(mContext, null);
-    mSelectedDay.switchTimezone(mHomeTimeZone);
-    mToday = new Time(mHomeTimeZone);
-    mToday.setToNow();
-    mTempTime = new Time(mHomeTimeZone);
+    controller = new CalendarController(context);
+    homeTimeZone = Utils.getTimeZone(context, null);
+    selectedDay.switchTimezone(homeTimeZone);
+    today = new Time(homeTimeZone);
+    today.setToNow();
+    mTempTime = new Time(homeTimeZone);
   }
 
   private void updateTimeZones() {
-    mSelectedDay.timezone = mHomeTimeZone;
-    mSelectedDay.normalize(true);
-    mToday.timezone = mHomeTimeZone;
-    mToday.setToNow();
-    mTempTime.switchTimezone(mHomeTimeZone);
+    selectedDay.timezone = homeTimeZone;
+    selectedDay.normalize(true);
+    today.timezone = homeTimeZone;
+    today.setToNow();
+    mTempTime.switchTimezone(homeTimeZone);
   }
 
   @Override
   public void setSelectedDay(Time selectedTime) {
-    mSelectedDay.set(selectedTime);
-    long millis = mSelectedDay.normalize(true);
-    mSelectedWeek = Utils.getWeeksSinceEpochFromJulianDay(
-        Time.getJulianDay(millis, mSelectedDay.gmtoff), mFirstDayOfWeek);
+    selectedDay.set(selectedTime);
+    long millis = selectedDay.normalize(true);
+    selectedWeek = Utils.getWeeksSinceEpochFromJulianDay(
+        Time.getJulianDay(millis, selectedDay.gmtoff), firstDayOfWeek);
     notifyDataSetChanged();
   }
 
@@ -165,7 +165,6 @@ public class MonthByWeekAdapter extends SimpleWeeksAdapter {
     refresh();
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public View getView(int position, View convertView, ViewGroup parent) {
 //        if (mIsMiniMonth) {
@@ -180,7 +179,7 @@ public class MonthByWeekAdapter extends SimpleWeeksAdapter {
       v = (MonthWeekEventsView) convertView;
       // Checking updateToday uses the current params instead of the new
       // params, so this is assuming the view is relatively stable
-      if (mAnimateToday && v.updateToday(mSelectedDay.timezone)) {
+      if (mAnimateToday && v.updateToday(selectedDay.timezone)) {
         long currentTime = System.currentTimeMillis();
         // If it's been too long since we tried to start the animation
         // don't show it. This can happen if the user stops a scroll
@@ -192,13 +191,13 @@ public class MonthByWeekAdapter extends SimpleWeeksAdapter {
           isAnimatingToday = true;
           // There is a bug that causes invalidates to not work some
           // of the time unless we recreate the view.
-          v = new MonthWeekEventsView(mContext);
+          v = new MonthWeekEventsView(context);
         }
       } else {
         drawingParams = (HashMap<String, Integer>) v.getTag();
       }
     } else {
-      v = new MonthWeekEventsView(mContext);
+      v = new MonthWeekEventsView(context);
     }
 
     if (drawingParams == null) {
@@ -212,17 +211,17 @@ public class MonthByWeekAdapter extends SimpleWeeksAdapter {
     v.setOnTouchListener(this);
 
     int selectedDay = -1;
-    if (mSelectedWeek == position) {
-      selectedDay = mSelectedDay.weekDay;
+    if (selectedWeek == position) {
+      selectedDay = this.selectedDay.weekDay;
     }
 
-    drawingParams.put(SimpleWeekView.VIEW_PARAMS_HEIGHT, (parent.getHeight() + parent.getTop()) / mNumWeeks);
+    drawingParams.put(SimpleWeekView.VIEW_PARAMS_HEIGHT, (parent.getHeight() + parent.getTop()) / numWeeks);
     drawingParams.put(SimpleWeekView.VIEW_PARAMS_SELECTED_DAY, selectedDay);
-    drawingParams.put(SimpleWeekView.VIEW_PARAMS_SHOW_WK_NUM, mShowWeekNumber ? 1 : 0);
-    drawingParams.put(SimpleWeekView.VIEW_PARAMS_WEEK_START, mFirstDayOfWeek);
-    drawingParams.put(SimpleWeekView.VIEW_PARAMS_NUM_DAYS, mDaysPerWeek);
+    drawingParams.put(SimpleWeekView.VIEW_PARAMS_SHOW_WK_NUM, showWeekNumber ? 1 : 0);
+    drawingParams.put(SimpleWeekView.VIEW_PARAMS_WEEK_START, firstDayOfWeek);
+    drawingParams.put(SimpleWeekView.VIEW_PARAMS_NUM_DAYS, daysPerWeek);
     drawingParams.put(SimpleWeekView.VIEW_PARAMS_WEEK, position);
-    drawingParams.put(SimpleWeekView.VIEW_PARAMS_FOCUS_MONTH, mFocusMonth);
+    drawingParams.put(SimpleWeekView.VIEW_PARAMS_FOCUS_MONTH, focusMonth);
     drawingParams.put(MonthWeekEventsView.VIEW_PARAMS_ORIENTATION, mOrientation);
 
     if (isAnimatingToday) {
@@ -230,7 +229,7 @@ public class MonthByWeekAdapter extends SimpleWeeksAdapter {
       mAnimateToday = false;
     }
 
-    v.setWeekParams(drawingParams, mSelectedDay.timezone);
+    v.setWeekParams(drawingParams, this.selectedDay.timezone);
     sendEventsToView(v);
     return v;
   }
@@ -256,36 +255,31 @@ public class MonthByWeekAdapter extends SimpleWeeksAdapter {
     v.setEvents(mEventDayList.subList(start, end), mEvents);
   }
 
-  @Override
   protected void refresh() {
-    mFirstDayOfWeek = Utils.getFirstDayOfWeek(mContext);
-    mShowWeekNumber = Utils.getShowWeekNumber(mContext);
-    mHomeTimeZone = Utils.getTimeZone(mContext, null);
-    mOrientation = mContext.getResources().getConfiguration().orientation;
+    notifyDataSetChanged();
+    firstDayOfWeek = Utils.getFirstDayOfWeek(context);
+    showWeekNumber = Utils.getShowWeekNumber(context);
+    homeTimeZone = Utils.getTimeZone(context, null);
+    mOrientation = context.getResources().getConfiguration().orientation;
     updateTimeZones();
     notifyDataSetChanged();
   }
 
   @Override
   protected void onDayTapped(Time day) {
-    day.timezone = mHomeTimeZone;
-    Time currTime = new Time(mHomeTimeZone);
+    day.timezone = homeTimeZone;
+    Time currTime = new Time(homeTimeZone);
     currTime.set(controller.getTime());
     day.hour = currTime.hour;
     day.minute = currTime.minute;
     day.allDay = false;
     day.normalize(true);
     if (mShowAgendaWithMonth) {
-      // If agenda view is visible with month view , refresh the views
-      // with the selected day's info
-      controller.sendEvent(mContext, EventType.GO_TO, day, day, -1,
-                           ViewType.CURRENT, CalendarController.EXTRA_GOTO_DATE, null, null);
+      // If agenda view is visible with month view , refresh the views with the selected day's info
+      controller.sendEvent(EventType.GO_TO, day, day, -1, ViewType.CURRENT, CalendarController.EXTRA_GOTO_DATE, null, null);
     } else {
       // Else , switch to the detailed view
-      controller.sendEvent(mContext, EventType.GO_TO, day, day, -1,
-                           ViewType.DETAIL,
-                           CalendarController.EXTRA_GOTO_DATE
-                           | CalendarController.EXTRA_GOTO_BACK_TO_PREVIOUS, null, null);
+      controller.sendEvent(EventType.GO_TO, day, day, -1, ViewType.DETAIL, CalendarController.EXTRA_GOTO_DATE | CalendarController.EXTRA_GOTO_BACK_TO_PREVIOUS, null, null);
     }
   }
 
@@ -299,12 +293,12 @@ public class MonthByWeekAdapter extends SimpleWeeksAdapter {
 
     // Event was tapped - switch to the detailed view making sure the click animation
     // is done first.
-    if (mGestureDetector.onTouchEvent(event)) {
+    if (gestureDetector.onTouchEvent(event)) {
       mSingleTapUpView = (MonthWeekEventsView) v;
       long delay = System.currentTimeMillis() - mClickTime;
       // Make sure the animation is visible for at least mOnTapDelay - mOnDownDelay ms
-      mListView.postDelayed(mDoSingleTapUp,
-                            delay > mTotalClickDelay ? 0 : mTotalClickDelay - delay);
+      listView.postDelayed(mDoSingleTapUp,
+                           delay > mTotalClickDelay ? 0 : mTotalClickDelay - delay);
       return true;
     } else {
       // Animate a click - on down: show the selected day in the "clicked" color.
@@ -314,7 +308,7 @@ public class MonthByWeekAdapter extends SimpleWeeksAdapter {
           mClickedView = (MonthWeekEventsView) v;
           mClickedXLocation = event.getX();
           mClickTime = System.currentTimeMillis();
-          mListView.postDelayed(doClick, mOnDownDelay);
+          listView.postDelayed(doClick, mOnDownDelay);
           break;
         case MotionEvent.ACTION_UP:
         case MotionEvent.ACTION_SCROLL:
@@ -348,7 +342,7 @@ public class MonthByWeekAdapter extends SimpleWeeksAdapter {
 
   // Clear the visual cues of the click animation and related running code.
   private void clearClickedView(MonthWeekEventsView v) {
-    mListView.removeCallbacks(doClick);
+    listView.removeCallbacks(doClick);
     synchronized (v) {
       v.clearClickedDay();
     }
@@ -367,7 +361,7 @@ public class MonthByWeekAdapter extends SimpleWeeksAdapter {
         mClickedView = null;
         // This is a workaround , sometimes the top item on the listview doesn't refresh on
         // invalidate, so this forces a re-draw.
-        mListView.invalidate();
+        listView.invalidate();
       }
     }
   };
