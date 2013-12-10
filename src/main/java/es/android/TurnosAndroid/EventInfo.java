@@ -18,7 +18,7 @@ public class EventInfo {
   private static final int    ATTENDEE_STATUS_TENTATIVE_MASK = 0x08;
 
   public long          eventType; // one of the EventType
-  public int           viewType; // one of the ViewType
+  public ViewType      viewType; // one of the ViewType
   public long          id; // event id
   public Time          selectedTime; // the selected time in focus
   public Time          startTime; // start of a range of time.

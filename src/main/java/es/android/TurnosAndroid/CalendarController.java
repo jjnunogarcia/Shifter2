@@ -50,9 +50,9 @@ public class CalendarController {
   private Context                 context;
   private Time                    time;
   private EventHandler            firstEventHandler;
-  private int                     viewType;
-  private int                     detailViewType;
-  private int                     previousViewType;
+  private ViewType                viewType;
+  private ViewType                detailViewType;
+  private ViewType                previousViewType;
   private long                    eventId;
   private long                    dateFlags;
   private final Runnable updateTimezone = new Runnable() {
@@ -68,9 +68,9 @@ public class CalendarController {
     time = new Time();
     updateTimezone.run();
     time.setToNow();
-    viewType = -1;
-    detailViewType = -1;
-    previousViewType = -1;
+    viewType = ViewType.DETAIL;
+    detailViewType = ViewType.DETAIL;
+    previousViewType = ViewType.DETAIL;
     eventId = -1;
     dateFlags = 0;
 //        detailViewType = Utils.getSharedPreference(context, GeneralPreferences.KEY_DETAILED_VIEW, GeneralPreferences.DEFAULT_DETAILED_VIEW);
@@ -129,18 +129,18 @@ public class CalendarController {
    * @param eventId   event id
    * @param viewType  {@link es.android.TurnosAndroid.ViewType}
    */
-  public void sendEvent(long eventType, Time start, Time end, long eventId, int viewType) {
+  public void sendEvent(long eventType, Time start, Time end, long eventId, ViewType viewType) {
     sendEvent(eventType, start, end, start, eventId, viewType, EXTRA_GOTO_TIME, null, null);
   }
 
   /**
    * sendEvent() variant with extraLong, search query, and search component name.
    */
-  public void sendEvent(long eventType, Time start, Time end, long eventId, int viewType, long extraLong, String query, ComponentName componentName) {
+  public void sendEvent(long eventType, Time start, Time end, long eventId, ViewType viewType, long extraLong, String query, ComponentName componentName) {
     sendEvent(eventType, start, end, start, eventId, viewType, extraLong, query, componentName);
   }
 
-  public void sendEvent(long eventType, Time start, Time end, Time selected, long eventId, int viewType, long extraLong, String query, ComponentName componentName) {
+  public void sendEvent(long eventType, Time start, Time end, Time selected, long eventId, ViewType viewType, long extraLong, String query, ComponentName componentName) {
     EventInfo info = new EventInfo();
     info.eventType = eventType;
     info.startTime = start;
@@ -279,38 +279,6 @@ public class CalendarController {
    */
   public void setTime(long millisTime) {
     time.set(millisTime);
-  }
-
-  /**
-   * @return the last set of date flags sent with {@link EventType#UPDATE_TITLE}
-   */
-  public long getDateFlags() {
-    return dateFlags;
-  }
-
-  /**
-   * @return the last event ID the edit view was launched with
-   */
-  public long getEventId() {
-    return eventId;
-  }
-
-  // Sets the eventId. Should only be used for initialization.
-  public void setEventId(long eventId) {
-    this.eventId = eventId;
-  }
-
-  public int getViewType() {
-    return viewType;
-  }
-
-  // Forces the viewType. Should only be used for initialization.
-  public void setViewType(int viewType) {
-    this.viewType = viewType;
-  }
-
-  public int getPreviousViewType() {
-    return previousViewType;
   }
 
 //    private void launchSelectVisibleCalendars() {
