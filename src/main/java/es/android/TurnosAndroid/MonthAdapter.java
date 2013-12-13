@@ -21,75 +21,149 @@ import android.content.res.Configuration;
 import android.text.format.Time;
 import android.util.Log;
 import android.view.*;
+import android.view.View.OnTouchListener;
 import android.widget.AbsListView.LayoutParams;
+import android.widget.BaseAdapter;
+import android.widget.ListView;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
+import java.util.Locale;
 
-public class MonthAdapter extends SimpleWeeksAdapter {
-  private static final String TAG = "MonthByWeek";
+/**
+ * <p>
+ * This is a specialized adapter for creating a list of weeks with selectable days. It can be configured to display the week number, start the week on a
+ * given day, show a reduced number of days, or display an arbitrary number of weeks at a time. See {@link MonthFragment} for usage.
+ * </p>
+ */
+public class MonthAdapter extends BaseAdapter implements OnTouchListener {
+  private static final String TAG                       = MonthAdapter.class.getSimpleName();
+  /**
+   * The number of weeks to display at a time.
+   */
+  public static final  String WEEK_PARAMS_NUM_WEEKS     = "num_weeks";
+  /**
+   * Which month should be in focus currently.
+   */
+  public static final  String WEEK_PARAMS_FOCUS_MONTH   = "focus_month";
+  /**
+   * Whether the week number should be shown. Non-zero to show them.
+   */
+  public static final  String WEEK_PARAMS_SHOW_WEEK     = "week_numbers";
+  /**
+   * Which day the week should start on. {@link android.text.format.Time#SUNDAY} through {@link android.text.format.Time#SATURDAY}.
+   */
+  public static final  String WEEK_PARAMS_WEEK_START    = "week_start";
+  /**
+   * The Julian day to highlight as selected.
+   */
+  public static final  String WEEK_PARAMS_JULIAN_DAY    = "selected_day";
+  public static final  String WEEK_PARAMS_DAYS_PER_WEEK = "days_per_week";
+  private static final int    WEEK_COUNT                = 3497;
+  private static final int    DEFAULT_NUM_WEEKS         = 6;
+  private static final int    DEFAULT_MONTH_FOCUS       = 0;
+  private static final int    DEFAULT_DAYS_PER_WEEK     = 7;
+  private static final long   ANIMATE_TODAY_TIMEOUT     = 1000;
 
-  public static final  String WEEK_PARAMS_IS_MINI   = "mini_month";
-  protected static     int    DEFAULT_QUERY_DAYS    = 7 * 8; // 8 weeks
-  private static final long   ANIMATE_TODAY_TIMEOUT = 1000;
-
-  protected CalendarController controller;
-  protected String             homeTimeZone;
-  protected Time               mTempTime;
-  protected Time               today;
-  protected int                mFirstJulianDay;
-  protected int                mQueryDays;
-  //    protected boolean isMiniMonth = false;
-  protected int mOrientation = Configuration.ORIENTATION_LANDSCAPE;
-  private final boolean mShowAgendaWithMonth;
-
-  protected ArrayList<ArrayList<Event>> mEventDayList = new ArrayList<ArrayList<Event>>();
-  protected ArrayList<Event>            mEvents       = null;
-
-  private boolean mAnimateToday = false;
-  private long    mAnimateTime  = 0;
-
-  MonthWeekEventsView mClickedView;
-  MonthWeekEventsView mSingleTapUpView;
-
-  float mClickedXLocation;                // Used to find which day was clicked
-  long  mClickTime;                        // Used to calculate minimum click animation time
-  // Used to insure minimal time for seeing the click animation before switching views
-  private static final int mOnTapDelay = 100;
-  // Minimal time for a down touch action before stating the click animation, this insures that
-  // there is no click animation on flings
-  private static int   mOnDownDelay;
-  private static int   mTotalClickDelay;
-  // Minimal distance to move the finger in order to cancel the click animation
-  private static float mMovedPixelToCancel;
+  private Context                     context;
+  private Time                        selectedDay;
+  private int                         selectedWeek;
+  private int                         firstDayOfWeek;
+  private boolean                     showWeekNumber;
+  private GestureDetector             gestureDetector;
+  private int                         numWeeks;
+  private int                         daysPerWeek;
+  private int                         focusMonth;
+  private ListView                    listView;
+  private CalendarController          controller;
+  private String                      homeTimeZone;
+  private Time                        tempTime;
+  private Time                        today;
+  private int                         firstJulianDay;
+  private int                         orientation;
+  private int                         totalClickDelay;
+  private int                         onDownDelay;
+  private float                       movedPixelToCancel;
+  private boolean                     showAgendaWithMonth;
+  private ArrayList<ArrayList<Event>> eventDayList;
+  private ArrayList<Event>            events;
+  private boolean                     animateToday;
+  private long                        animateTime;
+  private MonthWeekEventsView         clickedView;
+  private MonthWeekEventsView         singleTapUpView;
+  private float                       clickedXLocation;                // Used to find which day was clicked
+  private long                        clickTime;                        // Used to calculate minimum click animation time
 
   public MonthAdapter(Context context, HashMap<String, Integer> params) {
-    super(context, params);
-    if (params.containsKey(WEEK_PARAMS_IS_MINI)) {
-//            isMiniMonth = params.get(WEEK_PARAMS_IS_MINI) != 0;
-    }
-    mShowAgendaWithMonth = Utils.getConfigBool(context, R.bool.show_agenda_with_month);
-    ViewConfiguration vc = ViewConfiguration.get(context);
-    mOnDownDelay = ViewConfiguration.getTapTimeout();
-    mMovedPixelToCancel = vc.getScaledTouchSlop();
-    mTotalClickDelay = mOnDownDelay + mOnTapDelay;
+    this.context = context;
 
-  }
-
-  public void animateToday() {
-    mAnimateToday = true;
-    mAnimateTime = System.currentTimeMillis();
-  }
-
-  @Override
-  protected void init() {
-    super.init();
+    // Get default week start based on locale, subtracting one for use with android Time.
+    Calendar calendar = Calendar.getInstance(Locale.getDefault());
+    firstDayOfWeek = calendar.getFirstDayOfWeek() - 1;
+    gestureDetector = new GestureDetector(context, new CalendarGestureListener());
+    selectedDay = new Time();
+    selectedDay.setToNow();
+    showWeekNumber = false;
+    numWeeks = DEFAULT_NUM_WEEKS;
+    daysPerWeek = DEFAULT_DAYS_PER_WEEK;
+    focusMonth = DEFAULT_MONTH_FOCUS;
     controller = new CalendarController(context);
     homeTimeZone = Utils.getTimeZone(context, null);
     selectedDay.switchTimezone(homeTimeZone);
     today = new Time(homeTimeZone);
     today.setToNow();
-    mTempTime = new Time(homeTimeZone);
+    tempTime = new Time(homeTimeZone);
+    updateParams(params);
+    orientation = Configuration.ORIENTATION_LANDSCAPE;
+    eventDayList = new ArrayList<ArrayList<Event>>();
+    animateToday = false;
+    animateTime = 0;
+    int onTapDelay = 100;
+    showAgendaWithMonth = Utils.getConfigBool(context, R.bool.show_agenda_with_month);
+    ViewConfiguration vc = ViewConfiguration.get(context);
+    onDownDelay = ViewConfiguration.getTapTimeout();
+    movedPixelToCancel = vc.getScaledTouchSlop();
+    totalClickDelay = onDownDelay + onTapDelay;
+
+  }
+
+  /**
+   * Parse the parameters and set any necessary fields. See {@link #WEEK_PARAMS_NUM_WEEKS} for parameter details.
+   *
+   * @param params A list of parameters for this adapter
+   */
+  public void updateParams(HashMap<String, Integer> params) {
+    if (params == null) {
+      Log.e(TAG, "WeekParameters are null! Cannot update adapter.");
+      return;
+    }
+    if (params.containsKey(WEEK_PARAMS_FOCUS_MONTH)) {
+      focusMonth = params.get(WEEK_PARAMS_FOCUS_MONTH);
+    }
+    if (params.containsKey(WEEK_PARAMS_FOCUS_MONTH)) {
+      numWeeks = params.get(WEEK_PARAMS_NUM_WEEKS);
+    }
+    if (params.containsKey(WEEK_PARAMS_SHOW_WEEK)) {
+      showWeekNumber = params.get(WEEK_PARAMS_SHOW_WEEK) != 0;
+    }
+    if (params.containsKey(WEEK_PARAMS_WEEK_START)) {
+      firstDayOfWeek = params.get(WEEK_PARAMS_WEEK_START);
+    }
+    if (params.containsKey(WEEK_PARAMS_JULIAN_DAY)) {
+      int julianDay = params.get(WEEK_PARAMS_JULIAN_DAY);
+      selectedDay.setJulianDay(julianDay);
+      selectedWeek = getWeeksSinceEpochFromJulianDay(julianDay, firstDayOfWeek);
+    }
+    if (params.containsKey(WEEK_PARAMS_DAYS_PER_WEEK)) {
+      daysPerWeek = params.get(WEEK_PARAMS_DAYS_PER_WEEK);
+    }
+    notifyDataSetChanged();
+  }
+
+  public void animateToday() {
+    animateToday = true;
+    animateTime = System.currentTimeMillis();
   }
 
   private void updateTimeZones() {
@@ -97,31 +171,53 @@ public class MonthAdapter extends SimpleWeeksAdapter {
     selectedDay.normalize(true);
     today.timezone = homeTimeZone;
     today.setToNow();
-    mTempTime.switchTimezone(homeTimeZone);
+    tempTime.switchTimezone(homeTimeZone);
   }
 
-  @Override
+  /**
+   * Updates the selected day and related parameters.
+   *
+   * @param selectedTime The time to highlight
+   */
   public void setSelectedDay(Time selectedTime) {
     selectedDay.set(selectedTime);
     long millis = selectedDay.normalize(true);
-    selectedWeek = Utils.getWeeksSinceEpochFromJulianDay(
-        Time.getJulianDay(millis, selectedDay.gmtoff), firstDayOfWeek);
+    selectedWeek = Utils.getWeeksSinceEpochFromJulianDay(Time.getJulianDay(millis, selectedDay.gmtoff), firstDayOfWeek);
     notifyDataSetChanged();
   }
 
+  private int getWeeksSinceEpochFromJulianDay(int julianDay, int firstDayOfWeek) {
+    int diff = Time.THURSDAY - firstDayOfWeek;
+    if (diff < 0) {
+      diff += 7;
+    }
+    int refDay = Time.EPOCH_JULIAN_DAY - diff;
+    return (julianDay - refDay) / 7;
+  }
+
+  public Time getSelectedDay() {
+    return selectedDay;
+  }
+
+  @Override
+  public int getCount() {
+    return WEEK_COUNT;
+  }
+
+  @Override
+  public Object getItem(int position) {
+    return null;
+  }
+
+  @Override
+  public long getItemId(int position) {
+    return position;
+  }
+
   public void setEvents(int firstJulianDay, int numDays, ArrayList<Event> events) {
-//        if (isMiniMonth) {
-//            if (Log.isLoggable(TAG, Log.ERROR)) {
-//                Log.e(TAG, "Attempted to set events for mini view. Events only supported in full"
-//                        + " view.");
-//            }
-//            return;
-//        }
-    mEvents = events;
-    mFirstJulianDay = firstJulianDay;
-    mQueryDays = numDays;
-    // Create a new list, this is necessary since the weeks are referencing
-    // pieces of the old list
+    this.events = events;
+    this.firstJulianDay = firstJulianDay;
+    // Create a new list, this is necessary since the weeks are referencing pieces of the old list
     ArrayList<ArrayList<Event>> eventDayList = new ArrayList<ArrayList<Event>>();
     for (int i = 0; i < numDays; i++) {
       eventDayList.add(new ArrayList<Event>());
@@ -131,15 +227,15 @@ public class MonthAdapter extends SimpleWeeksAdapter {
       if (Log.isLoggable(TAG, Log.DEBUG)) {
         Log.d(TAG, "No events. Returning early--go schedule something fun.");
       }
-      mEventDayList = eventDayList;
+      this.eventDayList = eventDayList;
       refresh();
       return;
     }
 
     // Compute the new set of days with events
     for (Event event : events) {
-      int startDay = event.startDay - mFirstJulianDay;
-      int endDay = event.endDay - mFirstJulianDay + 1;
+      int startDay = event.startDay - this.firstJulianDay;
+      int endDay = event.endDay - this.firstJulianDay + 1;
       if (startDay < numDays || endDay >= 0) {
         if (startDay < 0) {
           startDay = 0;
@@ -161,15 +257,12 @@ public class MonthAdapter extends SimpleWeeksAdapter {
     if (Log.isLoggable(TAG, Log.DEBUG)) {
       Log.d(TAG, "Processed " + events.size() + " events.");
     }
-    mEventDayList = eventDayList;
+    this.eventDayList = eventDayList;
     refresh();
   }
 
   @Override
   public View getView(int position, View convertView, ViewGroup parent) {
-//        if (isMiniMonth) {
-//            return super.getView(position, convertView, parent);
-//        }
     MonthWeekEventsView v;
     LayoutParams params = new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
     HashMap<String, Integer> drawingParams = null;
@@ -177,20 +270,16 @@ public class MonthAdapter extends SimpleWeeksAdapter {
 
     if (convertView != null) {
       v = (MonthWeekEventsView) convertView;
-      // Checking updateToday uses the current params instead of the new
-      // params, so this is assuming the view is relatively stable
-      if (mAnimateToday && v.updateToday(selectedDay.timezone)) {
+      // Checking updateToday uses the current params instead of the new params, so this is assuming the view is relatively stable
+      if (animateToday && v.updateToday(selectedDay.timezone)) {
         long currentTime = System.currentTimeMillis();
-        // If it's been too long since we tried to start the animation
-        // don't show it. This can happen if the user stops a scroll
-        // before reaching today.
-        if (currentTime - mAnimateTime > ANIMATE_TODAY_TIMEOUT) {
-          mAnimateToday = false;
-          mAnimateTime = 0;
+        // If it's been too long since we tried to start the animation don't show it. This can happen if the user stops a scroll before reaching today.
+        if (currentTime - animateTime > ANIMATE_TODAY_TIMEOUT) {
+          animateToday = false;
+          animateTime = 0;
         } else {
           isAnimatingToday = true;
-          // There is a bug that causes invalidates to not work some
-          // of the time unless we recreate the view.
+          // There is a bug that causes invalidates to not work some of the time unless we recreate the view.
           v = new MonthWeekEventsView(context);
         }
       } else {
@@ -222,11 +311,11 @@ public class MonthAdapter extends SimpleWeeksAdapter {
     drawingParams.put(SimpleWeekView.VIEW_PARAMS_NUM_DAYS, daysPerWeek);
     drawingParams.put(SimpleWeekView.VIEW_PARAMS_WEEK, position);
     drawingParams.put(SimpleWeekView.VIEW_PARAMS_FOCUS_MONTH, focusMonth);
-    drawingParams.put(MonthWeekEventsView.VIEW_PARAMS_ORIENTATION, mOrientation);
+    drawingParams.put(MonthWeekEventsView.VIEW_PARAMS_ORIENTATION, orientation);
 
     if (isAnimatingToday) {
       drawingParams.put(MonthWeekEventsView.VIEW_PARAMS_ANIMATE_TODAY, 1);
-      mAnimateToday = false;
+      animateToday = false;
     }
 
     v.setWeekParams(drawingParams, this.selectedDay.timezone);
@@ -234,8 +323,18 @@ public class MonthAdapter extends SimpleWeeksAdapter {
     return v;
   }
 
+  /**
+   * Changes which month is in focus and updates the view.
+   *
+   * @param month The month to show as in focus [0-11]
+   */
+  public void updateFocusMonth(int month) {
+    focusMonth = month;
+    notifyDataSetChanged();
+  }
+
   private void sendEventsToView(MonthWeekEventsView v) {
-    if (mEventDayList.size() == 0) {
+    if (eventDayList.size() == 0) {
       if (Log.isLoggable(TAG, Log.DEBUG)) {
         Log.d(TAG, "No events loaded, did not pass any events to view.");
       }
@@ -243,16 +342,16 @@ public class MonthAdapter extends SimpleWeeksAdapter {
       return;
     }
     int viewJulianDay = v.getFirstJulianDay();
-    int start = viewJulianDay - mFirstJulianDay;
+    int start = viewJulianDay - firstJulianDay;
     int end = start + v.mNumDays;
-    if (start < 0 || end > mEventDayList.size()) {
+    if (start < 0 || end > eventDayList.size()) {
       if (Log.isLoggable(TAG, Log.DEBUG)) {
-        Log.d(TAG, "Week is outside range of loaded events. viewStart: " + viewJulianDay + " eventsStart: " + mFirstJulianDay);
+        Log.d(TAG, "Week is outside range of loaded events. viewStart: " + viewJulianDay + " eventsStart: " + firstJulianDay);
       }
       v.setEvents(null, null);
       return;
     }
-    v.setEvents(mEventDayList.subList(start, end), mEvents);
+    v.setEvents(eventDayList.subList(start, end), events);
   }
 
   protected void refresh() {
@@ -260,13 +359,17 @@ public class MonthAdapter extends SimpleWeeksAdapter {
     firstDayOfWeek = Utils.getFirstDayOfWeek(context);
     showWeekNumber = Utils.getShowWeekNumber(context);
     homeTimeZone = Utils.getTimeZone(context, null);
-    mOrientation = context.getResources().getConfiguration().orientation;
+    orientation = context.getResources().getConfiguration().orientation;
     updateTimeZones();
     notifyDataSetChanged();
   }
 
-  @Override
-  protected void onDayTapped(Time day) {
+  /**
+   * Maintains the same hour/min/sec but moves the day to the tapped day.
+   *
+   * @param day The day that was tapped
+   */
+  private void onDayTapped(Time day) {
     day.timezone = homeTimeZone;
     Time currTime = new Time(homeTimeZone);
     currTime.set(controller.getTime());
@@ -274,7 +377,7 @@ public class MonthAdapter extends SimpleWeeksAdapter {
     day.minute = currTime.minute;
     day.allDay = false;
     day.normalize(true);
-    if (mShowAgendaWithMonth) {
+    if (showAgendaWithMonth) {
       // If agenda view is visible with month view , refresh the views with the selected day's info
       controller.sendEvent(EventType.GO_TO, day, day, -1, ViewType.CURRENT, CalendarController.EXTRA_GOTO_DATE, null, null);
     } else {
@@ -285,30 +388,24 @@ public class MonthAdapter extends SimpleWeeksAdapter {
 
   @Override
   public boolean onTouch(View v, MotionEvent event) {
-    if (!(v instanceof MonthWeekEventsView)) {
-      return super.onTouch(v, event);
-    }
-
     int action = event.getAction();
 
-    // Event was tapped - switch to the detailed view making sure the click animation
-    // is done first.
+    // Event was tapped - switch to the detailed view making sure the click animation is done first.
     if (gestureDetector.onTouchEvent(event)) {
-      mSingleTapUpView = (MonthWeekEventsView) v;
-      long delay = System.currentTimeMillis() - mClickTime;
-      // Make sure the animation is visible for at least mOnTapDelay - mOnDownDelay ms
-      listView.postDelayed(mDoSingleTapUp,
-                           delay > mTotalClickDelay ? 0 : mTotalClickDelay - delay);
+      singleTapUpView = (MonthWeekEventsView) v;
+      long delay = System.currentTimeMillis() - clickTime;
+      // Make sure the animation is visible for at least onTapDelay - onDownDelay ms
+      listView.postDelayed(doSingleTapUp, delay > totalClickDelay ? 0 : totalClickDelay - delay);
       return true;
     } else {
       // Animate a click - on down: show the selected day in the "clicked" color.
       // On Up/scroll/move/cancel: hide the "clicked" color.
       switch (action) {
         case MotionEvent.ACTION_DOWN:
-          mClickedView = (MonthWeekEventsView) v;
-          mClickedXLocation = event.getX();
-          mClickTime = System.currentTimeMillis();
-          listView.postDelayed(doClick, mOnDownDelay);
+          clickedView = (MonthWeekEventsView) v;
+          clickedXLocation = event.getX();
+          clickTime = System.currentTimeMillis();
+          listView.postDelayed(doClick, onDownDelay);
           break;
         case MotionEvent.ACTION_UP:
         case MotionEvent.ACTION_SCROLL:
@@ -317,7 +414,7 @@ public class MonthAdapter extends SimpleWeeksAdapter {
           break;
         case MotionEvent.ACTION_MOVE:
           // No need to cancel on vertical movement, ACTION_SCROLL will do that.
-          if (Math.abs(event.getX() - mClickedXLocation) > mMovedPixelToCancel) {
+          if (Math.abs(event.getX() - clickedXLocation) > movedPixelToCancel) {
             clearClickedView((MonthWeekEventsView) v);
           }
           break;
@@ -325,28 +422,15 @@ public class MonthAdapter extends SimpleWeeksAdapter {
           break;
       }
     }
-    // Do not tell the frameworks we consumed the touch action so that fling actions can be
-    // processed by the fragment.
+    // Do not tell the frameworks we consumed the touch action so that fling actions can be processed by the fragment.
     return false;
-  }
-
-  /**
-   * This is here so we can identify events and process them
-   */
-  protected class CalendarGestureListener extends GestureDetector.SimpleOnGestureListener {
-    @Override
-    public boolean onSingleTapUp(MotionEvent e) {
-      return true;
-    }
   }
 
   // Clear the visual cues of the click animation and related running code.
   private void clearClickedView(MonthWeekEventsView v) {
     listView.removeCallbacks(doClick);
-    synchronized (v) {
-      v.clearClickedDay();
-    }
-    mClickedView = null;
+    v.clearClickedDay();
+    clickedView = null;
   }
 
   // Perform the tap animation in a runnable to allow a delay before showing the tap color.
@@ -354,13 +438,12 @@ public class MonthAdapter extends SimpleWeeksAdapter {
   private final Runnable doClick = new Runnable() {
     @Override
     public void run() {
-      if (mClickedView != null) {
-        synchronized (mClickedView) {
-          mClickedView.setClickedDay(mClickedXLocation);
+      if (clickedView != null) {
+        synchronized (clickedView) {
+          clickedView.setClickedDay(clickedXLocation);
         }
-        mClickedView = null;
-        // This is a workaround , sometimes the top item on the listview doesn't refresh on
-        // invalidate, so this forces a re-draw.
+        clickedView = null;
+        // This is a workaround , sometimes the top item on the listview doesn't refresh on invalidate, so this forces a re-draw.
         listView.invalidate();
       }
     }
@@ -368,20 +451,31 @@ public class MonthAdapter extends SimpleWeeksAdapter {
 
   // Performs the single tap operation: go to the tapped day.
   // This is done in a runnable to allow the click animation to finish before switching views
-  private final Runnable mDoSingleTapUp = new Runnable() {
+  private final Runnable doSingleTapUp = new Runnable() {
     @Override
     public void run() {
-      if (mSingleTapUpView != null) {
-        Time day = mSingleTapUpView.getDayFromLocation(mClickedXLocation);
-        if (Log.isLoggable(TAG, Log.DEBUG)) {
-          Log.d(TAG, "Touched day at Row=" + mSingleTapUpView.mWeek + " day=" + day.toString());
-        }
+      if (singleTapUpView != null) {
+        Time day = singleTapUpView.getDayFromLocation(clickedXLocation);
         if (day != null) {
           onDayTapped(day);
         }
-        clearClickedView(mSingleTapUpView);
-        mSingleTapUpView = null;
+        clearClickedView(singleTapUpView);
+        singleTapUpView = null;
       }
     }
   };
+
+  /**
+   * This is here so we can identify single tap events and set the selected day correctly
+   */
+  private class CalendarGestureListener extends GestureDetector.SimpleOnGestureListener {
+    @Override
+    public boolean onSingleTapUp(MotionEvent e) {
+      return true;
+    }
+  }
+
+  public void setListView(ListView lv) {
+    listView = lv;
+  }
 }

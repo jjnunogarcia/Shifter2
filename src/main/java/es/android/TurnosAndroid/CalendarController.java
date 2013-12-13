@@ -34,27 +34,18 @@ import java.util.ArrayList;
 
 public class CalendarController {
   private static final String TAG                         = CalendarController.class.getSimpleName();
-  public static final  String EVENT_EDIT_ON_LAUNCH        = "editMode";
-  /**
-   * Pass to the ExtraLong parameter for EventType.CREATE_EVENT to create an all-day event
-   */
   public static final  long   EXTRA_CREATE_ALL_DAY        = 0x10;
-  /**
-   * Pass to the ExtraLong parameter for EventType.GO_TO to signal the time can be ignored
-   */
   public static final  long   EXTRA_GOTO_DATE             = 1;
   public static final  long   EXTRA_GOTO_TIME             = 2;
   public static final  long   EXTRA_GOTO_BACK_TO_PREVIOUS = 4;
   public static final  long   EXTRA_GOTO_TODAY            = 8;
+
   private ArrayList<EventHandler> eventHandlers;
   private Context                 context;
   private Time                    time;
   private EventHandler            firstEventHandler;
   private ViewType                viewType;
   private ViewType                detailViewType;
-  private ViewType                previousViewType;
-  private long                    eventId;
-  private long                    dateFlags;
   private final Runnable updateTimezone = new Runnable() {
     @Override
     public void run() {
@@ -70,9 +61,6 @@ public class CalendarController {
     time.setToNow();
     viewType = ViewType.DETAIL;
     detailViewType = ViewType.DETAIL;
-    previousViewType = ViewType.DETAIL;
-    eventId = -1;
-    dateFlags = 0;
 //        detailViewType = Utils.getSharedPreference(context, GeneralPreferences.KEY_DETAILED_VIEW, GeneralPreferences.DEFAULT_DETAILED_VIEW);
   }
 
@@ -155,9 +143,6 @@ public class CalendarController {
   }
 
   private void sendEvent(EventInfo event) {
-    // TODO Throw exception on invalid events
-    previousViewType = viewType;
-
     // Fix up view if not specified
     if (event.viewType == ViewType.DETAIL) {
       event.viewType = detailViewType;
@@ -192,23 +177,10 @@ public class CalendarController {
       }
       event.selectedTime = time;
     }
-    // Store the formatting flags if this is an update to the title
-    if (event.eventType == EventType.UPDATE_TITLE) {
-      dateFlags = event.extraLong;
-    }
 
     // Fix up start time if not specified
     if (startMillis == 0) {
       event.startTime = time;
-    }
-
-    // Store the eventId if we're entering edit event
-    if ((event.eventType & (EventType.CREATE_EVENT | EventType.EDIT_EVENT | EventType.VIEW_EVENT_DETAILS)) != 0) {
-      if (event.id > 0) {
-        eventId = event.id;
-      } else {
-        eventId = -1;
-      }
     }
 
     boolean handled = false;
@@ -307,24 +279,6 @@ public class CalendarController {
 //        intent.putExtra(EXTRA_EVENT_END_TIME, endMillis);
 //        intent.putExtra(ATTENDEE_STATUS, response);
 //        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-//        context.startActivity(intent);
-//    }
-//
-//    private void launchEditEvent(long eventId, long startMillis, long endMillis, boolean edit) {
-//        Uri uri = ContentUris.withAppendedId(Events.CONTENT_URI, eventId);
-//        Intent intent = new Intent(Intent.ACTION_EDIT, uri);
-//        intent.putExtra(EXTRA_EVENT_BEGIN_TIME, startMillis);
-//        intent.putExtra(EXTRA_EVENT_END_TIME, endMillis);
-//        intent.setClass(context, EditEventActivity.class);
-//        intent.putExtra(EVENT_EDIT_ON_LAUNCH, edit);
-//        eventId = eventId;
-//        context.startActivity(intent);
-//    }
-
-//    private void launchAlerts() {
-//        Intent intent = new Intent();
-//        intent.setClass(context, AlertActivity.class);
-//        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 //        context.startActivity(intent);
 //    }
 

@@ -41,7 +41,7 @@ import java.util.Locale;
  * This is a dynamic view for drawing a single week. It can be configured to
  * display the week number, start the week on a given day, or show a reduced
  * number of days. It is intended for use as a single view within a ListView.
- * See {@link SimpleWeeksAdapter} for usage.
+ * See {@link MonthAdapter} for usage.
  * </p>
  */
 public class SimpleWeekView extends View {

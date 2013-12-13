@@ -33,12 +33,15 @@ import android.widget.ViewSwitcher.ViewFactory;
  * This is the base class for Day and Week Activities.
  */
 public class DayFragment extends Fragment implements EventHandler, ViewFactory {
+  public static final    String TAG                     = DayFragment.class.getSimpleName();
   protected static final String BUNDLE_KEY_RESTORE_TIME = "key_restore_time";
   /**
    * The view id used for all the views we create. It's OK to have all child views have the same ID. This ID is used to pick which view receives
    * focus when a view hierarchy is saved / restore
    */
   private static final   int    VIEW_ID                 = 1;
+  public static final    String TIME_MILLIS             = "time_millis";
+  public static final    String NUM_OF_DAYS             = "num_of_days";
   private ViewSwitcher viewSwitcher;
   private DayView      view;
   private Animation    inAnimationForward;
@@ -60,21 +63,27 @@ public class DayFragment extends Fragment implements EventHandler, ViewFactory {
 
   public DayFragment() {
     selectedDay = new Time();
-    selectedDay.setToNow();
-  }
-
-  public DayFragment(long timeMillis, int numOfDays) {
-    selectedDay = new Time();
-    numDays = numOfDays;
-    if (timeMillis == 0) {
-      selectedDay.setToNow();
-    } else {
-      selectedDay.set(timeMillis);
-    }
   }
 
   @Override
   public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    Bundle arguments = getArguments();
+    long timeMillis;
+
+    if (arguments != null) {
+      timeMillis = arguments.getLong(TIME_MILLIS, -1);
+      numDays = arguments.getInt(NUM_OF_DAYS, 0);
+    } else {
+      timeMillis = -1;
+      numDays = 0;
+    }
+
+    if (timeMillis == -1) {
+      selectedDay.setToNow();
+    } else {
+      selectedDay.set(timeMillis);
+    }
+
     View view = inflater.inflate(R.layout.day_activity, null);
 
     viewSwitcher = (ViewSwitcher) view.findViewById(R.id.switcher);
