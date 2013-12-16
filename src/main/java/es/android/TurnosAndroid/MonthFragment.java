@@ -69,7 +69,6 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
   // How long to wait after receiving an onScrollStateChanged notification before acting on it
   protected static final int           SCROLL_CHANGE_DELAY     = 40;
   // The size of the month name displayed above the week list
-  protected static final String        KEY_CURRENT_TIME        = "current_time";
   public static final    String        INITIAL_TIME            = "initial_time";
   public static          int           LIST_TOP_OFFSET         = -1;  // so that the top line will be under the separator
   protected static       StringBuilder mSB                     = new StringBuilder(50);
@@ -114,6 +113,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
   private float               friction;
   private ScrollStateRunnable scrollStateChangedRunnable;
   private long                initialTime;
+  private CalendarController  calendarController;
 
   private final Runnable timeZoneUpdater = new Runnable() {
     @Override
@@ -149,7 +149,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
   };
 
   // This causes an update of the view at midnight
-  private Runnable todayUpdater = new Runnable() {
+  private final Runnable todayUpdater = new Runnable() {
     @Override
     public void run() {
       Time midnight = new Time(firstVisibleDay.timezone);
@@ -170,7 +170,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
   };
 
   // This allows us to update our position when a day is tapped
-  private DataSetObserver observer = new DataSetObserver() {
+  private final DataSetObserver observer = new DataSetObserver() {
     @Override
     public void onChanged() {
       Time day = adapter.getSelectedDay();
@@ -181,7 +181,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
   };
 
   // Used to load the events when a delay is needed
-  private Runnable loadingRunnable = new Runnable() {
+  private final Runnable loadingRunnable = new Runnable() {
     @Override
     public void run() {
       if (!isDetached()) {
@@ -189,7 +189,6 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
       }
     }
   };
-  private CalendarController calendarController;
 
   public MonthFragment() {
     weekMinVisibleHeight = 12;
@@ -280,7 +279,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
     }
     showDetailsInMonth = res.getBoolean(R.bool.show_details_in_month);
 
-    SimpleWeekView child = (SimpleWeekView) listView.getChildAt(0);
+    MonthView child = (MonthView) listView.getChildAt(0);
     if (child == null) {
       return;
     }
@@ -293,8 +292,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
     listView.setOnTouchListener(this);
     listView.setBackgroundColor(getResources().getColor(R.color.month_bgcolor));
 
-    // To get a smoother transition when showing this fragment, delay loading of events until
-    // the fragment is expended fully and the calendar controls are gone.
+    // To get a smoother transition when showing this fragment, delay loading of events until the fragment is expended fully and the calendar controls are gone.
     if (showCalendarControls) {
       listView.postDelayed(loadingRunnable, eventsLoadingDelay);
     } else {
@@ -350,7 +348,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
    * @return The new Uri to use
    */
   private Uri updateUri() {
-    SimpleWeekView child = (SimpleWeekView) listView.getChildAt(0);
+    MonthView child = (MonthView) listView.getChildAt(0);
     if (child != null) {
       firstLoadedJulianDay = child.getFirstJulianDay();
     }
@@ -500,9 +498,6 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
 
   @Override
   public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-    if (Log.isLoggable(TAG, Log.DEBUG)) {
-      Log.d(TAG, "Found " + data.getCount() + " cursor entries for uri " + eventUri);
-    }
     CursorLoader cLoader = (CursorLoader) loader;
     if (eventUri == null) {
       eventUri = cLoader.getUri();
@@ -512,9 +507,9 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
       // We've started a new query since this loader ran so ignore the result
       return;
     }
-    ArrayList<Event> events = new ArrayList<Event>();
-    Event.buildEventsFromCursor(events, data, context, firstLoadedJulianDay, lastLoadedJulianDay);
-    ((MonthAdapter) adapter).setEvents(firstLoadedJulianDay, lastLoadedJulianDay - firstLoadedJulianDay + 1, events);
+
+    ArrayList<Event> events = Event.buildEventsFromCursor(data, context, firstLoadedJulianDay, lastLoadedJulianDay);
+    adapter.setEvents(firstLoadedJulianDay, lastLoadedJulianDay - firstLoadedJulianDay + 1, events);
   }
 
   @Override
@@ -578,7 +573,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
         handler.postDelayed(new Runnable() {
           @Override
           public void run() {
-            ((MonthAdapter) adapter).animateToday();
+            adapter.animateToday();
             adapter.notifyDataSetChanged();
           }
         }, delayAnimation ? GOTO_SCROLL_DURATION : 0);
@@ -687,7 +682,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
    */
   @Override
   public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
-    SimpleWeekView child = (SimpleWeekView) view.getChildAt(0);
+    MonthView child = (MonthView) view.getChildAt(0);
     if (child == null) {
       return;
     }
@@ -717,7 +712,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
    * @param view The ListView containing the weeks
    */
   private void updateMonthHighlight(AbsListView view) {
-    SimpleWeekView child = (SimpleWeekView) view.getChildAt(0);
+    MonthView child = (MonthView) view.getChildAt(0);
     if (child == null) {
       return;
     }
@@ -727,7 +722,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
     // Use some hysteresis for checking which month to highlight. This
     // causes the month to transition when two full weeks of a month are
     // visible.
-    child = (SimpleWeekView) view.getChildAt(SCROLL_HYST_WEEKS + offset);
+    child = (MonthView) view.getChildAt(SCROLL_HYST_WEEKS + offset);
 
     if (child == null) {
       return;

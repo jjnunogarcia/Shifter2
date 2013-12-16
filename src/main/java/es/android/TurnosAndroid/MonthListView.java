@@ -179,7 +179,7 @@ public class MonthListView extends ListView {
 
   // Returns the julian day of the day in the upper right corner
   private int getUpperRightJulianDay() {
-    SimpleWeekView child = (SimpleWeekView) getChildAt(0);
+    MonthView child = (MonthView) getChildAt(0);
     if (child == null) {
       return -1;
     }

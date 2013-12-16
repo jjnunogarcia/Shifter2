@@ -135,7 +135,7 @@ public class EventLoader {
 
     @Override
     public void processRequest(EventLoader eventLoader) {
-      Event.loadEvents(eventLoader.mContext, events, startDay, numDays, id, eventLoader.mSequenceNumber);
+      events = Event.loadEvents(eventLoader.mContext, startDay, numDays, id, eventLoader.mSequenceNumber);
 
       // Check if we are still the most recent request.
       if (id == eventLoader.mSequenceNumber.get()) {

@@ -29,7 +29,6 @@ import android.provider.CalendarContract.Events;
 import android.provider.CalendarContract.Instances;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
-import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,7 +37,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 // TODO: should Event be Parcelable so it can be passed via Intents?
 public class Event implements Cloneable {
-
   private static final String  TAG     = Event.class.getSimpleName();
   private static final boolean PROFILE = false;
 
@@ -85,25 +83,9 @@ public class Event implements Cloneable {
   };
 
   // The indices for the projection array above.
-  private static final int PROJECTION_TITLE_INDEX                    = 0;
-  private static final int PROJECTION_LOCATION_INDEX                 = 1;
-  private static final int PROJECTION_ALL_DAY_INDEX                  = 2;
-  private static final int PROJECTION_COLOR_INDEX                    = 3;
-  private static final int PROJECTION_TIMEZONE_INDEX                 = 4;
-  private static final int PROJECTION_EVENT_ID_INDEX                 = 5;
-  private static final int PROJECTION_BEGIN_INDEX                    = 6;
-  private static final int PROJECTION_END_INDEX                      = 7;
-  private static final int PROJECTION_START_DAY_INDEX                = 9;
-  private static final int PROJECTION_END_DAY_INDEX                  = 10;
-  private static final int PROJECTION_START_MINUTE_INDEX             = 11;
-  private static final int PROJECTION_END_MINUTE_INDEX               = 12;
-  private static final int PROJECTION_HAS_ALARM_INDEX                = 13;
-  private static final int PROJECTION_RRULE_INDEX                    = 14;
-  private static final int PROJECTION_RDATE_INDEX                    = 15;
-  private static final int PROJECTION_SELF_ATTENDEE_STATUS_INDEX     = 16;
-  private static final int PROJECTION_ORGANIZER_INDEX                = 17;
-  private static final int PROJECTION_GUESTS_CAN_INVITE_OTHERS_INDEX = 18;
-  private static final int PROJECTION_DISPLAY_AS_ALLDAY              = 19;
+  private static final int PROJECTION_COLOR_INDEX = 3;
+  private static String mNoTitleString;
+  private static int    mNoColorColor;
 
   static {
     if (!Utils.isJellybeanOrLater()) {
@@ -111,31 +93,24 @@ public class Event implements Cloneable {
     }
   }
 
-  private static String mNoTitleString;
-  private static int    mNoColorColor;
-
-  public long         id;
-  public int          color;
-  public CharSequence title;
-  public CharSequence location;
-  public boolean      allDay;
-  public String       organizer;
-  public boolean      guestsCanModify;
-
-  public int startDay;       // start Julian day
-  public int endDay;         // end Julian day
-  public int startTime;      // Start and end time are in minutes since midnight
-  public int endTime;
-
-  public  long startMillis;   // UTC milliseconds since the epoch
-  public  long endMillis;     // UTC milliseconds since the epoch
-  private int  mColumn;
-  private int  maxColumns;
-
-  public boolean hasAlarm;
-  public boolean isRepeating;
-
-  public int selfAttendeeStatus;
+  public  long         id;
+  public  int          color;
+  public  CharSequence title;
+  public  CharSequence location;
+  public  boolean      allDay;
+  public  String       organizer;
+  public  boolean      guestsCanModify;
+  public  int          startDay;       // start Julian day
+  public  int          endDay;         // end Julian day
+  public  int          startTime;      // Start and end time are in minutes since midnight
+  public  int          endTime;
+  public  long         startMillis;   // UTC milliseconds since the epoch
+  public  long         endMillis;     // UTC milliseconds since the epoch
+  private int          column;
+  private int          maxColumns;
+  public  boolean      hasAlarm;
+  public  boolean      isRepeating;
+  public  int          selfAttendeeStatus;
 
   // The coordinates of the event rectangle drawn on the screen.
   public float left;
@@ -213,7 +188,7 @@ public class Event implements Cloneable {
   /**
    * Loads <i>days</i> days worth of instances starting at <i>startDay</i>.
    */
-  public static void loadEvents(Context context, ArrayList<Event> events, int startDay, int days, int requestId, AtomicInteger sequenceNumber) {
+  public static ArrayList<Event> loadEvents(Context context, int startDay, int days, int requestId, AtomicInteger sequenceNumber) {
 
     if (PROFILE) {
       Debug.startMethodTracing("loadEvents");
@@ -222,17 +197,14 @@ public class Event implements Cloneable {
     Cursor cEvents = null;
     Cursor cAllday = null;
 
-    events.clear();
+    ArrayList<Event> events = new ArrayList<Event>();
     try {
       int endDay = startDay + days - 1;
 
       // We use the byDay instances query to get a list of all events for the days we're interested in.
-      // The sort order is: events with an earlier start time occur
-      // first and if the start times are the same, then events with
-      // a later end time occur first. The later end time is ordered
-      // first so that long rectangles in the calendar views appear on
-      // the left side.  If the start and end times of two events are
-      // the same then we sort alphabetically on the title.  This isn't
+      // The sort order is: events with an earlier start time occur first and if the start times are the same, then events with
+      // a later end time occur first. The later end time is ordered first so that long rectangles in the calendar views appear on
+      // the left side.  If the start and end times of two events are the same then we sort alphabetically on the title.  This isn't
       // required for correctness, it just adds a nice touch.
 
       // Respect the preference to show/hide declined events
@@ -253,11 +225,11 @@ public class Event implements Cloneable {
 
       // Check if we should return early because there are more recent load requests waiting.
       if (requestId != sequenceNumber.get()) {
-        return;
+        return events;
       }
 
-      buildEventsFromCursor(events, cEvents, context, startDay, endDay);
-      buildEventsFromCursor(events, cAllday, context, startDay, endDay);
+      events = buildEventsFromCursor(cEvents, context, startDay, endDay);
+      events = buildEventsFromCursor(cAllday, context, startDay, endDay);
 
     } finally {
       if (cEvents != null) {
@@ -270,6 +242,7 @@ public class Event implements Cloneable {
         Debug.stopMethodTracing();
       }
     }
+    return events;
   }
 
   /**
@@ -314,24 +287,23 @@ public class Event implements Cloneable {
   /**
    * Adds all the events from the cursors to the events list.
    *
-   * @param events   The list of events
    * @param cEvents  Events to add to the list
    * @param context
    * @param startDay
    * @param endDay
    */
-  public static void buildEventsFromCursor(ArrayList<Event> events, Cursor cEvents, Context context, int startDay, int endDay) {
-    if (cEvents == null || events == null) {
-      Log.e(TAG, "buildEventsFromCursor: null cursor or null events list!");
-      return;
+  public static ArrayList<Event> buildEventsFromCursor(Cursor cEvents, Context context, int startDay, int endDay) {
+    if (cEvents == null) {
+      return null;
     }
 
     int count = cEvents.getCount();
 
     if (count == 0) {
-      return;
+      return null;
     }
 
+    ArrayList<Event> events = new ArrayList<Event>();
     Resources res = context.getResources();
     mNoTitleString = res.getString(R.string.no_title_label);
     mNoColorColor = res.getColor(R.color.event_center);
@@ -343,6 +315,8 @@ public class Event implements Cloneable {
         events.add(e);
       }
     }
+
+    return events;
   }
 
   /**
@@ -519,50 +493,6 @@ public class Event implements Cloneable {
     return 64;
   }
 
-  public final void dump() {
-    Log.e("Cal", "+-----------------------------------------+");
-    Log.e("Cal", "+        id = " + id);
-    Log.e("Cal", "+     color = " + color);
-    Log.e("Cal", "+     title = " + title);
-    Log.e("Cal", "+  location = " + location);
-    Log.e("Cal", "+    allDay = " + allDay);
-    Log.e("Cal", "+  startDay = " + startDay);
-    Log.e("Cal", "+    endDay = " + endDay);
-    Log.e("Cal", "+ startTime = " + startTime);
-    Log.e("Cal", "+   endTime = " + endTime);
-    Log.e("Cal", "+ organizer = " + organizer);
-    Log.e("Cal", "+  guestwrt = " + guestsCanModify);
-  }
-
-  public final boolean intersects(int julianDay, int startMinute, int endMinute) {
-    if (endDay < julianDay) {
-      return false;
-    }
-
-    if (startDay > julianDay) {
-      return false;
-    }
-
-    if (endDay == julianDay) {
-      if (endTime < startMinute) {
-        return false;
-      }
-      // An event that ends at the start minute should not be considered
-      // as intersecting the given time span, but don't exclude
-      // zero-length (or very short) events.
-      if (endTime == startMinute
-          && (startTime != endTime || startDay != endDay)) {
-        return false;
-      }
-    }
-
-    if (startDay == julianDay && startTime > endMinute) {
-      return false;
-    }
-
-    return true;
-  }
-
   /**
    * Returns the event title and location separated by a comma.  If the location is already part of the title (at the end of the title), then
    * just the title is returned.
@@ -585,11 +515,11 @@ public class Event implements Cloneable {
   }
 
   public void setColumn(int column) {
-    mColumn = column;
+    this.column = column;
   }
 
   public int getColumn() {
-    return mColumn;
+    return column;
   }
 
   public void setMaxColumns(int maxColumns) {
@@ -600,16 +530,8 @@ public class Event implements Cloneable {
     return maxColumns;
   }
 
-  public void setStartMillis(long startMillis) {
-    this.startMillis = startMillis;
-  }
-
   public long getStartMillis() {
     return startMillis;
-  }
-
-  public void setEndMillis(long endMillis) {
-    this.endMillis = endMillis;
   }
 
   public long getEndMillis() {
