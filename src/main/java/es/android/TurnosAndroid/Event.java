@@ -298,12 +298,12 @@ public class Event implements Cloneable {
     }
 
     int count = cEvents.getCount();
+    ArrayList<Event> events = new ArrayList<Event>();
 
     if (count == 0) {
-      return null;
+      return events;
     }
 
-    ArrayList<Event> events = new ArrayList<Event>();
     Resources res = context.getResources();
     mNoTitleString = res.getString(R.string.no_title_label);
     mNoColorColor = res.getColor(R.color.event_center);

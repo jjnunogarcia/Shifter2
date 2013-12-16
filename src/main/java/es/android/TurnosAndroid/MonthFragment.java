@@ -51,29 +51,97 @@ import java.util.*;
  * </p>
  */
 public class MonthFragment extends ListFragment implements EventHandler, LoaderManager.LoaderCallbacks<Cursor>, OnScrollListener, OnTouchListener {
-  public static final String TAG = MonthFragment.class.getSimpleName();
-
+  public static final    String          TAG                     = MonthFragment.class.getSimpleName();
+  // The number of days to display in each week
+  public static final    int             DAYS_PER_WEEK           = 7;
+  // The size of the month name displayed above the week list
+  public static final    String          INITIAL_TIME            = "initial_time";
+  // Affects when the month selection will change while scrolling up
+  protected static final int             SCROLL_HYST_WEEKS       = 2;
+  protected static final int             GOTO_SCROLL_DURATION    = 500;
+  // How long to wait after receiving an onScrollStateChanged notification before acting on it
+  protected static final int             SCROLL_CHANGE_DELAY     = 40;
   // Selection and selection args for adding event queries
-  private static final   String        WHERE_CALENDARS_VISIBLE = "visible=1";
-  private static final   int           WEEKS_BUFFER            = 1;
+  private static final   String          WHERE_CALENDARS_VISIBLE = "visible=1";
+  private static final   int             WEEKS_BUFFER            = 1;
   // How long to wait after scroll stops before starting the loader
   // Using scroll duration because scroll state changes don't update correctly when a scroll is triggered programmatically.
-  private static final   int           LOADER_DELAY            = 200;
+  private static final   int             LOADER_DELAY            = 200;
   // The minimum time between requeries of the data if the db is changing
-  private static final   int           LOADER_THROTTLE_DELAY   = 500;
-  // The number of days to display in each week
-  public static final    int           DAYS_PER_WEEK           = 7;
-  // Affects when the month selection will change while scrolling up
-  protected static final int           SCROLL_HYST_WEEKS       = 2;
-  protected static final int           GOTO_SCROLL_DURATION    = 500;
-  // How long to wait after receiving an onScrollStateChanged notification before acting on it
-  protected static final int           SCROLL_CHANGE_DELAY     = 40;
-  // The size of the month name displayed above the week list
-  public static final    String        INITIAL_TIME            = "initial_time";
-  public static          int           LIST_TOP_OFFSET         = -1;  // so that the top line will be under the separator
-  protected static       StringBuilder mSB                     = new StringBuilder(50);
-  protected static       Formatter     mF                      = new Formatter(mSB, Locale.getDefault());
+  private static final   int             LOADER_THROTTLE_DELAY   = 500;
+  public static          int             LIST_TOP_OFFSET         = -1;  // so that the top line will be under the separator
+  protected static       StringBuilder   mSB                     = new StringBuilder(50);
+  protected static       Formatter       mF                      = new Formatter(mSB, Locale.getDefault());
+  private final          Runnable        timeZoneUpdater         = new Runnable() {
+    @Override
+    public void run() {
+      String tz = Utils.getTimeZone(context, this);
+      selectedDay.timezone = tz;
+      selectedDay.normalize(true);
+      tempTime.timezone = tz;
+      firstDayOfMonth.timezone = tz;
+      firstDayOfMonth.normalize(true);
+      firstVisibleDay.timezone = tz;
+      firstVisibleDay.normalize(true);
+      if (adapter != null) {
+        adapter.notifyDataSetChanged();
+      }
+    }
+  };
+  private final          Runnable        updateLoader            = new Runnable() {
+    @Override
+    public void run() {
+      if (shouldLoad && cursorLoader != null) {
+        // Stop any previous loads while we update the uri
+        stopLoader();
 
+        // Start the loader again
+        eventUri = updateUri();
+        cursorLoader.setUri(eventUri);
+        cursorLoader.startLoading();
+        cursorLoader.onContentChanged();
+      }
+    }
+  };
+  // This causes an update of the view at midnight
+  private final          Runnable        todayUpdater            = new Runnable() {
+    @Override
+    public void run() {
+      Time midnight = new Time(firstVisibleDay.timezone);
+      midnight.setToNow();
+      long currentMillis = midnight.toMillis(true);
+
+      midnight.hour = 0;
+      midnight.minute = 0;
+      midnight.second = 0;
+      midnight.monthDay++;
+      long millisToMidnight = midnight.normalize(true) - currentMillis;
+      handler.postDelayed(this, millisToMidnight);
+
+      if (adapter != null) {
+        adapter.notifyDataSetChanged();
+      }
+    }
+  };
+  // This allows us to update our position when a day is tapped
+  private final          DataSetObserver observer                = new DataSetObserver() {
+    @Override
+    public void onChanged() {
+      Time day = adapter.getSelectedDay();
+      if (day.year != selectedDay.year || day.yearDay != selectedDay.yearDay) {
+        goTo(day.toMillis(true), true, true, false);
+      }
+    }
+  };
+  // Used to load the events when a delay is needed
+  private final          Runnable        loadingRunnable         = new Runnable() {
+    @Override
+    public void run() {
+      if (!isDetached()) {
+        cursorLoader = (CursorLoader) getLoaderManager().initLoader(0, null, MonthFragment.this);
+      }
+    }
+  };
   private Context             context;
   private int                 weekMinVisibleHeight;
   private int                 bottomBuffer;
@@ -83,7 +151,6 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
   private Time                desiredDay;
   private boolean             shouldLoad;
   private boolean             userScrolled;
-  private int                 eventsLoadingDelay;
   private boolean             showCalendarControls;
   private boolean             showDetailsInMonth;
   private boolean             hideDeclined;
@@ -114,81 +181,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
   private ScrollStateRunnable scrollStateChangedRunnable;
   private long                initialTime;
   private CalendarController  calendarController;
-
-  private final Runnable timeZoneUpdater = new Runnable() {
-    @Override
-    public void run() {
-      String tz = Utils.getTimeZone(context, this);
-      selectedDay.timezone = tz;
-      selectedDay.normalize(true);
-      tempTime.timezone = tz;
-      firstDayOfMonth.timezone = tz;
-      firstDayOfMonth.normalize(true);
-      firstVisibleDay.timezone = tz;
-      firstVisibleDay.normalize(true);
-      if (adapter != null) {
-        adapter.notifyDataSetChanged();
-      }
-    }
-  };
-
-  private final Runnable updateLoader = new Runnable() {
-    @Override
-    public void run() {
-      if (shouldLoad && cursorLoader != null) {
-        // Stop any previous loads while we update the uri
-        stopLoader();
-
-        // Start the loader again
-        eventUri = updateUri();
-        cursorLoader.setUri(eventUri);
-        cursorLoader.startLoading();
-        cursorLoader.onContentChanged();
-      }
-    }
-  };
-
-  // This causes an update of the view at midnight
-  private final Runnable todayUpdater = new Runnable() {
-    @Override
-    public void run() {
-      Time midnight = new Time(firstVisibleDay.timezone);
-      midnight.setToNow();
-      long currentMillis = midnight.toMillis(true);
-
-      midnight.hour = 0;
-      midnight.minute = 0;
-      midnight.second = 0;
-      midnight.monthDay++;
-      long millisToMidnight = midnight.normalize(true) - currentMillis;
-      handler.postDelayed(this, millisToMidnight);
-
-      if (adapter != null) {
-        adapter.notifyDataSetChanged();
-      }
-    }
-  };
-
-  // This allows us to update our position when a day is tapped
-  private final DataSetObserver observer = new DataSetObserver() {
-    @Override
-    public void onChanged() {
-      Time day = adapter.getSelectedDay();
-      if (day.year != selectedDay.year || day.yearDay != selectedDay.yearDay) {
-        goTo(day.toMillis(true), true, true, false);
-      }
-    }
-  };
-
-  // Used to load the events when a delay is needed
-  private final Runnable loadingRunnable = new Runnable() {
-    @Override
-    public void run() {
-      if (!isDetached()) {
-        cursorLoader = (CursorLoader) getLoaderManager().initLoader(0, null, MonthFragment.this);
-      }
-    }
-  };
+  private TextView            header;
 
   public MonthFragment() {
     weekMinVisibleHeight = 12;
@@ -213,6 +206,17 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
     showDetailsInMonth = false;
     scrollStateChangedRunnable = new ScrollStateRunnable();
     handler = new Handler();
+    initialTime = -1;
+
+    String currentTimezone = Time.getCurrentTimezone();
+    // Ensure we're in the correct time zone
+    selectedDay.switchTimezone(currentTimezone);
+    selectedDay.normalize(true);
+    firstDayOfMonth.timezone = currentTimezone;
+    firstDayOfMonth.normalize(true);
+    firstVisibleDay.timezone = currentTimezone;
+    firstVisibleDay.normalize(true);
+    tempTime.timezone = currentTimezone;
   }
 
   @Override
@@ -221,13 +225,12 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
 
     if (arguments != null) {
       initialTime = arguments.getLong(INITIAL_TIME, -1);
-    } else {
-      initialTime = -1;
     }
 
     View view = inflater.inflate(R.layout.full_month_by_week, container, false);
     dayNamesHeader = (ViewGroup) view.findViewById(R.id.day_names);
     monthName = (TextView) view.findViewById(R.id.month_name);
+    header = (TextView) dayNamesHeader.findViewById(R.id.wk_label);
 
     return view;
   }
@@ -237,19 +240,9 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
     super.onActivityCreated(savedInstanceState);
 
     context = getActivity().getApplicationContext();
-    String currentTimezone = Time.getCurrentTimezone();
     calendarController = ((MainActivity) getActivity()).getCalendarController();
 
-    // Ensure we're in the correct time zone
-    selectedDay.switchTimezone(currentTimezone);
-    selectedDay.normalize(true);
-    firstDayOfMonth.timezone = currentTimezone;
-    firstDayOfMonth.normalize(true);
-    firstVisibleDay.timezone = currentTimezone;
-    firstVisibleDay.normalize(true);
-    tempTime.timezone = currentTimezone;
-
-    Resources res = context.getResources();
+    Resources res = getResources();
     saturdayColor = res.getColor(R.color.month_saturday);
     sundayColor = res.getColor(R.color.month_sunday);
     dayNameColor = res.getColor(R.color.month_day_names_color);
@@ -261,46 +254,48 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
       bottomBuffer *= scale;
       LIST_TOP_OFFSET *= scale;
     }
+
+    setUpHeader();
+    setUpListView();
     setUpAdapter();
     setListAdapter(adapter);
     timeZoneUpdater.run();
 
-    if (adapter != null) {
-      adapter.setSelectedDay(selectedDay);
-    }
-
-    setUpListView();
-    setUpHeader();
-
+    adapter.setSelectedDay(selectedDay);
     showCalendarControls = Utils.getConfigBool(context, R.bool.show_calendar_controls);
+
     // Synchronized the loading time of the month's events with the animation of the calendar controls.
+    int eventsLoadingDelay = 0;
     if (showCalendarControls) {
       eventsLoadingDelay = res.getInteger(R.integer.calendar_controls_animation_time);
     }
     showDetailsInMonth = res.getBoolean(R.bool.show_details_in_month);
 
-    MonthView child = (MonthView) listView.getChildAt(0);
-    if (child == null) {
-      return;
-    }
-    int julianDay = child.getFirstJulianDay();
-    firstVisibleDay.setJulianDay(julianDay);
-    // set the title to the month of the second week
-    tempTime.setJulianDay(julianDay + DAYS_PER_WEEK);
-    setMonthDisplayed(tempTime, true);
+    final int finalEventsLoadingDelay = eventsLoadingDelay;
+    listView.post(new Runnable() {
+      @Override
+      public void run() {
+        MonthView child = (MonthView) listView.getChildAt(0);
+        if (child == null) {
+          return;
+        }
+        int julianDay = child.getFirstJulianDay();
+        firstVisibleDay.setJulianDay(julianDay);
+        // set the title to the month of the second week
+        tempTime.setJulianDay(julianDay + DAYS_PER_WEEK);
+        setMonthDisplayed(tempTime, true);
 
-    listView.setOnTouchListener(this);
-    listView.setBackgroundColor(getResources().getColor(R.color.month_bgcolor));
+        // To get a smoother transition when showing this fragment, delay loading of events until the fragment is expended fully and the calendar controls are gone.
+        if (showCalendarControls) {
+          listView.postDelayed(loadingRunnable, finalEventsLoadingDelay);
+        } else {
+          cursorLoader = (CursorLoader) getLoaderManager().initLoader(0, null, MonthFragment.this);
+        }
+        adapter.setListView(listView);
 
-    // To get a smoother transition when showing this fragment, delay loading of events until the fragment is expended fully and the calendar controls are gone.
-    if (showCalendarControls) {
-      listView.postDelayed(loadingRunnable, eventsLoadingDelay);
-    } else {
-      cursorLoader = (CursorLoader) getLoaderManager().initLoader(0, null, this);
-    }
-    adapter.setListView(listView);
-
-    goTo(initialTime, false, true, true);
+        goTo(initialTime, false, true, true);
+      }
+    });
   }
 
   @Override
@@ -326,79 +321,25 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
     }
   }
 
-  @Override
-  public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-    CursorLoader loader;
-    firstLoadedJulianDay = Time.getJulianDay(selectedDay.toMillis(true), selectedDay.gmtoff) - (numWeeks * 7 / 2);
-    eventUri = updateUri();
-
-    String where = updateWhere();
-    loader = new CursorLoader(getActivity().getApplicationContext(), eventUri, new String[] {DBConstants.ID, DBConstants.EVENT, DBConstants.LOCATION, DBConstants.DESCRIPTION,
-                                                                                             DBConstants.START, DBConstants.END, DBConstants.CALENDAR_ID, DBConstants.EVENT_ID,
-                                                                                             DBConstants.START_DAY, DBConstants.END_DAY, DBConstants.START_TIME, DBConstants.END_TIME}
-                                                                                                /*Event.EVENT_PROJECTION*/, /*where*/null,
-                                                                                                null /* WHERE_CALENDARS_SELECTED_ARGS */, null/*INSTANCES_SORT_ORDER*/);
-    loader.setUpdateThrottle(LOADER_THROTTLE_DELAY);
-    return loader;
+  private void setUpHeader() {
+    dayLabels = new String[7];
+    for (int i = Calendar.SUNDAY; i <= Calendar.SATURDAY; i++) {
+      dayLabels[i - Calendar.SUNDAY] = DateUtils.getDayOfWeekString(i, DateUtils.LENGTH_MEDIUM).toUpperCase();
+    }
   }
 
-  /**
-   * Updates the uri used by the loader according to the current position of the listview.
-   *
-   * @return The new Uri to use
-   */
-  private Uri updateUri() {
-    MonthView child = (MonthView) listView.getChildAt(0);
-    if (child != null) {
-      firstLoadedJulianDay = child.getFirstJulianDay();
-    }
-    // -1 to ensure we get all day events from any time zone
-    tempTime.setJulianDay(firstLoadedJulianDay - 1);
-    long start = tempTime.toMillis(true);
-    lastLoadedJulianDay = firstLoadedJulianDay + (numWeeks + 2 * WEEKS_BUFFER) * 7;
-    // +1 to ensure we get all day events from any time zone
-    tempTime.setJulianDay(lastLoadedJulianDay + 1);
-    long end = tempTime.toMillis(true);
-
-    // Create a new uri with the updated times
-    Uri.Builder builder = CalendarProvider.CONTENT_URI.buildUpon();
-    ContentUris.appendId(builder, start);
-    ContentUris.appendId(builder, end);
-    return builder.build();
-  }
-
-  // Extract range of julian days from URI
-  private void updateLoadedDays() {
-    List<String> pathSegments = eventUri.getPathSegments();
-    int size = pathSegments.size();
-    if (size <= 2) {
-      return;
-    }
-    long first = Long.parseLong(pathSegments.get(size - 2));
-    long last = Long.parseLong(pathSegments.get(size - 1));
-    tempTime.set(first);
-    firstLoadedJulianDay = Time.getJulianDay(first, tempTime.gmtoff);
-    tempTime.set(last);
-    lastLoadedJulianDay = Time.getJulianDay(last, tempTime.gmtoff);
-  }
-
-  private String updateWhere() {
-    // TODO fix selection/selection args after b/3206641 is fixed
-    String where = WHERE_CALENDARS_VISIBLE;
-    if (hideDeclined || !showDetailsInMonth) {
-      where += " AND " + Instances.SELF_ATTENDEE_STATUS + "!=" + Attendees.ATTENDEE_STATUS_DECLINED;
-    }
-    return where;
-  }
-
-  private void stopLoader() {
-    handler.removeCallbacks(updateLoader);
-    if (cursorLoader != null) {
-      cursorLoader.stopLoading();
-      if (Log.isLoggable(TAG, Log.DEBUG)) {
-        Log.d(TAG, "Stopped loader from loading");
-      }
-    }
+  private void setUpListView() {
+    listView = getListView();
+    listView.setCacheColorHint(0);
+    listView.setDivider(null);
+    listView.setItemsCanFocus(true);
+    listView.setFastScrollEnabled(false);
+    listView.setVerticalScrollBarEnabled(false);
+    listView.setOnScrollListener(this);
+    listView.setFadingEdgeLength(0);
+    listView.setFriction(ViewConfiguration.getScrollFriction() * friction);
+    listView.setOnTouchListener(this);
+    listView.setBackgroundColor(getResources().getColor(R.color.month_bgcolor));
   }
 
   private void setUpAdapter() {
@@ -421,11 +362,31 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
     adapter.notifyDataSetChanged();
   }
 
-  private void setUpHeader() {
-    dayLabels = new String[7];
-    for (int i = Calendar.SUNDAY; i <= Calendar.SATURDAY; i++) {
-      dayLabels[i - Calendar.SUNDAY] = DateUtils.getDayOfWeekString(i, DateUtils.LENGTH_MEDIUM).toUpperCase();
+  private void updateHeader() {
+    if (showWeekNumber) {
+      header.setVisibility(View.VISIBLE);
+    } else {
+      header.setVisibility(View.GONE);
     }
+    int offset = firstDayOfWeek - 1;
+    for (int i = 1; i < 8; i++) {
+      header = (TextView) dayNamesHeader.getChildAt(i);
+      if (i < daysPerWeek + 1) {
+        int position = (offset + i) % 7;
+        header.setText(dayLabels[position]);
+        header.setVisibility(View.VISIBLE);
+        if (position == Time.SATURDAY) {
+          header.setTextColor(saturdayColor);
+        } else if (position == Time.SUNDAY) {
+          header.setTextColor(sundayColor);
+        } else {
+          header.setTextColor(dayNameColor);
+        }
+      } else {
+        header.setVisibility(View.GONE);
+      }
+    }
+    dayNamesHeader.invalidate();
   }
 
   private void doResumeUpdates() {
@@ -444,56 +405,20 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
     goTo(selectedDay.toMillis(true), false, true, false);
   }
 
-  /**
-   * Sets all the required fields for the list view. Override this method to set a different list view behavior.
-   */
-  private void setUpListView() {
-    // Configure the listview
-    listView = getListView();
-    // Transparent background on scroll
-    listView.setCacheColorHint(0);
-    // No dividers
-    listView.setDivider(null);
-    // Items are clickable
-    listView.setItemsCanFocus(true);
-    // The thumb gets in the way, so disable it
-    listView.setFastScrollEnabled(false);
-    listView.setVerticalScrollBarEnabled(false);
-    listView.setOnScrollListener(this);
-    listView.setFadingEdgeLength(0);
-    // Make the scrolling behavior nicer
-    listView.setFriction(ViewConfiguration.getScrollFriction() * friction);
-  }
+  @Override
+  public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+    CursorLoader loader;
+    firstLoadedJulianDay = Time.getJulianDay(selectedDay.toMillis(true), selectedDay.gmtoff) - (numWeeks * 7 / 2);
+    eventUri = updateUri();
 
-  /**
-   * Fixes the day names header to provide correct spacing and updates the label text. Override this to set up a custom header.
-   */
-  private void updateHeader() {
-    TextView label = (TextView) dayNamesHeader.findViewById(R.id.wk_label);
-    if (showWeekNumber) {
-      label.setVisibility(View.VISIBLE);
-    } else {
-      label.setVisibility(View.GONE);
-    }
-    int offset = firstDayOfWeek - 1;
-    for (int i = 1; i < 8; i++) {
-      label = (TextView) dayNamesHeader.getChildAt(i);
-      if (i < daysPerWeek + 1) {
-        int position = (offset + i) % 7;
-        label.setText(dayLabels[position]);
-        label.setVisibility(View.VISIBLE);
-        if (position == Time.SATURDAY) {
-          label.setTextColor(saturdayColor);
-        } else if (position == Time.SUNDAY) {
-          label.setTextColor(sundayColor);
-        } else {
-          label.setTextColor(dayNameColor);
-        }
-      } else {
-        label.setVisibility(View.GONE);
-      }
-    }
-    dayNamesHeader.invalidate();
+    String where = updateWhere();
+    loader = new CursorLoader(getActivity().getApplicationContext(), eventUri, new String[]{DBConstants.ID, DBConstants.EVENT, DBConstants.LOCATION, DBConstants.DESCRIPTION,
+        DBConstants.START, DBConstants.END, DBConstants.CALENDAR_ID, DBConstants.EVENT_ID,
+        DBConstants.START_DAY, DBConstants.END_DAY, DBConstants.START_TIME, DBConstants.END_TIME}
+                                                                                                /*Event.EVENT_PROJECTION*/, /*where*/null,
+                                                                                                null /* WHERE_CALENDARS_SELECTED_ARGS */, null/*INSTANCES_SORT_ORDER*/);
+    loader.setUpdateThrottle(LOADER_THROTTLE_DELAY);
+    return loader;
   }
 
   @Override
@@ -516,42 +441,19 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
   public void onLoaderReset(Loader<Cursor> loader) {
   }
 
-  @Override
-  public void eventsChanged() {
-    // TODO remove this after b/3387924 is resolved
+  private void stopLoader() {
+    handler.removeCallbacks(updateLoader);
     if (cursorLoader != null) {
-      cursorLoader.forceLoad();
+      cursorLoader.stopLoading();
+      if (Log.isLoggable(TAG, Log.DEBUG)) {
+        Log.d(TAG, "Stopped loader from loading");
+      }
     }
   }
 
   @Override
   public long getSupportedEventTypes() {
     return EventType.GO_TO | EventType.EVENTS_CHANGED;
-  }
-
-  @Override
-  public void onScrollStateChanged(AbsListView view, int scrollState) {
-    if (scrollState != OnScrollListener.SCROLL_STATE_IDLE) {
-      shouldLoad = false;
-      stopLoader();
-      desiredDay.setToNow();
-    } else {
-      handler.removeCallbacks(updateLoader);
-      shouldLoad = true;
-      handler.postDelayed(updateLoader, LOADER_DELAY);
-    }
-    if (scrollState == OnScrollListener.SCROLL_STATE_TOUCH_SCROLL) {
-      userScrolled = true;
-    }
-
-    scrollStateChangedRunnable.doScrollStateChange(scrollState);
-  }
-
-  @Override
-  public boolean onTouch(View v, MotionEvent event) {
-    desiredDay.setToNow();
-    return false;
-    // TODO post a cleanup to push us back onto the grid if something went wrong in a scroll such as the user stopping the view but not scrolling
   }
 
   @Override
@@ -583,6 +485,21 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
     }
   }
 
+  @Override
+  public void eventsChanged() {
+    // TODO remove this after b/3387924 is resolved
+    if (cursorLoader != null) {
+      cursorLoader.forceLoad();
+    }
+  }
+
+  @Override
+  public boolean onTouch(View v, MotionEvent event) {
+    desiredDay.setToNow();
+    return false;
+    // TODO post a cleanup to push us back onto the grid if something went wrong in a scroll such as the user stopping the view but not scrolling
+  }
+
   /**
    * This moves to the specified time in the view. If the time is not already in range it will move the list so that the first of the month containing the time is at the top of the view.
    * If the new time is already in view the list will not be scrolled unless forceScroll is true. This time may optionally be highlighted as selected as well.
@@ -595,7 +512,6 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
    */
   private boolean goTo(long time, boolean animate, boolean setSelected, boolean forceScroll) {
     if (time == -1) {
-      Log.e(TAG, "time is invalid");
       return false;
     }
 
@@ -706,6 +622,24 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
     updateMonthHighlight(listView);
   }
 
+  @Override
+  public void onScrollStateChanged(AbsListView view, int scrollState) {
+    if (scrollState != OnScrollListener.SCROLL_STATE_IDLE) {
+      shouldLoad = false;
+      stopLoader();
+      desiredDay.setToNow();
+    } else {
+      handler.removeCallbacks(updateLoader);
+      shouldLoad = true;
+      handler.postDelayed(updateLoader, LOADER_DELAY);
+    }
+    if (scrollState == OnScrollListener.SCROLL_STATE_TOUCH_SCROLL) {
+      userScrolled = true;
+    }
+
+    scrollStateChangedRunnable.doScrollStateChange(scrollState);
+  }
+
   /**
    * Figures out if the month being shown has changed and updates the highlight if needed
    *
@@ -761,6 +695,46 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
     }
   }
 
+  // Extract range of julian days from URI
+  private void updateLoadedDays() {
+    List<String> pathSegments = eventUri.getPathSegments();
+    int size = pathSegments.size();
+    if (size <= 2) {
+      return;
+    }
+    long first = Long.parseLong(pathSegments.get(size - 2));
+    long last = Long.parseLong(pathSegments.get(size - 1));
+    tempTime.set(first);
+    firstLoadedJulianDay = Time.getJulianDay(first, tempTime.gmtoff);
+    tempTime.set(last);
+    lastLoadedJulianDay = Time.getJulianDay(last, tempTime.gmtoff);
+  }
+
+  /**
+   * Updates the uri used by the loader according to the current position of the listview.
+   *
+   * @return The new Uri to use
+   */
+  private Uri updateUri() {
+    MonthView child = (MonthView) listView.getChildAt(0);
+    if (child != null) {
+      firstLoadedJulianDay = child.getFirstJulianDay();
+    }
+    // -1 to ensure we get all day events from any time zone
+    tempTime.setJulianDay(firstLoadedJulianDay - 1);
+    long start = tempTime.toMillis(true);
+    lastLoadedJulianDay = firstLoadedJulianDay + (numWeeks + 2 * WEEKS_BUFFER) * 7;
+    // +1 to ensure we get all day events from any time zone
+    tempTime.setJulianDay(lastLoadedJulianDay + 1);
+    long end = tempTime.toMillis(true);
+
+    // Create a new uri with the updated times
+    Uri.Builder builder = CalendarProvider.CONTENT_URI.buildUpon();
+    ContentUris.appendId(builder, start);
+    ContentUris.appendId(builder, end);
+    return builder.build();
+  }
+
   /**
    * Sets the month displayed at the top of this view based on time. Override to add custom events when the title is changed.
    *
@@ -779,7 +753,6 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
     if (updateHighlight) {
       adapter.updateFocusMonth(currentMonthDisplayed);
     }
-
 
     boolean useSelected = false;
     if (time.year == desiredDay.year && time.month == desiredDay.month) {
@@ -805,6 +778,15 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
                                  DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_NO_MONTH_DAY | DateUtils.FORMAT_SHOW_YEAR, null, null);
   }
 
+  private String updateWhere() {
+    // TODO fix selection/selection args after b/3206641 is fixed
+    String where = WHERE_CALENDARS_VISIBLE;
+    if (hideDeclined || !showDetailsInMonth) {
+      where += " AND " + Instances.SELF_ATTENDEE_STATUS + "!=" + Attendees.ATTENDEE_STATUS_DECLINED;
+    }
+    return where;
+  }
+
   private String formatDateRange(Context context, long startMillis, long endMillis, int flags) {
     String date;
     String tz;
@@ -818,7 +800,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
     return date;
   }
 
-  protected class ScrollStateRunnable implements Runnable {
+  private class ScrollStateRunnable implements Runnable {
     private int newState;
 
     /**
