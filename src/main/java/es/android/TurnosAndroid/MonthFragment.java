@@ -33,7 +33,6 @@ import android.support.v4.content.Loader;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
 import android.text.format.Time;
-import android.util.Log;
 import android.view.*;
 import android.view.View.OnTouchListener;
 import android.view.accessibility.AccessibilityEvent;
@@ -412,9 +411,9 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
     eventUri = updateUri();
 
     String where = updateWhere();
-    loader = new CursorLoader(getActivity().getApplicationContext(), eventUri, new String[] {DBConstants.ID, DBConstants.EVENT, DBConstants.LOCATION, DBConstants.DESCRIPTION,
-                                                                                             DBConstants.START, DBConstants.END, DBConstants.CALENDAR_ID, DBConstants.EVENT_ID,
-                                                                                             DBConstants.START_DAY, DBConstants.END_DAY, DBConstants.START_TIME, DBConstants.END_TIME}
+    loader = new CursorLoader(getActivity().getApplicationContext(), eventUri, new String[]{DBConstants.ID, DBConstants.EVENT, DBConstants.LOCATION, DBConstants.DESCRIPTION,
+        DBConstants.START, DBConstants.END, DBConstants.CALENDAR_ID, DBConstants.EVENT_ID,
+        DBConstants.START_DAY, DBConstants.END_DAY, DBConstants.START_TIME, DBConstants.END_TIME}
                                                                                                 /*Event.EVENT_PROJECTION*/, /*where*/null,
                                                                                                 null /* WHERE_CALENDARS_SELECTED_ARGS */, null/*INSTANCES_SORT_ORDER*/);
     loader.setUpdateThrottle(LOADER_THROTTLE_DELAY);
@@ -445,9 +444,6 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
     handler.removeCallbacks(updateLoader);
     if (cursorLoader != null) {
       cursorLoader.stopLoading();
-      if (Log.isLoggable(TAG, Log.DEBUG)) {
-        Log.d(TAG, "Stopped loader from loading");
-      }
     }
   }
 
@@ -833,9 +829,6 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
 //                }
 //                int dist = child.getTop();
 //                if (dist < LIST_TOP_OFFSET) {
-//                    if (Log.isLoggable(TAG, Log.DEBUG)) {
-//                        Log.d(TAG, "scrolling by " + dist + " up? " + isScrollingUp);
-//                    }
 //                    int firstPosition = mView.getFirstVisiblePosition();
 //                    int lastPosition = mView.getLastVisiblePosition();
 //                    boolean scroll = firstPosition != 0 && lastPosition != mView.getCount() - 1;

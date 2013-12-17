@@ -19,9 +19,8 @@ public class CalendarProvider extends ContentProvider {
 
     private static final String AUTHORITY           = "es.android.TurnosAndroid.calendarprovider";
     public static final  Uri    CONTENT_URI         = Uri.parse("content://" + AUTHORITY + "/events");
-    public static final  Uri    CONTENT_ID_URI_BASE = Uri.parse("content://" + AUTHORITY + "/event/");
+//    public static final  Uri    CONTENT_ID_URI_BASE = Uri.parse("content://" + AUTHORITY + "/event/");
     private static final UriMatcher uriMatcher;
-
     private static final HashMap<String, String> mMap;
 
     static {
@@ -79,7 +78,7 @@ public class CalendarProvider extends ContentProvider {
         long rowID = db.insert(DBConstants.EVENTS_TABLE, null, values);
         Uri _uri;
         if (rowID > 0) {
-            _uri = ContentUris.withAppendedId(CONTENT_ID_URI_BASE, rowID);
+            _uri = ContentUris.withAppendedId(CONTENT_URI, rowID);
             getContext().getContentResolver().notifyChange(uri, null);
         } else {
             throw new SQLException("Failed to insert row into " + uri);

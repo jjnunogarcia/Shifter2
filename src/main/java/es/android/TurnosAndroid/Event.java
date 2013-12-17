@@ -22,10 +22,7 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.Debug;
 import android.provider.CalendarContract.Attendees;
-import android.provider.CalendarContract.Calendars;
-import android.provider.CalendarContract.Events;
 import android.provider.CalendarContract.Instances;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
@@ -37,9 +34,30 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 // TODO: should Event be Parcelable so it can be passed via Intents?
 public class Event implements Cloneable {
-  private static final String  TAG     = Event.class.getSimpleName();
-  private static final boolean PROFILE = false;
-
+  // The projection to use when querying instances to build a list of events
+  public static final  String[] EVENT_PROJECTION       = new String[]{
+      DBConstants.EVENT,
+      DBConstants.EVENT_LOCATION,
+      DBConstants.DISPLAY_COLOR,
+      DBConstants.CALENDAR_ID,
+      DBConstants.EVENT_TIME_ZONE,
+      DBConstants.EVENT_ID,
+      DBConstants.BEGIN,
+      DBConstants.END,
+      DBConstants.ID,
+      DBConstants.START_DAY,
+      DBConstants.END_DAY,
+      DBConstants.START_TIME,
+      DBConstants.END_TIME,
+      DBConstants.HAS_ALARM,
+      DBConstants.LOCATION,
+      DBConstants.START,
+      DBConstants.ORGANIZER,
+      DBConstants.GUESTS_CAN_MODIFY,
+      DBConstants.DESCRIPTION,
+      DBConstants.ALL_DAY
+  };
+  private static final String   TAG                    = Event.class.getSimpleName();
   /**
    * The sort order is:
    * 1) events with an earlier start (begin for normal events, startday for allday)
@@ -50,40 +68,13 @@ public class Event implements Cloneable {
    * sorted correctly with respect to events that are >24 hours (and
    * therefore show up in the allday area).
    */
-  private static final String SORT_EVENTS_BY    = "begin ASC, end DESC, title ASC";
-  private static final String SORT_ALLDAY_BY    = "startDay ASC, endDay DESC, title ASC";
-  private static final String DISPLAY_AS_ALLDAY = "dispAllday";
-
-  private static final String EVENTS_WHERE = DISPLAY_AS_ALLDAY + "=0";
-  private static final String ALLDAY_WHERE = DISPLAY_AS_ALLDAY + "=1";
-
-  // The projection to use when querying instances to build a list of events
-  public static final String[] EVENT_PROJECTION = new String[] {
-      Instances.TITLE,                 // 0
-      Instances.EVENT_LOCATION,        // 1
-      Instances.ALL_DAY,               // 2
-      Instances.DISPLAY_COLOR,         // 3 If SDK < 16, set to Instances.CALENDAR_COLOR.
-      Instances.EVENT_TIMEZONE,        // 4
-      Instances.EVENT_ID,              // 5
-      Instances.BEGIN,                 // 6
-      Instances.END,                   // 7
-      Instances._ID,                   // 8
-      Instances.START_DAY,             // 9
-      Instances.END_DAY,               // 10
-      Instances.START_MINUTE,          // 11
-      Instances.END_MINUTE,            // 12
-      Instances.HAS_ALARM,             // 13
-      Instances.RRULE,                 // 14
-      Instances.RDATE,                 // 15
-      Instances.SELF_ATTENDEE_STATUS,  // 16
-      Events.ORGANIZER,                // 17
-      Events.GUESTS_CAN_MODIFY,        // 18
-      Instances.ALL_DAY + "=1 OR (" + Instances.END + "-" + Instances.BEGIN + ")>="
-      + DateUtils.DAY_IN_MILLIS + " AS " + DISPLAY_AS_ALLDAY, // 19
-  };
-
+  private static final String   SORT_EVENTS_BY         = "begin ASC, end DESC, title ASC";
+  private static final String   SORT_ALLDAY_BY         = "startDay ASC, endDay DESC, title ASC";
+  private static final String   DISPLAY_AS_ALLDAY      = "dispAllday";
+  private static final String   EVENTS_WHERE           = DISPLAY_AS_ALLDAY + "=0";
+  private static final String   ALLDAY_WHERE           = DISPLAY_AS_ALLDAY + "=1";
   // The indices for the projection array above.
-  private static final int PROJECTION_COLOR_INDEX = 3;
+  private static final int      PROJECTION_COLOR_INDEX = 3;
   private static String mNoTitleString;
   private static int    mNoColorColor;
 
@@ -106,24 +97,21 @@ public class Event implements Cloneable {
   public  int          endTime;
   public  long         startMillis;   // UTC milliseconds since the epoch
   public  long         endMillis;     // UTC milliseconds since the epoch
-  private int          column;
-  private int          maxColumns;
   public  boolean      hasAlarm;
   public  boolean      isRepeating;
   public  int          selfAttendeeStatus;
-
   // The coordinates of the event rectangle drawn on the screen.
-  public float left;
-  public float right;
-  public float top;
-  public float bottom;
-
-  // These 4 fields are used for navigating among events within the selected
-  // hour in the Day and Week view.
-  public Event nextRight;
-  public Event nextLeft;
-  public Event nextUp;
-  public Event nextDown;
+  public  float        left;
+  public  float        right;
+  public  float        top;
+  public  float        bottom;
+  // These 4 fields are used for navigating among events within the selected hour in the Day and Week view.
+  public  Event        nextRight;
+  public  Event        nextLeft;
+  public  Event        nextUp;
+  public  Event        nextDown;
+  private int          column;
+  private int          maxColumns;
 
   public Event() {
     id = 0;
@@ -142,58 +130,10 @@ public class Event implements Cloneable {
     selfAttendeeStatus = Attendees.ATTENDEE_STATUS_NONE;
   }
 
-  @Override
-  public final Object clone() throws CloneNotSupportedException {
-    super.clone();
-    Event e = new Event();
-
-    e.title = title;
-    e.color = color;
-    e.location = location;
-    e.allDay = allDay;
-    e.startDay = startDay;
-    e.endDay = endDay;
-    e.startTime = startTime;
-    e.endTime = endTime;
-    e.startMillis = startMillis;
-    e.endMillis = endMillis;
-    e.hasAlarm = hasAlarm;
-    e.isRepeating = isRepeating;
-    e.selfAttendeeStatus = selfAttendeeStatus;
-    e.organizer = organizer;
-    e.guestsCanModify = guestsCanModify;
-
-    return e;
-  }
-
-  public final void copyTo(Event dest) {
-    dest.id = id;
-    dest.title = title;
-    dest.color = color;
-    dest.location = location;
-    dest.allDay = allDay;
-    dest.startDay = startDay;
-    dest.endDay = endDay;
-    dest.startTime = startTime;
-    dest.endTime = endTime;
-    dest.startMillis = startMillis;
-    dest.endMillis = endMillis;
-    dest.hasAlarm = hasAlarm;
-    dest.isRepeating = isRepeating;
-    dest.selfAttendeeStatus = selfAttendeeStatus;
-    dest.organizer = organizer;
-    dest.guestsCanModify = guestsCanModify;
-  }
-
   /**
    * Loads <i>days</i> days worth of instances starting at <i>startDay</i>.
    */
   public static ArrayList<Event> loadEvents(Context context, int startDay, int days, int requestId, AtomicInteger sequenceNumber) {
-
-    if (PROFILE) {
-      Debug.startMethodTracing("loadEvents");
-    }
-
     Cursor cEvents = null;
     Cursor cAllday = null;
 
@@ -238,9 +178,6 @@ public class Event implements Cloneable {
       if (cAllday != null) {
         cAllday.close();
       }
-      if (PROFILE) {
-        Debug.stopMethodTracing();
-      }
     }
     return events;
   }
@@ -260,7 +197,7 @@ public class Event implements Cloneable {
    * @return A Cursor of instances matching the selection
    */
   private static Cursor instancesQuery(ContentResolver cr, String[] projection, int startDay, int endDay, String selection, String[] selectionArgs, String orderBy) {
-    String WHERE_CALENDARS_SELECTED = Calendars.VISIBLE + "=?";
+    String WHERE_CALENDARS_SELECTED = "visible=?";
     String[] WHERE_CALENDARS_ARGS = {"1"};
     String DEFAULT_SORT_ORDER = "begin ASC";
 
@@ -493,6 +430,49 @@ public class Event implements Cloneable {
     return 64;
   }
 
+  @Override
+  public final Object clone() throws CloneNotSupportedException {
+    super.clone();
+    Event e = new Event();
+
+    e.title = title;
+    e.color = color;
+    e.location = location;
+    e.allDay = allDay;
+    e.startDay = startDay;
+    e.endDay = endDay;
+    e.startTime = startTime;
+    e.endTime = endTime;
+    e.startMillis = startMillis;
+    e.endMillis = endMillis;
+    e.hasAlarm = hasAlarm;
+    e.isRepeating = isRepeating;
+    e.selfAttendeeStatus = selfAttendeeStatus;
+    e.organizer = organizer;
+    e.guestsCanModify = guestsCanModify;
+
+    return e;
+  }
+
+  public final void copyTo(Event dest) {
+    dest.id = id;
+    dest.title = title;
+    dest.color = color;
+    dest.location = location;
+    dest.allDay = allDay;
+    dest.startDay = startDay;
+    dest.endDay = endDay;
+    dest.startTime = startTime;
+    dest.endTime = endTime;
+    dest.startMillis = startMillis;
+    dest.endMillis = endMillis;
+    dest.hasAlarm = hasAlarm;
+    dest.isRepeating = isRepeating;
+    dest.selfAttendeeStatus = selfAttendeeStatus;
+    dest.organizer = organizer;
+    dest.guestsCanModify = guestsCanModify;
+  }
+
   /**
    * Returns the event title and location separated by a comma.  If the location is already part of the title (at the end of the title), then
    * just the title is returned.
@@ -514,20 +494,20 @@ public class Event implements Cloneable {
     return text;
   }
 
-  public void setColumn(int column) {
-    this.column = column;
-  }
-
   public int getColumn() {
     return column;
   }
 
-  public void setMaxColumns(int maxColumns) {
-    this.maxColumns = maxColumns;
+  public void setColumn(int column) {
+    this.column = column;
   }
 
   public int getMaxColumns() {
     return maxColumns;
+  }
+
+  public void setMaxColumns(int maxColumns) {
+    this.maxColumns = maxColumns;
   }
 
   public long getStartMillis() {

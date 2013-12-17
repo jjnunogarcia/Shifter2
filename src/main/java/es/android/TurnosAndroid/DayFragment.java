@@ -32,25 +32,16 @@ import android.widget.ViewSwitcher;
  * This is the base class for Day and Week Activities.
  */
 public class DayFragment extends Fragment implements EventHandler, ViewSwitcher.ViewFactory {
-  public static final    String TAG                     = DayFragment.class.getSimpleName();
-  protected static final String BUNDLE_KEY_RESTORE_TIME = "key_restore_time";
+  public static final    String   TAG                     = DayFragment.class.getSimpleName();
+  public static final    String   TIME_MILLIS             = "time_millis";
+  public static final    String   NUM_OF_DAYS             = "num_of_days";
+  protected static final String   BUNDLE_KEY_RESTORE_TIME = "key_restore_time";
   /**
    * The view id used for all the views we create. It's OK to have all child views have the same ID. This ID is used to pick which view receives
    * focus when a view hierarchy is saved / restore
    */
-  private static final   int    VIEW_ID                 = 1;
-  public static final    String TIME_MILLIS             = "time_millis";
-  public static final    String NUM_OF_DAYS             = "num_of_days";
-    private ViewSwitcher viewSwitcher;
-  private DayView     dayView;
-  private Animation   inAnimationForward;
-  private Animation   outAnimationForward;
-  private Animation   inAnimationBackward;
-  private Animation   outAnimationBackward;
-  private EventLoader eventLoader;
-  private Time        selectedDay;
-  private int         numDays;
-  private final Runnable timeZoneUpdater = new Runnable() {
+  private static final   int      VIEW_ID                 = 1;
+  private final          Runnable timeZoneUpdater         = new Runnable() {
     @Override
     public void run() {
       if (DayFragment.this.isAdded()) {
@@ -59,6 +50,16 @@ public class DayFragment extends Fragment implements EventHandler, ViewSwitcher.
       }
     }
   };
+  private ViewSwitcher       viewSwitcher;
+  private DayView            dayView;
+  private Animation          inAnimationForward;
+  private Animation          outAnimationForward;
+  private Animation          inAnimationBackward;
+  private Animation          outAnimationBackward;
+  private EventLoader        eventLoader;
+  private Time               selectedDay;
+  private CalendarController calendarController;
+  private int                numDays;
 
   public DayFragment() {
     selectedDay = new Time();
@@ -84,15 +85,8 @@ public class DayFragment extends Fragment implements EventHandler, ViewSwitcher.
     }
 
     View view = inflater.inflate(R.layout.day_fragment, null);
-//    dayView = (DayView) view.findViewById(R.id.day_view);
 
     viewSwitcher = (ViewSwitcher) view.findViewById(R.id.switcher);
-    viewSwitcher.setFactory(this);
-    viewSwitcher.getCurrentView().requestFocus();
-    ((DayView) viewSwitcher.getCurrentView()).updateTitle();
-//    dayView.updateTitle();
-//    timeZoneUpdater.run();
-//    dayView.setSelected(selectedDay, false, false);
 
     return view;
   }
@@ -108,14 +102,17 @@ public class DayFragment extends Fragment implements EventHandler, ViewSwitcher.
     outAnimationBackward = AnimationUtils.loadAnimation(context, R.anim.slide_right_out);
 
     eventLoader = new EventLoader(context);
-    dayView = new DayView(context, new CalendarController(context), viewSwitcher, eventLoader, numDays);
-    dayView.setId(VIEW_ID);
-    dayView.setLayoutParams(new ViewSwitcher.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+    viewSwitcher.setFactory(this);
+    viewSwitcher.getCurrentView().requestFocus();
+    ((DayView) viewSwitcher.getCurrentView()).updateTitle();
   }
 
   @Override
   public View makeView() {
     timeZoneUpdater.run();
+    dayView = new DayView(getActivity().getApplicationContext(), ((MainActivity) getActivity()).getCalendarController(), viewSwitcher, eventLoader, numDays);
+    dayView.setId(VIEW_ID);
+    dayView.setLayoutParams(new ViewSwitcher.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
     dayView.setSelected(selectedDay, false, false);
     return dayView;
   }
