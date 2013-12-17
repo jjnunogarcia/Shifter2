@@ -19,11 +19,8 @@ package es.android.TurnosAndroid;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.text.format.Time;
-import android.view.MotionEvent;
-import android.view.View;
+import android.view.*;
 import android.view.View.OnTouchListener;
-import android.view.ViewConfiguration;
-import android.view.ViewGroup;
 import android.widget.AbsListView.LayoutParams;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
@@ -80,38 +77,62 @@ public class MonthAdapter extends BaseAdapter implements OnTouchListener {
       }
     }
   };
+
+  // Performs the single tap operation: go to the tapped day. This is done in a runnable to allow the click animation to finish before switching views
+  private final Runnable doSingleTapUp = new Runnable() {
+    @Override
+    public void run() {
+      if (singleTapUpView != null) {
+        Time day = singleTapUpView.getDayFromLocation(clickedXLocation);
+        if (day != null) {
+          onDayTapped(day);
+        }
+        clearClickedView(singleTapUpView);
+        singleTapUpView = null;
+      }
+    }
+  };
+
   private Context                     context;
   private Time                        selectedDay;
   private int                         selectedWeek;
   private int                         firstDayOfWeek;
   private boolean                     showWeekNumber;
+  private GestureDetector             gestureDetector;
   private int                         numWeeks;
   private int                         daysPerWeek;
   private int                         focusMonth;
   private ListView                    listView;
+  private CalendarController          calendarController;
   private String                      homeTimeZone;
   private Time                        tempTime;
   private Time                        today;
   private int                         firstJulianDay;
   private int                         orientation;
+  private int                         totalClickDelay;
   private int                         onDownDelay;
   private float                       movedPixelToCancel;
+  private boolean                     showAgendaWithMonth;
   private ArrayList<ArrayList<Event>> eventDayList;
   private ArrayList<Event>            events;
   private boolean                     animateToday;
   private long                        animateTime;
   private MonthView                   clickedView;
+  private MonthView                   singleTapUpView;
   private float                       clickedXLocation;
+  private long                        clickTime;
 
-  public MonthAdapter(Context context, HashMap<String, Integer> params) {
+  public MonthAdapter(Context context, CalendarController calendarController, HashMap<String, Integer> params) {
     this.context = context;
     firstDayOfWeek = Calendar.getInstance(Locale.getDefault()).getFirstDayOfWeek() - 1;
+    gestureDetector = new GestureDetector(context, new CalendarGestureListener());
     selectedDay = new Time();
     selectedDay.setToNow();
     showWeekNumber = false;
     numWeeks = DEFAULT_NUM_WEEKS;
     daysPerWeek = DEFAULT_DAYS_PER_WEEK;
     focusMonth = DEFAULT_MONTH_FOCUS;
+    this.calendarController = calendarController;
     homeTimeZone = Utils.getTimeZone(context, null);
     selectedDay.switchTimezone(homeTimeZone);
     today = new Time(homeTimeZone);
@@ -122,9 +143,12 @@ public class MonthAdapter extends BaseAdapter implements OnTouchListener {
     eventDayList = new ArrayList<ArrayList<Event>>();
     animateToday = false;
     animateTime = 0;
+    int onTapDelay = 100;
+    showAgendaWithMonth = Utils.getConfigBool(context, R.bool.show_agenda_with_month);
     ViewConfiguration vc = ViewConfiguration.get(context);
     onDownDelay = ViewConfiguration.getTapTimeout();
     movedPixelToCancel = vc.getScaledTouchSlop();
+    totalClickDelay = onDownDelay + onTapDelay;
   }
 
   /**
@@ -331,34 +355,67 @@ public class MonthAdapter extends BaseAdapter implements OnTouchListener {
     notifyDataSetChanged();
   }
 
+  /**
+   * Maintains the same hour/min/sec but moves the day to the tapped day.
+   *
+   * @param day The day that was tapped
+   */
+  private void onDayTapped(Time day) {
+    day.timezone = homeTimeZone;
+    Time currTime = new Time(homeTimeZone);
+    currTime.set(calendarController.getTime());
+    day.hour = currTime.hour;
+    day.minute = currTime.minute;
+    day.allDay = false;
+    day.normalize(true);
+    if (showAgendaWithMonth) {
+      // If agenda view is visible with month view , refresh the views with the selected day's info
+      calendarController.sendEvent(EventType.GO_TO, day, day, -1, ViewType.CURRENT, CalendarController.EXTRA_GOTO_DATE, null, null);
+    } else {
+      // Else , switch to the detailed view
+      calendarController.sendEvent(EventType.GO_TO, day, day, -1, ViewType.DETAIL, CalendarController.EXTRA_GOTO_DATE | CalendarController.EXTRA_GOTO_BACK_TO_PREVIOUS, null, null);
+    }
+  }
+
   @Override
   public boolean onTouch(View v, MotionEvent event) {
     int action = event.getAction();
 
-    // Event was tapped - switch to the detailed view making sure the click animation is done first.
-    // Animate a click - on down: show the selected day in the "clicked" color.
-    // On Up/scroll/move/cancel: hide the "clicked" color.
-    switch (action) {
-      case MotionEvent.ACTION_DOWN:
-        clickedView = (MonthView) v;
-        clickedXLocation = event.getX();
-        listView.postDelayed(doClick, onDownDelay);
-        break;
-      case MotionEvent.ACTION_UP:
-      case MotionEvent.ACTION_SCROLL:
-      case MotionEvent.ACTION_CANCEL:
-        clearClickedView((MonthView) v);
-        break;
-      case MotionEvent.ACTION_MOVE:
-        // No need to cancel on vertical movement, ACTION_SCROLL will do that.
-        if (Math.abs(event.getX() - clickedXLocation) > movedPixelToCancel) {
+    // Event was tapped - switch to the detailed view making sure the click animation
+    // is done first.
+    if (gestureDetector.onTouchEvent(event)) {
+      singleTapUpView = (MonthView) v;
+      long delay = System.currentTimeMillis() - clickTime;
+      // Make sure the animation is visible for at least mOnTapDelay - mOnDownDelay ms
+      listView.postDelayed(doSingleTapUp, delay > totalClickDelay ? 0 : totalClickDelay - delay);
+      return true;
+    } else {
+      // Animate a click - on down: show the selected day in the "clicked" color.
+      // On Up/scroll/move/cancel: hide the "clicked" color.
+      switch (action) {
+        case MotionEvent.ACTION_DOWN:
+          clickedView = (MonthView) v;
+          clickedXLocation = event.getX();
+          clickTime = System.currentTimeMillis();
+          listView.postDelayed(doClick, onDownDelay);
+          break;
+        case MotionEvent.ACTION_UP:
+        case MotionEvent.ACTION_SCROLL:
+        case MotionEvent.ACTION_CANCEL:
           clearClickedView((MonthView) v);
-        }
-        break;
-      default:
-        break;
+          break;
+        case MotionEvent.ACTION_MOVE:
+          // No need to cancel on vertical movement, ACTION_SCROLL will do that.
+          if (Math.abs(event.getX() - clickedXLocation) > movedPixelToCancel) {
+            clearClickedView((MonthView) v);
+          }
+          break;
+        default:
+          break;
+      }
     }
-    // Do not tell the frameworks we consumed the touch action so that fling actions can be processed by the fragment.
+    // Do not tell the frameworks we consumed the touch action so that fling actions can be
+    // processed by the fragment.
     return false;
   }
 
@@ -371,5 +428,15 @@ public class MonthAdapter extends BaseAdapter implements OnTouchListener {
 
   public void setListView(ListView lv) {
     listView = lv;
+  }
+
+  /**
+   * This is here so we can identify single tap events and set the selected day correctly
+   */
+  private class CalendarGestureListener extends GestureDetector.SimpleOnGestureListener {
+    @Override
+    public boolean onSingleTapUp(MotionEvent e) {
+      return true;
+    }
   }
 }

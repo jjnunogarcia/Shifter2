@@ -227,7 +227,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
       initialTime = arguments.getLong(INITIAL_TIME, -1);
     }
 
-    View view = inflater.inflate(R.layout.full_month_by_week, container, false);
+    View view = inflater.inflate(R.layout.month_fragment, container, false);
     dayNamesHeader = (ViewGroup) view.findViewById(R.id.day_names);
     monthName = (TextView) view.findViewById(R.id.month_name);
     header = (TextView) dayNamesHeader.findViewById(R.id.wk_label);
@@ -354,7 +354,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
     weekParams.put(MonthAdapter.WEEK_PARAMS_DAYS_PER_WEEK, daysPerWeek);
 
     if (adapter == null) {
-      adapter = new MonthAdapter(getActivity().getApplicationContext(), weekParams);
+      adapter = new MonthAdapter(getActivity().getApplicationContext(), calendarController, weekParams);
       adapter.registerDataSetObserver(observer);
     } else {
       adapter.updateParams(weekParams);
@@ -412,9 +412,9 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
     eventUri = updateUri();
 
     String where = updateWhere();
-    loader = new CursorLoader(getActivity().getApplicationContext(), eventUri, new String[]{DBConstants.ID, DBConstants.EVENT, DBConstants.LOCATION, DBConstants.DESCRIPTION,
-        DBConstants.START, DBConstants.END, DBConstants.CALENDAR_ID, DBConstants.EVENT_ID,
-        DBConstants.START_DAY, DBConstants.END_DAY, DBConstants.START_TIME, DBConstants.END_TIME}
+    loader = new CursorLoader(getActivity().getApplicationContext(), eventUri, new String[] {DBConstants.ID, DBConstants.EVENT, DBConstants.LOCATION, DBConstants.DESCRIPTION,
+                                                                                             DBConstants.START, DBConstants.END, DBConstants.CALENDAR_ID, DBConstants.EVENT_ID,
+                                                                                             DBConstants.START_DAY, DBConstants.END_DAY, DBConstants.START_TIME, DBConstants.END_TIME}
                                                                                                 /*Event.EVENT_PROJECTION*/, /*where*/null,
                                                                                                 null /* WHERE_CALENDARS_SELECTED_ARGS */, null/*INSTANCES_SORT_ORDER*/);
     loader.setUpdateThrottle(LOADER_THROTTLE_DELAY);

@@ -18,7 +18,7 @@ public class MainActivity extends FragmentActivity implements EventHandler {
 
     new ImportEntries(getApplicationContext()).execute();
     calendarController = new CalendarController(getApplicationContext());
-    setContentView(R.layout.cal_layout);
+    setContentView(R.layout.calendar_activity);
     addMonthFragment();
     calendarController.registerEventHandler(this);
   }

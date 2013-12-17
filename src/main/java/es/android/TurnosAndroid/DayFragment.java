@@ -27,12 +27,11 @@ import android.view.ViewGroup.LayoutParams;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ViewSwitcher;
-import android.widget.ViewSwitcher.ViewFactory;
 
 /**
  * This is the base class for Day and Week Activities.
  */
-public class DayFragment extends Fragment implements EventHandler, ViewFactory {
+public class DayFragment extends Fragment implements EventHandler, ViewSwitcher.ViewFactory {
   public static final    String TAG                     = DayFragment.class.getSimpleName();
   protected static final String BUNDLE_KEY_RESTORE_TIME = "key_restore_time";
   /**
@@ -42,15 +41,15 @@ public class DayFragment extends Fragment implements EventHandler, ViewFactory {
   private static final   int    VIEW_ID                 = 1;
   public static final    String TIME_MILLIS             = "time_millis";
   public static final    String NUM_OF_DAYS             = "num_of_days";
-  private ViewSwitcher viewSwitcher;
-  private DayView      view;
-  private Animation    inAnimationForward;
-  private Animation    outAnimationForward;
-  private Animation    inAnimationBackward;
-  private Animation    outAnimationBackward;
-  private EventLoader  eventLoader;
-  private Time         selectedDay;
-  private int          numDays;
+    private ViewSwitcher viewSwitcher;
+  private DayView     dayView;
+  private Animation   inAnimationForward;
+  private Animation   outAnimationForward;
+  private Animation   inAnimationBackward;
+  private Animation   outAnimationBackward;
+  private EventLoader eventLoader;
+  private Time        selectedDay;
+  private int         numDays;
   private final Runnable timeZoneUpdater = new Runnable() {
     @Override
     public void run() {
@@ -84,12 +83,16 @@ public class DayFragment extends Fragment implements EventHandler, ViewFactory {
       selectedDay.set(timeMillis);
     }
 
-    View view = inflater.inflate(R.layout.day_activity, null);
+    View view = inflater.inflate(R.layout.day_fragment, null);
+//    dayView = (DayView) view.findViewById(R.id.day_view);
 
     viewSwitcher = (ViewSwitcher) view.findViewById(R.id.switcher);
     viewSwitcher.setFactory(this);
     viewSwitcher.getCurrentView().requestFocus();
     ((DayView) viewSwitcher.getCurrentView()).updateTitle();
+//    dayView.updateTitle();
+//    timeZoneUpdater.run();
+//    dayView.setSelected(selectedDay, false, false);
 
     return view;
   }
@@ -105,16 +108,16 @@ public class DayFragment extends Fragment implements EventHandler, ViewFactory {
     outAnimationBackward = AnimationUtils.loadAnimation(context, R.anim.slide_right_out);
 
     eventLoader = new EventLoader(context);
-    view = new DayView(context, new CalendarController(context), viewSwitcher, eventLoader, numDays);
-    view.setId(VIEW_ID);
-    view.setLayoutParams(new ViewSwitcher.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+    dayView = new DayView(context, new CalendarController(context), viewSwitcher, eventLoader, numDays);
+    dayView.setId(VIEW_ID);
+    dayView.setLayoutParams(new ViewSwitcher.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
   }
 
   @Override
   public View makeView() {
     timeZoneUpdater.run();
-    view.setSelected(selectedDay, false, false);
-    return view;
+    dayView.setSelected(selectedDay, false, false);
+    return dayView;
   }
 
   @Override

@@ -53,7 +53,6 @@ import android.text.style.StyleSpan;
 import android.util.Log;
 import android.view.*;
 import android.view.ContextMenu.ContextMenuInfo;
-import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityManager;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.Animation;
@@ -1067,7 +1066,6 @@ public class DayView extends View implements View.OnCreateContextMenuListener, S
         mTodayAnimator.start();
       }
     }
-    sendAccessibilityEventAsNeeded(false);
   }
 
   // Called from animation framework via reflection. Do not remove
@@ -1663,96 +1661,6 @@ public class DayView extends View implements View.OnCreateContextMenuListener, S
 
   private boolean isTouchExplorationEnabled() {
     return isAccessibilityEnabled && mAccessibilityMgr.isTouchExplorationEnabled();
-  }
-
-  private void sendAccessibilityEventAsNeeded(boolean speakEvents) {
-    if (!isAccessibilityEnabled) {
-      return;
-    }
-    boolean dayChanged = mLastSelectionDayForAccessibility != mSelectionDayForAccessibility;
-    boolean hourChanged = mLastSelectionHourForAccessibility != mSelectionHourForAccessibility;
-    if (dayChanged || hourChanged || mLastSelectedEventForAccessibility != mSelectedEventForAccessibility) {
-      mLastSelectionDayForAccessibility = mSelectionDayForAccessibility;
-      mLastSelectionHourForAccessibility = mSelectionHourForAccessibility;
-      mLastSelectedEventForAccessibility = mSelectedEventForAccessibility;
-
-      StringBuilder b = new StringBuilder();
-
-      // Announce only the changes i.e. day or hour or both
-      if (dayChanged) {
-        b.append(getSelectedTimeForAccessibility().format("%A "));
-      }
-      if (hourChanged) {
-        b.append(getSelectedTimeForAccessibility().format(mIs24HourFormat ? "%k" : "%l%p"));
-      }
-      if (dayChanged || hourChanged) {
-        b.append(PERIOD_SPACE);
-      }
-
-      if (speakEvents) {
-        if (mEventCountTemplate == null) {
-          mEventCountTemplate = context.getString(R.string.template_announce_item_index);
-        }
-
-        // Read out the relevant event(s)
-        int numEvents = mSelectedEvents.size();
-        if (numEvents > 0) {
-          if (mSelectedEventForAccessibility == null) {
-            // Read out all the events
-            int i = 1;
-            for (Event calEvent : mSelectedEvents) {
-              if (numEvents > 1) {
-                // Read out x of numEvents if there are more than one event
-                mStringBuilder.setLength(0);
-                b.append(mFormatter.format(mEventCountTemplate, i++, numEvents));
-                b.append(" ");
-              }
-              appendEventAccessibilityString(b, calEvent);
-            }
-          } else {
-            if (numEvents > 1) {
-              // Read out x of numEvents if there are more than one event
-              mStringBuilder.setLength(0);
-              b.append(mFormatter.format(mEventCountTemplate, mSelectedEvents.indexOf(mSelectedEventForAccessibility) + 1, numEvents));
-              b.append(" ");
-            }
-            appendEventAccessibilityString(b, mSelectedEventForAccessibility);
-          }
-        } else {
-          b.append(mCreateNewEventString);
-        }
-      }
-
-      if (dayChanged || hourChanged || speakEvents) {
-        AccessibilityEvent event = AccessibilityEvent.obtain(AccessibilityEvent.TYPE_VIEW_FOCUSED);
-        CharSequence msg = b.toString();
-        event.getText().add(msg);
-        event.setAddedCount(msg.length());
-        sendAccessibilityEventUnchecked(event);
-      }
-    }
-  }
-
-  /**
-   * @param b
-   * @param calEvent
-   */
-  private void appendEventAccessibilityString(StringBuilder b, Event calEvent) {
-    b.append(calEvent.getTitleAndLocation());
-    b.append(PERIOD_SPACE);
-    String when;
-    int flags = DateUtils.FORMAT_SHOW_DATE;
-    if (calEvent.allDay) {
-      flags |= DateUtils.FORMAT_UTC | DateUtils.FORMAT_SHOW_WEEKDAY;
-    } else {
-      flags |= DateUtils.FORMAT_SHOW_TIME;
-      if (DateFormat.is24HourFormat(context)) {
-        flags |= DateUtils.FORMAT_24HOUR;
-      }
-    }
-    when = Utils.formatDateRange(context, calEvent.startMillis, calEvent.endMillis, flags);
-    b.append(when);
-    b.append(PERIOD_SPACE);
   }
 
   private class GotoBroadcaster implements Animation.AnimationListener {
@@ -4484,7 +4392,6 @@ public class DayView extends View implements View.OnCreateContextMenuListener, S
     setSelectedDay(day);
 
     if (y < DAY_HEADER_HEIGHT) {
-      sendAccessibilityEventAsNeeded(false);
       return false;
     }
 
@@ -4521,7 +4428,6 @@ public class DayView extends View implements View.OnCreateContextMenuListener, S
 //                Log.i("Cal", "  " + timeRange + " " + ev.title);
 //            }
 //        }
-    sendAccessibilityEventAsNeeded(true);
 
     // Restore old values
     if (keepOldSelection) {

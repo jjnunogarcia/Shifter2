@@ -65,8 +65,7 @@ public class CalendarController {
   }
 
   public void sendEventRelatedEvent(long eventType, long eventId, long startMillis, long endMillis, int x, int y, long selectedMillis) {
-    // TODO: pass the real allDay status or at least a status that says we don't know the
-    // status and have the receiver query the data.
+    // TODO: pass the real allDay status or at least a status that says we don't know the status and have the receiver query the data.
     // The current use of this method for VIEW_EVENT is by the day view to show an EventInfo so currently the missing allDay status has no effect.
     sendEventRelatedEventWithExtra(eventType, eventId, startMillis, endMillis, x, y, EventInfo.buildViewExtraLong(Attendees.ATTENDEE_STATUS_NONE, false), selectedMillis);
   }
