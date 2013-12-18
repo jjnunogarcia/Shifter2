@@ -261,7 +261,6 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
     timeZoneUpdater.run();
 
     adapter.setSelectedDay(selectedDay);
-    showCalendarControls = Utils.getConfigBool(context, R.bool.show_calendar_controls);
 
     // Synchronized the loading time of the month's events with the animation of the calendar controls.
     int eventsLoadingDelay = 0;
@@ -284,12 +283,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
         tempTime.setJulianDay(julianDay + DAYS_PER_WEEK);
         setMonthDisplayed(tempTime, true);
 
-        // To get a smoother transition when showing this fragment, delay loading of events until the fragment is expended fully and the calendar controls are gone.
-        if (showCalendarControls) {
-          listView.postDelayed(loadingRunnable, finalEventsLoadingDelay);
-        } else {
-          cursorLoader = (CursorLoader) getLoaderManager().initLoader(0, null, MonthFragment.this);
-        }
+        cursorLoader = (CursorLoader) getLoaderManager().initLoader(0, null, MonthFragment.this);
         adapter.setListView(listView);
 
         goTo(initialTime, false, true, true);
@@ -308,16 +302,6 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
   public void onPause() {
     super.onPause();
     handler.removeCallbacks(todayUpdater);
-  }
-
-  @Override
-  public void onDetach() {
-    super.onDetach();
-    if (showCalendarControls) {
-      if (listView != null) {
-        listView.removeCallbacks(loadingRunnable);
-      }
-    }
   }
 
   private void setUpHeader() {

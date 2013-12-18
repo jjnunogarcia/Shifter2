@@ -1,12 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
+<android.support.v4.widget.DrawerLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/calendar_activity_drawer_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
     <FrameLayout
-        android:id="@+id/cal_frame"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+            android:id="@+id/calendar_frame"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
 
-</LinearLayout>
+    <ListView
+            android:id="@+id/left_drawer"
+            android:layout_width="240dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="start"
+            android:choiceMode="singleChoice"
+            android:divider="@android:color/black"
+            android:dividerHeight="0dp"
+            android:background="@android:color/white"/>
+
+</android.support.v4.widget.DrawerLayout>
