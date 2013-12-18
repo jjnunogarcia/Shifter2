@@ -42,6 +42,12 @@ public class CalendarProvider extends ContentProvider {
         mMap.put(DBConstants.END_DAY, DBConstants.END_DAY);
         mMap.put(DBConstants.START_TIME, DBConstants.START_TIME);
         mMap.put(DBConstants.END_TIME, DBConstants.END_TIME);
+        mMap.put(DBConstants.ALL_DAY, DBConstants.ALL_DAY);
+        mMap.put(DBConstants.DISPLAY_COLOR, DBConstants.DISPLAY_COLOR);
+        mMap.put(DBConstants.EVENT_TIME_ZONE, DBConstants.EVENT_TIME_ZONE);
+        mMap.put(DBConstants.HAS_ALARM, DBConstants.HAS_ALARM);
+        mMap.put(DBConstants.ORGANIZER, DBConstants.ORGANIZER);
+        mMap.put(DBConstants.GUESTS_CAN_MODIFY, DBConstants.GUESTS_CAN_MODIFY);
     }
 
     private DatabaseHelper DBHelper;

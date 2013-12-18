@@ -20,15 +20,13 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Color;
 import android.os.Build;
-import android.text.format.DateUtils;
 import android.text.format.Time;
 import android.util.Log;
 
 import java.util.*;
 
 public class Utils {
-  private static final boolean DEBUG = false;
-  private static final String  TAG   = "CalUtils";
+  private static final String TAG = Utils.class.getSimpleName();
 
   public static final int DECLINED_EVENT_ALPHA      = 0x66;
   public static final int DECLINED_EVENT_TEXT_ALPHA = 0xC0;
@@ -278,7 +276,7 @@ public class Utils {
 
     if (!mMinutesLoaded) {
       if (context == null) {
-        Log.wtf(TAG, "No context and haven't loaded parameters yet! Can't create DNA.");
+        return null;
       }
       Resources res = context.getResources();
       CONFLICT_COLOR = res.getColor(R.color.month_dna_conflict_time_color);
@@ -289,12 +287,7 @@ public class Utils {
       mMinutesLoaded = true;
     }
 
-    if (events == null || events.isEmpty() || dayXs == null || dayXs.length < 1
-        || bottom - top < 8 || minPixels < 0) {
-      Log.e(TAG,
-            "Bad values for createDNAStrands! events:" + events + " dayXs:"
-            + Arrays.toString(dayXs) + " bot-top:" + (bottom - top) + " minPixels:"
-            + minPixels);
+    if (events == null || events.isEmpty() || dayXs == null || dayXs.length < 1 || bottom - top < 8 || minPixels < 0) {
       return null;
     }
 
@@ -415,10 +408,6 @@ public class Utils {
             currSegment.endMinute = endMinute;
             segments.add(i + 1, rhs);
             strands.get(rhs.color).count++;
-            if (DEBUG) {
-              Log.d(TAG, "Added rhs, curr:" + currSegment.toString() + " i:"
-                         + segments.get(i).toString());
-            }
           }
           // if the event starts after the segment and wouldn't create
           // a segment that is too small split off the left side
@@ -434,10 +423,6 @@ public class Utils {
             // current segment.
             segments.add(i++, lhs);
             strands.get(lhs.color).count++;
-            if (DEBUG) {
-              Log.d(TAG, "Added lhs, curr:" + currSegment.toString() + " i:"
-                         + segments.get(i).toString());
-            }
           }
           // if the right side is black merge this with the segment to
           // the right if they're on the same day and overlap
@@ -541,9 +526,6 @@ public class Utils {
 
       y0 = top + getPixelOffsetFromMinutes(dayStartMinute, workDayHeight, remainderHeight);
       y1 = top + getPixelOffsetFromMinutes(dayEndMinute, workDayHeight, remainderHeight);
-      if (DEBUG) {
-        Log.d(TAG, "Adding " + Integer.toHexString(segment.color) + " at x,y0,y1: " + x + " " + y0 + " " + y1 + " for " + dayStartMinute + " " + dayEndMinute);
-      }
       strand.points[strand.position++] = x;
       strand.points[strand.position++] = y0;
       strand.points[strand.position++] = x;

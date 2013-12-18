@@ -24,25 +24,21 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.provider.CalendarContract.Attendees;
 import android.provider.CalendarContract.Instances;
-import android.text.TextUtils;
 import android.text.format.DateUtils;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicInteger;
 
 // TODO: should Event be Parcelable so it can be passed via Intents?
 public class Event implements Cloneable {
   // The projection to use when querying instances to build a list of events
-  public static final  String[] EVENT_PROJECTION       = new String[]{
+  public static final  String[] EVENT_PROJECTION       = new String[] {
       DBConstants.EVENT,
-      DBConstants.EVENT_LOCATION,
       DBConstants.DISPLAY_COLOR,
       DBConstants.CALENDAR_ID,
       DBConstants.EVENT_TIME_ZONE,
       DBConstants.EVENT_ID,
-      DBConstants.BEGIN,
       DBConstants.END,
       DBConstants.ID,
       DBConstants.START_DAY,
@@ -68,21 +64,14 @@ public class Event implements Cloneable {
    * sorted correctly with respect to events that are >24 hours (and
    * therefore show up in the allday area).
    */
-  private static final String   SORT_EVENTS_BY         = "begin ASC, end DESC, title ASC";
-  private static final String   SORT_ALLDAY_BY         = "startDay ASC, endDay DESC, title ASC";
-  private static final String   DISPLAY_AS_ALLDAY      = "dispAllday";
-  private static final String   EVENTS_WHERE           = DISPLAY_AS_ALLDAY + "=0";
-  private static final String   ALLDAY_WHERE           = DISPLAY_AS_ALLDAY + "=1";
+  private static final String   SORT_EVENTS_BY         = "start ASC, end DESC, event ASC";
+  private static final String   SORT_ALLDAY_BY         = "start_day ASC, end_day DESC, event ASC";
+  private static final String   EVENTS_WHERE           = DBConstants.ALL_DAY + "=0";
+  private static final String   ALLDAY_WHERE           = DBConstants.ALL_DAY + "=1";
   // The indices for the projection array above.
   private static final int      PROJECTION_COLOR_INDEX = 3;
   private static String mNoTitleString;
   private static int    mNoColorColor;
-
-  static {
-    if (!Utils.isJellybeanOrLater()) {
-      EVENT_PROJECTION[PROJECTION_COLOR_INDEX] = Instances.CALENDAR_COLOR;
-    }
-  }
 
   public  long         id;
   public  int          color;
@@ -187,38 +176,23 @@ public class Event implements Cloneable {
    * should not be done on the UI thread. This will cause an expansion of recurring events to fill this time range if they are not already
    * expanded and will slow down for larger time ranges with many recurring events.
    *
-   * @param cr            The ContentResolver to use for the query
-   * @param projection    The columns to return
-   * @param startDay      The start of the time range to query in UTC millis since epoch
-   * @param endDay        The end of the time range to query in UTC millis since epoch
-   * @param selection     Filter on the query as an SQL WHERE statement
-   * @param selectionArgs Args to replace any '?'s in the selection
-   * @param orderBy       How to order the rows as an SQL ORDER BY statement
+   * @param contentResolver The ContentResolver to use for the query
+   * @param projection      The columns to return
+   * @param startDay        The start of the time range to query in UTC millis since epoch
+   * @param endDay          The end of the time range to query in UTC millis since epoch
+   * @param selection       Filter on the query as an SQL WHERE statement
+   * @param selectionArgs   The selection arguments
+   * @param orderBy         How to order the rows as an SQL ORDER BY statement
    * @return A Cursor of instances matching the selection
    */
-  private static Cursor instancesQuery(ContentResolver cr, String[] projection, int startDay, int endDay, String selection, String[] selectionArgs, String orderBy) {
-    String WHERE_CALENDARS_SELECTED = "visible=?";
-    String[] WHERE_CALENDARS_ARGS = {"1"};
-    String DEFAULT_SORT_ORDER = "begin ASC";
+  private static Cursor instancesQuery(ContentResolver contentResolver, String[] projection, int startDay, int endDay, String selection, String[] selectionArgs, String orderBy) {
+    String defaultSortOrder = "start ASC";
 
-//    Uri.Builder builder = Instances.CONTENT_BY_DAY_URI.buildUpon();
     Uri.Builder builder = CalendarProvider.CONTENT_URI.buildUpon();
     ContentUris.appendId(builder, startDay);
     ContentUris.appendId(builder, endDay);
 
-    if (TextUtils.isEmpty(selection)) {
-      selection = WHERE_CALENDARS_SELECTED;
-      selectionArgs = WHERE_CALENDARS_ARGS;
-    } else {
-      selection = "(" + selection + ") AND " + WHERE_CALENDARS_SELECTED;
-      if (selectionArgs != null && selectionArgs.length > 0) {
-        selectionArgs = Arrays.copyOf(selectionArgs, selectionArgs.length + 1);
-        selectionArgs[selectionArgs.length - 1] = WHERE_CALENDARS_ARGS[0];
-      } else {
-        selectionArgs = WHERE_CALENDARS_ARGS;
-      }
-    }
-    return cr.query(builder.build(), projection, selection, selectionArgs, orderBy == null ? DEFAULT_SORT_ORDER : orderBy);
+    return contentResolver.query(builder.build(), projection, selection, selectionArgs, orderBy == null ? defaultSortOrder : orderBy);
   }
 
   /**
@@ -261,28 +235,28 @@ public class Event implements Cloneable {
    * @return An event created from the cursor
    */
   private static Event generateEventFromCursor(Cursor cEvents) {
-    Event e = new Event();
+    Event event = new Event();
 
-    e.id = cEvents.getLong(7);
-    e.title = cEvents.getString(1);
-    e.location = cEvents.getString(2);
+    event.id = cEvents.getLong(7);
+    event.title = cEvents.getString(1);
+    event.location = cEvents.getString(2);
 
-//        e.id = cEvents.getLong(PROJECTION_EVENT_ID_INDEX);
-//        e.title = cEvents.getString(PROJECTION_TITLE_INDEX);
-//        e.location = cEvents.getString(PROJECTION_LOCATION_INDEX);
-//        e.allDay = cEvents.getInt(PROJECTION_ALL_DAY_INDEX) != 0;
-//        e.organizer = cEvents.getString(PROJECTION_ORGANIZER_INDEX);
-//        e.guestsCanModify = cEvents.getInt(PROJECTION_GUESTS_CAN_INVITE_OTHERS_INDEX) != 0;
+//        event.id = cEvents.getLong(PROJECTION_EVENT_ID_INDEX);
+//        event.title = cEvents.getString(PROJECTION_TITLE_INDEX);
+//        event.location = cEvents.getString(PROJECTION_LOCATION_INDEX);
+//        event.allDay = cEvents.getInt(PROJECTION_ALL_DAY_INDEX) != 0;
+//        event.organizer = cEvents.getString(PROJECTION_ORGANIZER_INDEX);
+//        event.guestsCanModify = cEvents.getInt(PROJECTION_GUESTS_CAN_INVITE_OTHERS_INDEX) != 0;
 
-    if (e.title == null || e.title.length() == 0) {
-      e.title = mNoTitleString;
+    if (event.title == null || event.title.length() == 0) {
+      event.title = mNoTitleString;
     }
 
     if (!cEvents.isNull(PROJECTION_COLOR_INDEX)) {
       // Read the color from the database
-      e.color = Utils.getDisplayColorFromColor(cEvents.getInt(PROJECTION_COLOR_INDEX));
+      event.color = Utils.getDisplayColorFromColor(cEvents.getInt(PROJECTION_COLOR_INDEX));
     } else {
-      e.color = mNoColorColor;
+      event.color = mNoColorColor;
     }
 
     long eStart = cEvents.getLong(4);
@@ -291,31 +265,31 @@ public class Event implements Cloneable {
 //        long eStart = cEvents.getLong(PROJECTION_BEGIN_INDEX);
 //        long eEnd = cEvents.getLong(PROJECTION_END_INDEX);
 
-    e.startMillis = eStart;
-    e.startTime = cEvents.getInt(10);
-//        e.startTime = cEvents.getInt(PROJECTION_START_MINUTE_INDEX);
-//        e.startDay = cEvents.getInt(PROJECTION_START_DAY_INDEX);
-    e.startDay = cEvents.getInt(8);
+    event.startMillis = eStart;
+    event.startTime = cEvents.getInt(10);
+//        event.startTime = cEvents.getInt(PROJECTION_START_MINUTE_INDEX);
+//        event.startDay = cEvents.getInt(PROJECTION_START_DAY_INDEX);
+    event.startDay = cEvents.getInt(8);
 
-    e.endMillis = eEnd;
-    e.endTime = cEvents.getInt(11);
-//        e.endTime = cEvents.getInt(PROJECTION_END_MINUTE_INDEX);
-//        e.endDay = cEvents.getInt(PROJECTION_END_DAY_INDEX);
-    e.endDay = cEvents.getInt(9);
+    event.endMillis = eEnd;
+    event.endTime = cEvents.getInt(11);
+//        event.endTime = cEvents.getInt(PROJECTION_END_MINUTE_INDEX);
+//        event.endDay = cEvents.getInt(PROJECTION_END_DAY_INDEX);
+    event.endDay = cEvents.getInt(9);
 
-//        e.hasAlarm = cEvents.getInt(PROJECTION_HAS_ALARM_INDEX) != 0;
+//        event.hasAlarm = cEvents.getInt(PROJECTION_HAS_ALARM_INDEX) != 0;
 
     // Check if this is a repeating event
 //        String rrule = cEvents.getString(PROJECTION_RRULE_INDEX);
 //        String rdate = cEvents.getString(PROJECTION_RDATE_INDEX);
 //        if (!TextUtils.isEmpty(rrule) || !TextUtils.isEmpty(rdate)) {
-//            e.isRepeating = true;
+//            event.isRepeating = true;
 //        } else {
-//            e.isRepeating = false;
+//            event.isRepeating = false;
 //        }
 //
-//        e.selfAttendeeStatus = cEvents.getInt(PROJECTION_SELF_ATTENDEE_STATUS_INDEX);
-    return e;
+//        event.selfAttendeeStatus = cEvents.getInt(PROJECTION_SELF_ATTENDEE_STATUS_INDEX);
+    return event;
   }
 
   /**
@@ -471,27 +445,6 @@ public class Event implements Cloneable {
     dest.selfAttendeeStatus = selfAttendeeStatus;
     dest.organizer = organizer;
     dest.guestsCanModify = guestsCanModify;
-  }
-
-  /**
-   * Returns the event title and location separated by a comma.  If the location is already part of the title (at the end of the title), then
-   * just the title is returned.
-   *
-   * @return the event title and location as a String
-   */
-  public String getTitleAndLocation() {
-    String text = title.toString();
-
-    // Append the location to the title, unless the title ends with the
-    // location (for example, "meeting in building 42" ends with the
-    // location).
-    if (location != null) {
-      String locationString = location.toString();
-      if (!text.endsWith(locationString)) {
-        text += ", " + locationString;
-      }
-    }
-    return text;
   }
 
   public int getColumn() {

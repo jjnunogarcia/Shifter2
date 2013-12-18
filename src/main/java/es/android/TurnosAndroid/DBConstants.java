@@ -6,12 +6,10 @@ package es.android.TurnosAndroid;
  */
 public class DBConstants {
   public static final String EVENTS_TABLE         = "events";
-  public static final String EVENT_LOCATION       = "event_location";
   public static final String ALL_DAY              = "all_day";
   public static final String DISPLAY_COLOR        = "display_color";
   public static final String EVENT_TIME_ZONE      = "event_time_zone";
   public static final String ID                   = "_id";
-  public static final String BEGIN                = "begin";
   public static final String END                  = "end";
   public static final String CALENDAR_ID          = "calendar_id";
   public static final String EVENT_ID             = "event_id";
