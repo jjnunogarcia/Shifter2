@@ -6,5 +6,5 @@ package es.android.TurnosAndroid;
  * One of the Agenda/Day/Week/Month view types
  */
 public enum ViewType {
-  DETAIL, CURRENT, AGENDA, DAY, WEEK, MONTH, EDIT
+  DETAIL, CURRENT, AGENDA, DAY, MONTH, EDIT
 }

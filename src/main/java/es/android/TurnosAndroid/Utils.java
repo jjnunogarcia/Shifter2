@@ -23,7 +23,10 @@ import android.os.Build;
 import android.text.format.Time;
 import android.util.Log;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
 
 public class Utils {
   private static final String TAG = Utils.class.getSimpleName();
@@ -49,8 +52,7 @@ public class Utils {
   // reasons, as it's what PreferenceManager assigned the first time the file was created.
   static final String SHARED_PREFS_NAME = "com.android.calendar_preferences";
 
-  private static final TimeZoneUtils timeZoneUtils           = new TimeZoneUtils(SHARED_PREFS_NAME);
-  private static       boolean       mAllowWeekForDetailView = false;
+  private static final TimeZoneUtils timeZoneUtils = new TimeZoneUtils(SHARED_PREFS_NAME);
 
   /**
    * Returns whether the SDK is the Jellybean release or later.
@@ -189,10 +191,6 @@ public class Utils {
     return (firstDayOfWeek == Time.SUNDAY && column == 0)
            || (firstDayOfWeek == Time.MONDAY && column == 6)
            || (firstDayOfWeek == Time.SATURDAY && column == 1);
-  }
-
-  public static boolean getAllowWeekForDetailView() {
-    return mAllowWeekForDetailView;
   }
 
   public static boolean getConfigBool(Context c, int key) {

@@ -150,7 +150,6 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
   private Time                desiredDay;
   private boolean             shouldLoad;
   private boolean             userScrolled;
-  private boolean             showCalendarControls;
   private boolean             showDetailsInMonth;
   private boolean             hideDeclined;
   private int                 firstLoadedJulianDay;
@@ -239,7 +238,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
     super.onActivityCreated(savedInstanceState);
 
     context = getActivity().getApplicationContext();
-    calendarController = ((MainActivity) getActivity()).getCalendarController();
+    calendarController = ((CustomApplication) getActivity().getApplication()).getCalendarController();
 
     Resources res = getResources();
     saturdayColor = res.getColor(R.color.month_saturday);
@@ -262,14 +261,8 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
 
     adapter.setSelectedDay(selectedDay);
 
-    // Synchronized the loading time of the month's events with the animation of the calendar controls.
-    int eventsLoadingDelay = 0;
-    if (showCalendarControls) {
-      eventsLoadingDelay = res.getInteger(R.integer.calendar_controls_animation_time);
-    }
     showDetailsInMonth = res.getBoolean(R.bool.show_details_in_month);
 
-    final int finalEventsLoadingDelay = eventsLoadingDelay;
     listView.post(new Runnable() {
       @Override
       public void run() {

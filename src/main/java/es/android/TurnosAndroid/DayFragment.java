@@ -50,16 +50,15 @@ public class DayFragment extends Fragment implements EventHandler, ViewSwitcher.
       }
     }
   };
-  private ViewSwitcher       viewSwitcher;
-  private DayView            dayView;
-  private Animation          inAnimationForward;
-  private Animation          outAnimationForward;
-  private Animation          inAnimationBackward;
-  private Animation          outAnimationBackward;
-  private EventLoader        eventLoader;
-  private Time               selectedDay;
-  private CalendarController calendarController;
-  private int                numDays;
+  private ViewSwitcher viewSwitcher;
+  private DayView      dayView;
+  private Animation    inAnimationForward;
+  private Animation    outAnimationForward;
+  private Animation    inAnimationBackward;
+  private Animation    outAnimationBackward;
+  private EventLoader  eventLoader;
+  private Time         selectedDay;
+  private int          numDays;
 
   public DayFragment() {
     selectedDay = new Time();
@@ -110,7 +109,7 @@ public class DayFragment extends Fragment implements EventHandler, ViewSwitcher.
   @Override
   public View makeView() {
     timeZoneUpdater.run();
-    dayView = new DayView(getActivity().getApplicationContext(), ((MainActivity) getActivity()).getCalendarController(), viewSwitcher, eventLoader, numDays);
+    dayView = new DayView(getActivity().getApplicationContext(), ((CustomApplication) getActivity().getApplication()).getCalendarController(), viewSwitcher, eventLoader, numDays);
     dayView.setId(VIEW_ID);
     dayView.setLayoutParams(new ViewSwitcher.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
     dayView.setSelected(selectedDay, false, false);

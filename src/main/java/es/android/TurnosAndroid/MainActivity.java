@@ -17,7 +17,6 @@ import android.widget.Toast;
 
 public class MainActivity extends FragmentActivity implements EventHandler {
 
-  private CalendarController    calendarController;
   private DrawerLayout          drawerLayout;
   private ListView              drawerList;
   private String[]              drawerElements;
@@ -32,7 +31,6 @@ public class MainActivity extends FragmentActivity implements EventHandler {
     setContentView(R.layout.calendar_activity);
 
     new ImportEntries(getApplicationContext()).execute();
-    calendarController = new CalendarController(getApplicationContext());
     drawerElements = getResources().getStringArray(R.array.drawer_elements);
     drawerTitle = getResources().getString(R.string.drawer_title);
     windowTitle = getTitle();
@@ -42,6 +40,7 @@ public class MainActivity extends FragmentActivity implements EventHandler {
     drawerList.setAdapter(new ArrayAdapter<String>(this, R.layout.drawer_list_item, drawerElements));
     drawerList.setOnItemClickListener(new DrawerItemClickListener());
 
+    CalendarController calendarController = ((CustomApplication) getApplication()).getCalendarController();
     calendarController.registerEventHandler(this);
     getActionBar().setDisplayHomeAsUpEnabled(true);
     getActionBar().setHomeButtonEnabled(true);
@@ -186,10 +185,6 @@ public class MainActivity extends FragmentActivity implements EventHandler {
     FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
     MyEventsFragment myEventsFragment = new MyEventsFragment();
     ft.replace(R.id.calendar_frame, myEventsFragment, MyEventsFragment.TAG).addToBackStack(null).commit();
-  }
-
-  public CalendarController getCalendarController() {
-    return calendarController;
   }
 
   private class DrawerItemClickListener implements ListView.OnItemClickListener {

@@ -112,7 +112,6 @@ public class MonthAdapter extends BaseAdapter implements OnTouchListener {
   private int                         totalClickDelay;
   private int                         onDownDelay;
   private float                       movedPixelToCancel;
-  private boolean                     showAgendaWithMonth;
   private ArrayList<ArrayList<Event>> eventDayList;
   private ArrayList<Event>            events;
   private boolean                     animateToday;
@@ -144,7 +143,6 @@ public class MonthAdapter extends BaseAdapter implements OnTouchListener {
     animateToday = false;
     animateTime = 0;
     int onTapDelay = 100;
-    showAgendaWithMonth = Utils.getConfigBool(context, R.bool.show_agenda_with_month);
     ViewConfiguration vc = ViewConfiguration.get(context);
     onDownDelay = ViewConfiguration.getTapTimeout();
     movedPixelToCancel = vc.getScaledTouchSlop();
@@ -368,13 +366,7 @@ public class MonthAdapter extends BaseAdapter implements OnTouchListener {
     day.minute = currTime.minute;
     day.allDay = false;
     day.normalize(true);
-    if (showAgendaWithMonth) {
-      // If agenda view is visible with month view , refresh the views with the selected day's info
-      calendarController.sendEvent(EventType.GO_TO, day, day, -1, ViewType.CURRENT, CalendarController.EXTRA_GOTO_DATE, null, null);
-    } else {
-      // Else , switch to the detailed view
-      calendarController.sendEvent(EventType.GO_TO, day, day, -1, ViewType.DETAIL, CalendarController.EXTRA_GOTO_DATE | CalendarController.EXTRA_GOTO_BACK_TO_PREVIOUS, null, null);
-    }
+    calendarController.sendEvent(EventType.GO_TO, day, day, -1, ViewType.DETAIL, CalendarController.EXTRA_GOTO_DATE | CalendarController.EXTRA_GOTO_BACK_TO_PREVIOUS, null, null);
   }
 
   @Override

@@ -151,7 +151,7 @@ public class CalendarController {
     } else if (event.viewType != ViewType.EDIT) {
       viewType = event.viewType;
 
-      if (event.viewType == ViewType.AGENDA || event.viewType == ViewType.DAY || (Utils.getAllowWeekForDetailView() && event.viewType == ViewType.WEEK)) {
+      if (event.viewType == ViewType.AGENDA || event.viewType == ViewType.DAY) {
         detailViewType = viewType;
       }
     }
@@ -169,8 +169,7 @@ public class CalendarController {
         // selectedTime is not set so set time to startTime iff it is not
         // within start and end times
         long mtimeMillis = time.toMillis(false);
-        if (mtimeMillis < startMillis
-            || (event.endTime != null && mtimeMillis > event.endTime.toMillis(false))) {
+        if (mtimeMillis < startMillis || (event.endTime != null && mtimeMillis > event.endTime.toMillis(false))) {
           time.set(event.startTime);
         }
       }

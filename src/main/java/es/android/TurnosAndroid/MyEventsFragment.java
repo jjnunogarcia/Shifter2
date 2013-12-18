@@ -1,7 +1,7 @@
 package es.android.TurnosAndroid;
 
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
+import android.support.v4.app.ListFragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,7 +11,7 @@ import android.view.ViewGroup;
  *
  * @author nuno@neofonie.de
  */
-public class MyEventsFragment extends Fragment {
+public class MyEventsFragment extends ListFragment {
   public static final String TAG = MyEventsFragment.class.getSimpleName();
 
   public MyEventsFragment() {
