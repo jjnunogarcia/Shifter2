@@ -24,8 +24,6 @@ import android.database.DataSetObserver;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.provider.CalendarContract.Attendees;
-import android.provider.CalendarContract.Instances;
 import android.support.v4.app.ListFragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
@@ -60,8 +58,6 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
   protected static final int             GOTO_SCROLL_DURATION    = 500;
   // How long to wait after receiving an onScrollStateChanged notification before acting on it
   protected static final int             SCROLL_CHANGE_DELAY     = 40;
-  // Selection and selection args for adding event queries
-  private static final   String          WHERE_CALENDARS_VISIBLE = "visible=1";
   private static final   int             WEEKS_BUFFER            = 1;
   // How long to wait after scroll stops before starting the loader
   // Using scroll duration because scroll state changes don't update correctly when a scroll is triggered programmatically.
@@ -132,15 +128,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
       }
     }
   };
-  // Used to load the events when a delay is needed
-  private final          Runnable        loadingRunnable         = new Runnable() {
-    @Override
-    public void run() {
-      if (!isDetached()) {
-        cursorLoader = (CursorLoader) getLoaderManager().initLoader(0, null, MonthFragment.this);
-      }
-    }
-  };
+
   private Context             context;
   private int                 weekMinVisibleHeight;
   private int                 bottomBuffer;
@@ -150,8 +138,6 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
   private Time                desiredDay;
   private boolean             shouldLoad;
   private boolean             userScrolled;
-  private boolean             showDetailsInMonth;
-  private boolean             hideDeclined;
   private int                 firstLoadedJulianDay;
   private int                 lastLoadedJulianDay;
   private Time                selectedDay;
@@ -201,7 +187,6 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
     friction = 1.0f;
     shouldLoad = true;
     userScrolled = false;
-    showDetailsInMonth = false;
     scrollStateChangedRunnable = new ScrollStateRunnable();
     handler = new Handler();
     initialTime = -1;
@@ -260,8 +245,6 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
     timeZoneUpdater.run();
 
     adapter.setSelectedDay(selectedDay);
-
-    showDetailsInMonth = res.getBoolean(R.bool.show_details_in_month);
 
     listView.post(new Runnable() {
       @Override
@@ -368,11 +351,6 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
   private void doResumeUpdates() {
     firstDayOfWeek = Utils.getFirstDayOfWeek(context);
     showWeekNumber = Utils.getShowWeekNumber(context);
-    boolean prevHideDeclined = hideDeclined;
-    hideDeclined = Utils.getHideDeclinedEvents(context);
-    if (prevHideDeclined != hideDeclined && cursorLoader != null) {
-      cursorLoader.setSelection(updateWhere());
-    }
     daysPerWeek = Utils.getDaysPerWeek(context);
     updateHeader();
     adapter.setSelectedDay(selectedDay);
@@ -383,34 +361,28 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
 
   @Override
   public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-    CursorLoader loader;
-    firstLoadedJulianDay = Time.getJulianDay(selectedDay.toMillis(true), selectedDay.gmtoff) - (numWeeks * 7 / 2);
-    eventUri = updateUri();
-
-    String where = updateWhere();
-    loader = new CursorLoader(getActivity().getApplicationContext(), eventUri, new String[]{DBConstants.ID, DBConstants.EVENT, DBConstants.LOCATION, DBConstants.DESCRIPTION,
-        DBConstants.START, DBConstants.END, DBConstants.CALENDAR_ID, DBConstants.EVENT_ID,
-        DBConstants.START_DAY, DBConstants.END_DAY, DBConstants.START_TIME, DBConstants.END_TIME}
-                                                                                                /*Event.EVENT_PROJECTION*/, /*where*/null,
-                                                                                                null /* WHERE_CALENDARS_SELECTED_ARGS */, null/*INSTANCES_SORT_ORDER*/);
-    loader.setUpdateThrottle(LOADER_THROTTLE_DELAY);
-    return loader;
+//    CursorLoader loader = new CursorLoader(getActivity().getApplicationContext(), eventUri, Event.EVENT_PROJECTION, null, null, null);
+//    firstLoadedJulianDay = Time.getJulianDay(selectedDay.toMillis(true), selectedDay.gmtoff) - (numWeeks * 7 / 2);
+//    eventUri = updateUri();
+//    loader.setUpdateThrottle(LOADER_THROTTLE_DELAY);
+//    return loader;
+    return null;
   }
 
   @Override
   public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-    CursorLoader cLoader = (CursorLoader) loader;
-    if (eventUri == null) {
-      eventUri = cLoader.getUri();
-      updateLoadedDays();
-    }
-    if (cLoader.getUri().compareTo(eventUri) != 0) {
-      // We've started a new query since this loader ran so ignore the result
-      return;
-    }
-
-    ArrayList<Event> events = Event.buildEventsFromCursor(data, context, firstLoadedJulianDay, lastLoadedJulianDay);
-    adapter.setEvents(firstLoadedJulianDay, lastLoadedJulianDay - firstLoadedJulianDay + 1, events);
+//    CursorLoader cLoader = (CursorLoader) loader;
+//    if (eventUri == null) {
+//      eventUri = cLoader.getUri();
+//      updateLoadedDays();
+//    }
+//    if (cLoader.getUri().compareTo(eventUri) != 0) {
+//      // We've started a new query since this loader ran so ignore the result
+//      return;
+//    }
+//
+//    ArrayList<Event> events = Event.buildEventsFromCursor(data, context, firstLoadedJulianDay, lastLoadedJulianDay);
+//    adapter.setEvents(firstLoadedJulianDay, lastLoadedJulianDay - firstLoadedJulianDay + 1, events);
   }
 
   @Override
@@ -483,7 +455,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
    * @param forceScroll Whether to recenter even if the time is already visible
    * @return Whether or not the view animated to the new location
    */
-  private boolean goTo(long time, boolean animate, boolean setSelected, boolean forceScroll) {
+  public boolean goTo(long time, boolean animate, boolean setSelected, boolean forceScroll) {
     if (time == -1) {
       return false;
     }
@@ -749,15 +721,6 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
     }
     calendarController.sendEvent(EventType.UPDATE_TITLE, time, time, time, -1, ViewType.CURRENT,
                                  DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_NO_MONTH_DAY | DateUtils.FORMAT_SHOW_YEAR, null, null);
-  }
-
-  private String updateWhere() {
-    // TODO fix selection/selection args after b/3206641 is fixed
-    String where = WHERE_CALENDARS_VISIBLE;
-    if (hideDeclined || !showDetailsInMonth) {
-      where += " AND " + Instances.SELF_ATTENDEE_STATUS + "!=" + Attendees.ATTENDEE_STATUS_DECLINED;
-    }
-    return where;
   }
 
   private String formatDateRange(Context context, long startMillis, long endMillis, int flags) {

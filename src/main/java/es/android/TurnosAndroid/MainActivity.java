@@ -13,9 +13,8 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.Toast;
 
-public class MainActivity extends FragmentActivity implements EventHandler {
+public class MainActivity extends FragmentActivity implements EventHandler, ActionBarInterface {
 
   private DrawerLayout          drawerLayout;
   private ListView              drawerList;
@@ -23,17 +22,21 @@ public class MainActivity extends FragmentActivity implements EventHandler {
   private CharSequence          windowTitle;
   private ActionBarDrawerToggle drawerToggle;
   private CharSequence          drawerTitle;
-
+  private ActionBarManager      actionBarManager;
+  private MonthFragment         monthFragment;
+  private DayFragment           dayFragment;
+  private CreateEventFragment createEventFragment;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    setContentView(R.layout.calendar_activity);
+    setContentView(R.layout.main_activity);
 
     new ImportEntries(getApplicationContext()).execute();
     drawerElements = getResources().getStringArray(R.array.drawer_elements);
     drawerTitle = getResources().getString(R.string.drawer_title);
     windowTitle = getTitle();
+    actionBarManager = new ActionBarManager(getActionBar(), this);
 
     drawerLayout = (DrawerLayout) findViewById(R.id.calendar_activity_drawer_layout);
     drawerList = (ListView) findViewById(R.id.left_drawer);
@@ -45,8 +48,6 @@ public class MainActivity extends FragmentActivity implements EventHandler {
     getActionBar().setDisplayHomeAsUpEnabled(true);
     getActionBar().setHomeButtonEnabled(true);
     initDrawer();
-
-    addMonthFragment();
   }
 
   private void initDrawer() {
@@ -56,13 +57,11 @@ public class MainActivity extends FragmentActivity implements EventHandler {
       @Override
       public void onDrawerClosed(View view) {
         getActionBar().setTitle(windowTitle);
-        invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
       }
 
       @Override
       public void onDrawerOpened(View drawerView) {
         getActionBar().setTitle(drawerTitle);
-        invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
       }
     };
 
@@ -76,30 +75,19 @@ public class MainActivity extends FragmentActivity implements EventHandler {
     drawerToggle.syncState();
   }
 
-//  @Override
-//  public boolean onPrepareOptionsMenu(Menu menu) {
-  // TODO show or hide action bar buttons
-  // If the nav drawer is open, hide action items related to the content view
-//    boolean drawerOpen = drawerLayout.isDrawerOpen(drawerList);
-//    menu.findItem(R.id.action_websearch).setVisible(!drawerOpen);
-//    return super.onPrepareOptionsMenu(menu);
-//  }
-
   @Override
   public boolean onCreateOptionsMenu(Menu menu) {
-    getMenuInflater().inflate(R.menu.activity_main, menu);
+    getMenuInflater().inflate(R.menu.action_bar_menu, menu);
+    actionBarManager.attachInternalMenu(menu);
+    addMonthFragment();
     return true;
   }
 
   @Override
   public boolean onOptionsItemSelected(MenuItem item) {
     // Pass the event to ActionBarDrawerToggle, if it returns true, then it has handled the app icon touch event
-    if (drawerToggle.onOptionsItemSelected(item)) {
-      return true;
-    }
-    // Handle your other action bar items...
+    return drawerToggle.onOptionsItemSelected(item) || actionBarManager.onActionBarItemSelected(item);
 
-    return super.onOptionsItemSelected(item);
   }
 
   @Override
@@ -159,16 +147,36 @@ public class MainActivity extends FragmentActivity implements EventHandler {
     drawerList.setItemChecked(position, true);
     setTitle(drawerElements[position]);
     drawerLayout.closeDrawer(drawerList);
-    Toast.makeText(getApplicationContext(), "Clicked element " + position, Toast.LENGTH_SHORT).show();
+  }
+
+  @Override
+  public void onTodayClicked() {
+    monthFragment.goTo(System.currentTimeMillis(), true, true, false);
+  }
+
+  @Override
+  public void onNewEventClicked() {
+    addCreateEventFragment();
+  }
+
+  @Override
+  public void onSaveEventClicked() {
+    createEventFragment.saveEvent();
+  }
+
+  @Override
+  public void onDeleteEventClicked() {
+    createEventFragment.deleteEvent();
   }
 
   private void addMonthFragment() {
     FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
     Bundle bundle = new Bundle();
     bundle.putLong(MonthFragment.INITIAL_TIME, System.currentTimeMillis());
-    MonthFragment monthFrag = new MonthFragment();
-    monthFrag.setArguments(bundle);
-    ft.replace(R.id.calendar_frame, monthFrag, MonthFragment.TAG).commit();
+    monthFragment = new MonthFragment();
+    monthFragment.setArguments(bundle);
+    ft.replace(R.id.calendar_frame, monthFragment, MonthFragment.TAG).commit();
+    actionBarManager.setMonthFragmentActionBar();
   }
 
   private void addDayFragment(EventInfo event) {
@@ -176,15 +184,24 @@ public class MainActivity extends FragmentActivity implements EventHandler {
     Bundle bundle = new Bundle();
     bundle.putLong(DayFragment.TIME_MILLIS, event.startTime.toMillis(true));
     bundle.putInt(DayFragment.NUM_OF_DAYS, 1);
-    DayFragment dayFrag = new DayFragment();
-    dayFrag.setArguments(bundle);
-    ft.replace(R.id.calendar_frame, dayFrag, DayFragment.TAG).addToBackStack(null).commit();
+    dayFragment = new DayFragment();
+    dayFragment.setArguments(bundle);
+    ft.replace(R.id.calendar_frame, dayFragment, DayFragment.TAG).addToBackStack(DayFragment.TAG).commit();
+    actionBarManager.setDayFragmentActionBar();
   }
 
   private void addMyEventsFragment() {
     FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
     MyEventsFragment myEventsFragment = new MyEventsFragment();
-    ft.replace(R.id.calendar_frame, myEventsFragment, MyEventsFragment.TAG).addToBackStack(null).commit();
+    ft.replace(R.id.calendar_frame, myEventsFragment, MyEventsFragment.TAG).commit();
+    actionBarManager.setMyEventsFragmentActionBar();
+  }
+
+  private void addCreateEventFragment() {
+    FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+    createEventFragment = new CreateEventFragment();
+    ft.replace(R.id.calendar_frame, createEventFragment, CreateEventFragment.TAG).addToBackStack(CreateEventFragment.TAG).commit();
+    actionBarManager.setCreateEventFragmentActionBar();
   }
 
   private class DrawerItemClickListener implements ListView.OnItemClickListener {

@@ -16,14 +16,12 @@
 
 package es.android.TurnosAndroid;
 
-import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.Context;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.CalendarContract.Attendees;
-import android.provider.CalendarContract.Instances;
 import android.text.format.DateUtils;
 
 import java.util.ArrayList;
@@ -34,24 +32,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Event implements Cloneable {
   // The projection to use when querying instances to build a list of events
   public static final  String[] EVENT_PROJECTION       = new String[] {
-      DBConstants.EVENT,
+      DBConstants.NAME,
       DBConstants.DISPLAY_COLOR,
-      DBConstants.CALENDAR_ID,
-      DBConstants.EVENT_TIME_ZONE,
-      DBConstants.EVENT_ID,
-      DBConstants.END,
       DBConstants.ID,
       DBConstants.START_DAY,
       DBConstants.END_DAY,
       DBConstants.START_TIME,
-      DBConstants.END_TIME,
-      DBConstants.HAS_ALARM,
+      DBConstants.DURATION,
       DBConstants.LOCATION,
-      DBConstants.START,
-      DBConstants.ORGANIZER,
-      DBConstants.GUESTS_CAN_MODIFY,
       DBConstants.DESCRIPTION,
-      DBConstants.ALL_DAY
   };
   private static final String   TAG                    = Event.class.getSimpleName();
   /**
@@ -65,9 +54,6 @@ public class Event implements Cloneable {
    * therefore show up in the allday area).
    */
   private static final String   SORT_EVENTS_BY         = "start ASC, end DESC, event ASC";
-  private static final String   SORT_ALLDAY_BY         = "start_day ASC, end_day DESC, event ASC";
-  private static final String   EVENTS_WHERE           = DBConstants.ALL_DAY + "=0";
-  private static final String   ALLDAY_WHERE           = DBConstants.ALL_DAY + "=1";
   // The indices for the projection array above.
   private static final int      PROJECTION_COLOR_INDEX = 3;
   private static String mNoTitleString;
@@ -123,85 +109,34 @@ public class Event implements Cloneable {
    * Loads <i>days</i> days worth of instances starting at <i>startDay</i>.
    */
   public static ArrayList<Event> loadEvents(Context context, int startDay, int days, int requestId, AtomicInteger sequenceNumber) {
-    Cursor cEvents = null;
-    Cursor cAllday = null;
-
+    Cursor eventsCursor = null;
     ArrayList<Event> events = new ArrayList<Event>();
+
     try {
       int endDay = startDay + days - 1;
+      Uri.Builder builder = CalendarProvider.CONTENT_URI.buildUpon();
+      // TODO are the two following lines really necessary?
+      ContentUris.appendId(builder, startDay);
+      ContentUris.appendId(builder, endDay);
 
-      // We use the byDay instances query to get a list of all events for the days we're interested in.
-      // The sort order is: events with an earlier start time occur first and if the start times are the same, then events with
-      // a later end time occur first. The later end time is ordered first so that long rectangles in the calendar views appear on
-      // the left side.  If the start and end times of two events are the same then we sort alphabetically on the title.  This isn't
-      // required for correctness, it just adds a nice touch.
-
-      // Respect the preference to show/hide declined events
-//            SharedPreferences prefs = GeneralPreferences.getSharedPreferences(context);
-//            boolean hideDeclined = prefs.getBoolean(GeneralPreferences.KEY_HIDE_DECLINED, false);
-      boolean hideDeclined = false;
-
-      String where = EVENTS_WHERE;
-      String whereAllday = ALLDAY_WHERE;
-      if (hideDeclined) {
-        String hideString = " AND " + Instances.SELF_ATTENDEE_STATUS + "!=" + Attendees.ATTENDEE_STATUS_DECLINED;
-        where += hideString;
-        whereAllday += hideString;
-      }
-
-      cEvents = instancesQuery(context.getContentResolver(), EVENT_PROJECTION, startDay, endDay, where, null, SORT_EVENTS_BY);
-      cAllday = instancesQuery(context.getContentResolver(), EVENT_PROJECTION, startDay, endDay, whereAllday, null, SORT_ALLDAY_BY);
+      eventsCursor = context.getContentResolver().query(builder.build(), EVENT_PROJECTION, null, null, SORT_EVENTS_BY);
 
       // Check if we should return early because there are more recent load requests waiting.
       if (requestId != sequenceNumber.get()) {
         return events;
       }
 
-      events = buildEventsFromCursor(cEvents, context, startDay, endDay);
-      events = buildEventsFromCursor(cAllday, context, startDay, endDay);
-
+      events = buildEventsFromCursor(eventsCursor, context, startDay, endDay);
     } finally {
-      if (cEvents != null) {
-        cEvents.close();
-      }
-      if (cAllday != null) {
-        cAllday.close();
+      if (eventsCursor != null) {
+        eventsCursor.close();
       }
     }
     return events;
   }
 
   /**
-   * Performs a query to return all visible instances in the given range that match the given selection. This is a blocking function and
-   * should not be done on the UI thread. This will cause an expansion of recurring events to fill this time range if they are not already
-   * expanded and will slow down for larger time ranges with many recurring events.
-   *
-   * @param contentResolver The ContentResolver to use for the query
-   * @param projection      The columns to return
-   * @param startDay        The start of the time range to query in UTC millis since epoch
-   * @param endDay          The end of the time range to query in UTC millis since epoch
-   * @param selection       Filter on the query as an SQL WHERE statement
-   * @param selectionArgs   The selection arguments
-   * @param orderBy         How to order the rows as an SQL ORDER BY statement
-   * @return A Cursor of instances matching the selection
-   */
-  private static Cursor instancesQuery(ContentResolver contentResolver, String[] projection, int startDay, int endDay, String selection, String[] selectionArgs, String orderBy) {
-    String defaultSortOrder = "start ASC";
-
-    Uri.Builder builder = CalendarProvider.CONTENT_URI.buildUpon();
-    ContentUris.appendId(builder, startDay);
-    ContentUris.appendId(builder, endDay);
-
-    return contentResolver.query(builder.build(), projection, selection, selectionArgs, orderBy == null ? defaultSortOrder : orderBy);
-  }
-
-  /**
    * Adds all the events from the cursors to the events list.
-   *
-   * @param cEvents  Events to add to the list
-   * @param context
-   * @param startDay
-   * @param endDay
    */
   public static ArrayList<Event> buildEventsFromCursor(Cursor cEvents, Context context, int startDay, int endDay) {
     if (cEvents == null) {

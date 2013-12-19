@@ -1,14 +1,8 @@
 package es.android.TurnosAndroid;
 
-import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.os.AsyncTask;
-import android.text.format.Time;
-
-import java.util.Calendar;
-import java.util.TimeZone;
-import java.util.concurrent.TimeUnit;
 
 public class ImportEntries extends AsyncTask<Void, Void, Void> {
 
@@ -24,108 +18,75 @@ public class ImportEntries extends AsyncTask<Void, Void, Void> {
     return null;
   }
 
-//  private Long[] checkTimes(long id) {
-//    Cursor cur = null;
-//    Long[] times = new Long[2];
-//    java.util.Calendar c = java.util.Calendar.getInstance();
-//    long now = c.getTimeInMillis();
-//    String[] projection = {Instances.BEGIN, Instances.END};
-//    Uri.Builder builder = Instances.CONTENT_URI.buildUpon();
-//    ContentUris.appendId(builder, now - DateUtils.YEAR_IN_MILLIS);
-//    ContentUris.appendId(builder, now + DateUtils.YEAR_IN_MILLIS);
-//    cur = context.getContentResolver().query(builder.build(), projection, Instances.EVENT_ID + "=" + id, null, null);
-//    if (cur != null && cur.moveToFirst()) {
-////	 			do{
-//      long start = Long.parseLong(cur.getString(0));
-//      long end = cur.getLong(1);
-////	 				long newStart = start - (Long.parseLong(reminders) * (60*1000));
-//      long current = System.currentTimeMillis();
-////	 				if(start > current){
-//      times[0] = start;
-//      times[1] = end;
-////	 					break;
-////	 				}
-////	 			}while(cur.moveToNext());
-//    }
-//
-//    cur.close();
-//    return times;
-//  }
-
   private void importEntries() {
 //		Long[] times = new Long[2];
 //		if(add){
 //			long time = System.currentTimeMillis();
-    String[] eventHolder = {DBConstants.ID, DBConstants.EVENT, DBConstants.LOCATION, DBConstants.DESCRIPTION, DBConstants.START, DBConstants.END, DBConstants.CALENDAR_ID,
-                            DBConstants.START_DAY, DBConstants.END_DAY, DBConstants.START_TIME, DBConstants.END_TIME, DBConstants.EVENT_ID};
-//        Cursor c = context.getContentResolver().query(Events.CONTENT_URI, eventHolder, null, null, null);
-    Cursor c = context.getContentResolver().query(CalendarProvider.CONTENT_URI, eventHolder, null, null, null);
+    String[] eventHolder = {DBConstants.ID, DBConstants.NAME, DBConstants.DESCRIPTION, DBConstants.START_TIME, DBConstants.DURATION,
+                            DBConstants.START_DAY, DBConstants.END_DAY, DBConstants.LOCATION, DBConstants.DISPLAY_COLOR};
+    Cursor cursor = context.getContentResolver().query(CalendarProvider.CONTENT_URI, eventHolder, null, null, null);
 
-    if (c != null && c.moveToFirst()) {
-      do {
-        long eventID = c.getLong(0);
-        String calID = c.getString(1);
-        String dbEvent = c.getString(2);
-        String dblocation = c.getString(3);
-        String dbdesc = c.getString(4);
+//    if (cursor != null && cursor.moveToFirst()) {
+//      do {
+//        long eventID = cursor.getLong(0);
+//        String calID = cursor.getString(1);
+//        String dbEvent = cursor.getString(2);
+//        String dblocation = cursor.getString(3);
+//        String dbdesc = cursor.getString(4);
 //		            times = checkTimes(eventID);
-        Cursor e = context.getContentResolver().query(CalendarProvider.CONTENT_URI, new String[] {DBConstants.CALENDAR_ID}, DBConstants.EVENT_ID + "=?",
-                                                      new String[] {String.valueOf(eventID)}, null);
-        if (e == null || !e.moveToFirst()) {
-          ContentValues values = new ContentValues();
-          Calendar cal = Calendar.getInstance();
-          TimeZone tz = TimeZone.getDefault();
-          cal.setTimeZone(tz);
-          long offset2 = tz.getRawOffset();
-          long offset3 = (tz.getOffset(c.getLong(5)) / 1000) % 60;
-          long offset = 3600000 * 4;
-          cal.setTimeInMillis(c.getLong(5));
-
-          long offset4 = TimeUnit.MILLISECONDS.toSeconds(tz.getOffset(c.getLong(5)));
-
-          int hours = cal.get(Calendar.HOUR_OF_DAY);
-          int min = cal.get(Calendar.MINUTE);
-          int startDay = Time.getJulianDay(c.getLong(5), offset4);
-          int endDay = Time.getJulianDay(c.getLong(6), TimeUnit.MILLISECONDS.toSeconds(tz.getOffset(c.getLong(6))));
-          int startMin = (cal.get(Calendar.HOUR_OF_DAY) * 60) + cal.get(Calendar.MINUTE);
-          cal = Calendar.getInstance();
-          cal.setTimeInMillis(c.getLong(6));
-          int endMin = (cal.get(Calendar.HOUR_OF_DAY) * 60) + cal.get(Calendar.MINUTE);
-          values.put(DBConstants.DESCRIPTION, dbdesc);
-          values.put(DBConstants.END, c.getLong(6));
-          values.put(DBConstants.START, c.getLong(5));
-          values.put(DBConstants.EVENT, dbEvent);
-          values.put(DBConstants.EVENT_ID, eventID);
-          values.put(DBConstants.LOCATION, dblocation);
-          values.put(DBConstants.CALENDAR_ID, calID);
-          values.put(DBConstants.START_DAY, startDay);
-          values.put(DBConstants.END_DAY, endDay);
-          values.put(DBConstants.START_TIME, startMin);
-          values.put(DBConstants.END_TIME, endMin);
-          context.getContentResolver().insert(CalendarProvider.CONTENT_URI, values);
-        }
-        if (e != null) {
-          e.close();
-        }
-      } while (c.moveToNext());
-
-    }
-    if (c != null) {
-      c.close();
+//        Cursor e = context.getContentResolver().query(CalendarProvider.CONTENT_URI, eventHolder, DBConstants.EVENT_ID + "=?",
+//                                                      new String[] {String.valueOf(eventID)}, null);
+//        if (e == null || !e.moveToFirst()) {
+//          ContentValues values = new ContentValues();
+//          Calendar cal = Calendar.getInstance();
+//          TimeZone tz = TimeZone.getDefault();
+//          cal.setTimeZone(tz);
+//          long offset2 = tz.getRawOffset();
+//          long offset3 = (tz.getOffset(cursor.getLong(5)) / 1000) % 60;
+//          long offset = 3600000 * 4;
+//          cal.setTimeInMillis(cursor.getLong(5));
+//
+//          long offset4 = TimeUnit.MILLISECONDS.toSeconds(tz.getOffset(cursor.getLong(5)));
+//
+//          int hours = cal.get(Calendar.HOUR_OF_DAY);
+//          int min = cal.get(Calendar.MINUTE);
+//          int startDay = Time.getJulianDay(cursor.getLong(5), offset4);
+//          int endDay = Time.getJulianDay(cursor.getLong(6), TimeUnit.MILLISECONDS.toSeconds(tz.getOffset(cursor.getLong(6))));
+//          int startMin = (cal.get(Calendar.HOUR_OF_DAY) * 60) + cal.get(Calendar.MINUTE);
+//          cal = Calendar.getInstance();
+//          cal.setTimeInMillis(cursor.getLong(6));
+//          int endMin = (cal.get(Calendar.HOUR_OF_DAY) * 60) + cal.get(Calendar.MINUTE);
+//          values.put(DBConstants.DESCRIPTION, dbdesc);
+//          values.put(DBConstants.NAME, dbEvent);
+//          values.put(DBConstants.LOCATION, dblocation);
+//          values.put(DBConstants.START_DAY, startDay);
+//          values.put(DBConstants.END_DAY, endDay);
+//          values.put(DBConstants.START_TIME, startMin);
+//          values.put(DBConstants.DURATION, endMin);
+//          context.getContentResolver().insert(CalendarProvider.CONTENT_URI, values);
+//        }
+//        if (e != null) {
+//          e.close();
+//        }
+//      } while (cursor.moveToNext());
+//
+//    }
+    if (cursor != null) {
+      cursor.close();
     }
 //		}else{
-//			String[] eventHolder = {Events._ID,Events.CALENDAR_ID,Events.TITLE,Events.EVENT_LOCATION,Events.DESCRIPTION,Events.DTSTART,Events.DTEND};
-//			Cursor c = getContentResolver().query(Events.CONTENT_URI,eventHolder,null,null,null);
-//			int value = c.getCount();
+//			String[] eventHolder = {Events._ID,Events.CALENDAR_ID,Events.NAME,Events.EVENT_LOCATION,Events.DESCRIPTION,Events.DTSTART,Events.DTEND};
+//			Cursor cursor = getContentResolver().query(Events.CONTENT_URI,eventHolder,null,null,null);
+//			int value = cursor.getCount();
 //			int count = 0;
-//			if(c != null && c.moveToFirst()){
+//			if(cursor != null && cursor.moveToFirst()){
 //				do{
 //					count++;
-//                	long eventID = c.getLong(0);
-//                	String calID = c.getString(1);
-//                    String dbEvent = c.getString(2);
-//                    String dblocation = c.getString(3);
-//                    String dbdesc = c.getString(4);
+//                	long eventID = cursor.getLong(0);
+//                	String calID = cursor.getString(1);
+//                    String dbEvent = cursor.getString(2);
+//                    String dblocation = cursor.getString(3);
+//                    String dbdesc = cursor.getString(4);
 //                    String reminders = getReminders(eventID);
 //                    if(reminders == null){
 //                    	reminders = "0";
@@ -142,7 +103,7 @@ public class ImportEntries extends AsyncTask<Void, Void, Void> {
 //        	    			values.put(CalendarProvider.DESCRIPTION, dbdesc);
 //        	    			values.put(CalendarProvider.END, times[1]);
 //        	    			values.put(CalendarProvider.START, times[0]);
-//        	    			values.put(CalendarProvider.EVENT, dbEvent);
+//        	    			values.put(CalendarProvider.NAME, dbEvent);
 //        	    			values.put(CalendarProvider.EVENT_ID, eventID);
 //        	    			values.put(CalendarProvider.LOCATION, dblocation);
 //        	    			values.put(CalendarProvider.CALENDAR_ID, calID);
@@ -157,7 +118,7 @@ public class ImportEntries extends AsyncTask<Void, Void, Void> {
 //        	    			values.put(CalendarProvider.DESCRIPTION, dbdesc);
 //        	    			values.put(CalendarProvider.END, times[1]);
 //        	    			values.put(CalendarProvider.START, times[0]);
-//        	    			values.put(CalendarProvider.EVENT, dbEvent);
+//        	    			values.put(CalendarProvider.NAME, dbEvent);
 //        	    			values.put(CalendarProvider.EVENT_ID, eventID);
 //        	    			values.put(CalendarProvider.ICON, "Default");
 //        	    			values.put(CalendarProvider.VIBRATE, "Normal");
@@ -169,9 +130,9 @@ public class ImportEntries extends AsyncTask<Void, Void, Void> {
 //                    	}
 //                    	e.close();
 //                    }
-//				}while(c.moveToNext());
+//				}while(cursor.moveToNext());
 //			}
-//			c.close();
+//			cursor.close();
 //		}
 
   }

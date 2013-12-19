@@ -23,6 +23,10 @@
     <string name="drawer_open">Abrir panel de navegación</string>
     <string name="drawer_close">Cerrar panel de navegación</string>
     <string name="drawer_title">Elige una opción</string>
+    <string name="today_button">Hoy</string>
+    <string name="create_event_button">Nuevo turno</string>
+    <string name="save_event_button">Guardar</string>
+    <string name="delete_event_button">Eliminar</string>
     <array name="drawer_elements">
         <item>Calendario</item>
         <item>Mis eventos</item>
