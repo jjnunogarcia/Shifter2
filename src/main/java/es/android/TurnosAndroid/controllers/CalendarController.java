@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package es.android.TurnosAndroid;
+package es.android.TurnosAndroid.controllers;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
@@ -29,6 +29,11 @@ import android.provider.CalendarContract.Attendees;
 import android.provider.CalendarContract.Calendars;
 import android.text.format.Time;
 import android.util.Log;
+import es.android.TurnosAndroid.EventHandler;
+import es.android.TurnosAndroid.helpers.Utils;
+import es.android.TurnosAndroid.model.EventInfo;
+import es.android.TurnosAndroid.model.EventType;
+import es.android.TurnosAndroid.views.ViewType;
 
 import java.util.ArrayList;
 
@@ -73,7 +78,7 @@ public class CalendarController {
   /**
    * Helper for sending New/View/Edit/Delete events
    *
-   * @param eventType      one of {@link es.android.TurnosAndroid.EventType}
+   * @param eventType      one of {@link es.android.TurnosAndroid.model.EventType}
    * @param eventId        event id
    * @param startMillis    start time
    * @param endMillis      end time
@@ -110,11 +115,11 @@ public class CalendarController {
   /**
    * Helper for sending non-calendar-event events
    *
-   * @param eventType one of {@link es.android.TurnosAndroid.EventType}
+   * @param eventType one of {@link es.android.TurnosAndroid.model.EventType}
    * @param start     start time
    * @param end       end time
    * @param eventId   event id
-   * @param viewType  {@link es.android.TurnosAndroid.ViewType}
+   * @param viewType  {@link es.android.TurnosAndroid.views.ViewType}
    */
   public void sendEvent(long eventType, Time start, Time end, long eventId, ViewType viewType) {
     sendEvent(eventType, start, end, start, eventId, viewType, EXTRA_GOTO_TIME, null, null);

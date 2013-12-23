@@ -1,9 +1,10 @@
-package es.android.TurnosAndroid;
+package es.android.TurnosAndroid.model;
 
 import android.content.ComponentName;
 import android.provider.CalendarContract;
 import android.text.format.Time;
 import android.util.Log;
+import es.android.TurnosAndroid.views.ViewType;
 
 /**
  * User: Jesús

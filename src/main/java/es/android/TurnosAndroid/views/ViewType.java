@@ -1,4 +1,4 @@
-package es.android.TurnosAndroid;
+package es.android.TurnosAndroid.views;
 
 /**
  * User: Jesús

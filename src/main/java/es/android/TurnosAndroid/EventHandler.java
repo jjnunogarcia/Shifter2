@@ -1,5 +1,7 @@
 package es.android.TurnosAndroid;
 
+import es.android.TurnosAndroid.model.EventInfo;
+
 /**
  * User: Jesús
  * Date: 2/12/13

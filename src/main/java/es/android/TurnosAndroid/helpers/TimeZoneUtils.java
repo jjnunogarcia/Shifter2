@@ -1,4 +1,4 @@
-package es.android.TurnosAndroid;
+package es.android.TurnosAndroid.helpers;
 
 import android.content.AsyncQueryHandler;
 import android.content.ContentResolver;

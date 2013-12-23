@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package es.android.TurnosAndroid;
+package es.android.TurnosAndroid.model;
 
 import android.content.ContentResolver;
 import android.content.ContentUris;
@@ -25,6 +25,10 @@ import android.net.Uri;
 import android.provider.CalendarContract.Attendees;
 import android.provider.CalendarContract.Instances;
 import android.text.format.DateUtils;
+import es.android.TurnosAndroid.R;
+import es.android.TurnosAndroid.helpers.Utils;
+import es.android.TurnosAndroid.database.CalendarProvider;
+import es.android.TurnosAndroid.database.DBConstants;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -33,7 +37,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 // TODO: should Event be Parcelable so it can be passed via Intents?
 public class Event implements Cloneable {
   // The projection to use when querying instances to build a list of events
-  public static final  String[] EVENT_PROJECTION       = new String[] {
+  public static final  String[] EVENT_PROJECTION       = new String[]{
       DBConstants.EVENT,
       DBConstants.DISPLAY_COLOR,
       DBConstants.CALENDAR_ID,
@@ -301,8 +305,7 @@ public class Event implements Cloneable {
    * @param minimumDurationMillis minimum duration acceptable as cell height of each event
    *                              rectangle in millisecond. Should be 0 when it is not determined.
    */
-    /* package */
-  static void computePositions(ArrayList<Event> eventsList, long minimumDurationMillis) {
+  public static void computePositions(ArrayList<Event> eventsList, long minimumDurationMillis) {
     if (eventsList != null) {
       // Compute the column positions separately for the all-day events
       doComputePositions(eventsList, minimumDurationMillis, false);

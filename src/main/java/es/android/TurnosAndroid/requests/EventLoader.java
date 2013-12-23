@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package es.android.TurnosAndroid;
+package es.android.TurnosAndroid.requests;
 
 import android.content.ContentResolver;
 import android.content.Context;
@@ -24,6 +24,7 @@ import android.os.Process;
 import android.provider.CalendarContract;
 import android.provider.CalendarContract.EventDays;
 import android.util.Log;
+import es.android.TurnosAndroid.model.Event;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,6 +33,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class EventLoader {
   private static final String TAG = EventLoader.class.getSimpleName();
+
   private Context                          context;
   private Handler                          handler;
   private AtomicInteger                    sequenceNumber;

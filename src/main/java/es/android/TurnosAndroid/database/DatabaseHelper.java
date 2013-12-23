@@ -1,4 +1,4 @@
-package es.android.TurnosAndroid;
+package es.android.TurnosAndroid.database;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
@@ -29,6 +29,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
   }
 
   private void createTables(SQLiteDatabase db) {
+    // TODO it's necessary to create two tables: one for all the different event types and the other to store which events are in which days
     db.execSQL("CREATE TABLE " + DBConstants.EVENTS_TABLE + "(" +
                DBConstants.ID + " integer primary key autoincrement, " +
                DBConstants.EVENT + " TEXT, " +

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package es.android.TurnosAndroid;
+package es.android.TurnosAndroid.views.day;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -52,6 +52,14 @@ import android.view.animation.Animation;
 import android.view.animation.Interpolator;
 import android.view.animation.TranslateAnimation;
 import android.widget.*;
+import es.android.TurnosAndroid.*;
+import es.android.TurnosAndroid.controllers.CalendarController;
+import es.android.TurnosAndroid.helpers.Utils;
+import es.android.TurnosAndroid.model.CalendarData;
+import es.android.TurnosAndroid.model.Event;
+import es.android.TurnosAndroid.model.EventType;
+import es.android.TurnosAndroid.requests.EventLoader;
+import es.android.TurnosAndroid.views.ViewType;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -61,11 +69,11 @@ import java.util.regex.Pattern;
  * View for multi-day view. So far only 1 and 7 day have been tested.
  */
 public class DayView extends View implements View.OnCreateContextMenuListener, ScaleGestureDetector.OnScaleGestureListener, View.OnClickListener, View.OnLongClickListener {
-  /* package */ static final int MINUTES_PER_HOUR  = 60;
-  /* package */ static final int MINUTES_PER_DAY   = MINUTES_PER_HOUR * 24;
-  /* package */ static final int MILLIS_PER_MINUTE = 60 * 1000;
-  /* package */ static final int MILLIS_PER_HOUR   = (3600 * 1000);
-  /* package */ static final int MILLIS_PER_DAY    = MILLIS_PER_HOUR * 24;
+  public static final  int           MINUTES_PER_HOUR              = 60;
+  public static final  int           MINUTES_PER_DAY               = MINUTES_PER_HOUR * 24;
+  public static final  int           MILLIS_PER_MINUTE             = 60 * 1000;
+  public static final  int           MILLIS_PER_HOUR               = (3600 * 1000);
+  public static final  int           MILLIS_PER_DAY                = MILLIS_PER_HOUR * 24;
   private static final String        PERIOD_SPACE                  = ". ";
   private static final long          INVALID_EVENT_ID              = -1; //This is used for remembering a null event
   // Duration of the allday expansion
@@ -84,7 +92,7 @@ public class DayView extends View implements View.OnCreateContextMenuListener, S
   private static final int           MENU_EVENT_CREATE             = 6;
   private static final int           MENU_EVENT_EDIT               = 7;
   private static final int           MENU_EVENT_DELETE             = 8;
-  private static final String[]      CALENDARS_PROJECTION          = new String[] {
+  private static final String[]      CALENDARS_PROJECTION          = new String[]{
       Calendars._ID,          // 0
       Calendars.CALENDAR_ACCESS_LEVEL, // 1
       Calendars.OWNER_ACCOUNT, // 2
@@ -824,7 +832,7 @@ public class DayView extends View implements View.OnCreateContextMenuListener, S
    *
    * @return selected time in UTC milliseconds since the epoch.
    */
-  long getSelectedTimeInMillis() {
+  public long getSelectedTimeInMillis() {
     Time time = new Time(baseDate);
     time.setJulianDay(mSelectionDay);
     time.hour = mSelectionHour;
@@ -856,11 +864,11 @@ public class DayView extends View implements View.OnCreateContextMenuListener, S
     return mSelectionHour * MINUTES_PER_HOUR;
   }
 
-  int getFirstVisibleHour() {
+  public int getFirstVisibleHour() {
     return firstHour;
   }
 
-  void setFirstVisibleHour(int firstHour) {
+  public void setFirstVisibleHour(int firstHour) {
     this.firstHour = firstHour;
     firstHourOffset = 0;
   }
@@ -1666,11 +1674,11 @@ public class DayView extends View implements View.OnCreateContextMenuListener, S
     }
   }
 
-  void clearCachedEvents() {
+  public void clearCachedEvents() {
     mLastReloadMillis = 0;
   }
 
-  void reloadEvents() {
+  public void reloadEvents() {
     // Protect against this being called before this view has been
     // initialized.
 //        if (context == null) {
@@ -2355,7 +2363,7 @@ public class DayView extends View implements View.OnCreateContextMenuListener, S
     p.setAntiAlias(true);
   }
 
-  Event getSelectedEvent() {
+  public Event getSelectedEvent() {
     if (mSelectedEvent == null) {
       // There is no event at the selected hour, so create a new event.
       return getNewEvent(mSelectionDay, getSelectedTimeInMillis(), getSelectedMinutesSinceMidnight());
@@ -2368,11 +2376,11 @@ public class DayView extends View implements View.OnCreateContextMenuListener, S
     mSelectedEventForAccessibility = e;
   }
 
-  boolean isEventSelected() {
+  public boolean isEventSelected() {
     return (mSelectedEvent != null);
   }
 
-  Event getNewEvent() {
+  public Event getNewEvent() {
     return getNewEvent(mSelectionDay, getSelectedTimeInMillis(), getSelectedMinutesSinceMidnight());
   }
 
@@ -2752,8 +2760,7 @@ public class DayView extends View implements View.OnCreateContextMenuListener, S
         continue;
       }
 
-      if (date == mSelectionDay && !mSelectionAllday && mComputeSelectedEvents
-          && geometry.eventIntersectsSelection(event, selectionArea)) {
+      if (date == mSelectionDay && !mSelectionAllday && mComputeSelectedEvents && geometry.eventIntersectsSelection(event, selectionArea)) {
         mSelectedEvents.add(event);
       }
 

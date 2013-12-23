@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package es.android.TurnosAndroid;
+package es.android.TurnosAndroid.views.month;
 
 import android.content.Context;
 import android.graphics.Rect;
@@ -25,6 +25,7 @@ import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
 import android.widget.ListView;
+import es.android.TurnosAndroid.fragments.MonthFragment;
 
 import java.util.TimeZone;
 

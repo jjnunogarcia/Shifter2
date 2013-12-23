@@ -1,4 +1,4 @@
-package es.android.TurnosAndroid;
+package es.android.TurnosAndroid.views.myevents;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -6,6 +6,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
+import es.android.TurnosAndroid.R;
+import es.android.TurnosAndroid.model.Event;
 
 import java.util.ArrayList;
 
@@ -14,8 +16,8 @@ import java.util.ArrayList;
  * Date: 23/12/13
  */
 public class MyEventsAdapter extends BaseAdapter {
-  private final Context context;
-  private ArrayList<Event> events;
+  private final Context          context;
+  private       ArrayList<Event> events;
 
   public MyEventsAdapter(Context context, ArrayList<Event> events) {
     this.context = context;

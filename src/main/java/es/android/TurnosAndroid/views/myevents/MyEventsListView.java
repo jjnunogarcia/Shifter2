@@ -1,4 +1,4 @@
-package es.android.TurnosAndroid;
+package es.android.TurnosAndroid.views.myevents;
 
 import android.content.Context;
 import android.util.AttributeSet;

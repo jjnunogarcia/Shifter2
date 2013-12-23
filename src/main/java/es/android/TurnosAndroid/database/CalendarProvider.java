@@ -1,4 +1,4 @@
-package es.android.TurnosAndroid;
+package es.android.TurnosAndroid.database;
 
 import android.content.ContentProvider;
 import android.content.ContentUris;
@@ -11,6 +11,8 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.text.TextUtils;
+import es.android.TurnosAndroid.database.DBConstants;
+import es.android.TurnosAndroid.database.DatabaseHelper;
 
 import java.util.HashMap;
 import java.util.List;
@@ -50,74 +52,74 @@ public class CalendarProvider extends ContentProvider {
         mMap.put(DBConstants.GUESTS_CAN_MODIFY, DBConstants.GUESTS_CAN_MODIFY);
     }
 
-    private DatabaseHelper DBHelper;
-    private SQLiteDatabase db;
+  private DatabaseHelper DBHelper;
+  private SQLiteDatabase db;
 
-    @Override
-    public boolean onCreate() {
-        DBHelper = new DatabaseHelper(getContext());
-        db = DBHelper.getWritableDatabase();
-        return (db != null);
+  @Override
+  public boolean onCreate() {
+    DBHelper = new DatabaseHelper(getContext());
+    db = DBHelper.getWritableDatabase();
+    return (db != null);
+  }
+
+  @Override
+  public int delete(Uri uri, String selection, String[] selectionArgs) {
+    int count = 0;
+    int num = uriMatcher.match(uri);
+    if (num == 1) {
+      count = db.delete(DBConstants.EVENTS_TABLE, selection, selectionArgs);
+    } else if (num == 2) {
+      String id = uri.getPathSegments().get(1);
+      count = db.delete(DBConstants.EVENTS_TABLE, DBConstants.ID + " = " + id + (!TextUtils.isEmpty(selection) ? " AND (" + selection + ')' : ""), selectionArgs);
+    }
+    getContext().getContentResolver().notifyChange(uri, null);
+    return count;
+  }
+
+  @Override
+  public String getType(Uri uri) {
+    return null;
+  }
+
+  @Override
+  public Uri insert(Uri uri, ContentValues values) {
+    long rowID = db.insert(DBConstants.EVENTS_TABLE, null, values);
+    Uri _uri;
+    if (rowID > 0) {
+      _uri = ContentUris.withAppendedId(CONTENT_URI, rowID);
+      getContext().getContentResolver().notifyChange(uri, null);
+    } else {
+      throw new SQLException("Failed to insert row into " + uri);
+    }
+    return _uri;
+  }
+
+  @Override
+  public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
+    SQLiteQueryBuilder sqlBuilder = new SQLiteQueryBuilder();
+    sqlBuilder.setTables(DBConstants.EVENTS_TABLE);
+
+    if (uriMatcher.match(uri) == 1) {
+      sqlBuilder.setProjectionMap(mMap);
+    } else if (uriMatcher.match(uri) == 2) {
+      sqlBuilder.setProjectionMap(mMap);
+      sqlBuilder.appendWhere(DBConstants.ID + "=?");
+      selectionArgs = DatabaseUtils.appendSelectionArgs(selectionArgs, new String[]{uri.getLastPathSegment()});
+    } else if (uriMatcher.match(uri) == 3) {
+      sqlBuilder.setProjectionMap(mMap);
+      sqlBuilder.appendWhere(DBConstants.START + ">=? OR ");
+      sqlBuilder.appendWhere(DBConstants.END + "<=?");
+      List<String> list = uri.getPathSegments();
+      String start = list.get(1);
+      String end = list.get(2);
+      selectionArgs = DatabaseUtils.appendSelectionArgs(selectionArgs, new String[]{start, end});
     }
 
-    @Override
-    public int delete(Uri uri, String selection, String[] selectionArgs) {
-        int count = 0;
-        int num = uriMatcher.match(uri);
-        if (num == 1) {
-            count = db.delete(DBConstants.EVENTS_TABLE, selection, selectionArgs);
-        } else if (num == 2) {
-            String id = uri.getPathSegments().get(1);
-            count = db.delete(DBConstants.EVENTS_TABLE, DBConstants.ID + " = " + id + (!TextUtils.isEmpty(selection) ? " AND (" + selection + ')' : ""), selectionArgs);
-        }
-        getContext().getContentResolver().notifyChange(uri, null);
-        return count;
+    if (sortOrder == null || sortOrder.equals("")) {
+      sortOrder = DBConstants.START + " COLLATE LOCALIZED ASC";
     }
 
-    @Override
-    public String getType(Uri uri) {
-        return null;
-    }
-
-    @Override
-    public Uri insert(Uri uri, ContentValues values) {
-        long rowID = db.insert(DBConstants.EVENTS_TABLE, null, values);
-        Uri _uri;
-        if (rowID > 0) {
-            _uri = ContentUris.withAppendedId(CONTENT_URI, rowID);
-            getContext().getContentResolver().notifyChange(uri, null);
-        } else {
-            throw new SQLException("Failed to insert row into " + uri);
-        }
-        return _uri;
-    }
-
-    @Override
-    public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
-        SQLiteQueryBuilder sqlBuilder = new SQLiteQueryBuilder();
-        sqlBuilder.setTables(DBConstants.EVENTS_TABLE);
-
-        if (uriMatcher.match(uri) == 1) {
-            sqlBuilder.setProjectionMap(mMap);
-        } else if (uriMatcher.match(uri) == 2) {
-            sqlBuilder.setProjectionMap(mMap);
-            sqlBuilder.appendWhere(DBConstants.ID + "=?");
-            selectionArgs = DatabaseUtils.appendSelectionArgs(selectionArgs, new String[]{uri.getLastPathSegment()});
-        } else if (uriMatcher.match(uri) == 3) {
-            sqlBuilder.setProjectionMap(mMap);
-            sqlBuilder.appendWhere(DBConstants.START + ">=? OR ");
-            sqlBuilder.appendWhere(DBConstants.END + "<=?");
-            List<String> list = uri.getPathSegments();
-            String start = list.get(1);
-            String end = list.get(2);
-            selectionArgs = DatabaseUtils.appendSelectionArgs(selectionArgs, new String[]{start, end});
-        }
-
-        if (sortOrder == null || sortOrder.equals("")) {
-            sortOrder = DBConstants.START + " COLLATE LOCALIZED ASC";
-        }
-
-        Cursor c = sqlBuilder.query(db, projection, selection, selectionArgs, null, null, sortOrder);
+    Cursor c = sqlBuilder.query(db, projection, selection, selectionArgs, null, null, sortOrder);
         c.setNotificationUri(getContext().getContentResolver(), uri);
         return c;
     }

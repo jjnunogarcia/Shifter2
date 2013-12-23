@@ -1,11 +1,13 @@
-package es.android.TurnosAndroid;
+package es.android.TurnosAndroid.fragments;
 
-import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import es.android.TurnosAndroid.model.Event;
+import es.android.TurnosAndroid.views.myevents.MyEventsAdapter;
+import es.android.TurnosAndroid.R;
 
 import java.util.ArrayList;
 

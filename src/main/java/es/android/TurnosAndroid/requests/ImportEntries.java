@@ -1,10 +1,12 @@
-package es.android.TurnosAndroid;
+package es.android.TurnosAndroid.requests;
 
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.text.format.Time;
+import es.android.TurnosAndroid.database.CalendarProvider;
+import es.android.TurnosAndroid.database.DBConstants;
 
 import java.util.Calendar;
 import java.util.TimeZone;

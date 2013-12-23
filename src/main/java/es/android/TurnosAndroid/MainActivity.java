@@ -13,6 +13,13 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import es.android.TurnosAndroid.controllers.CalendarController;
+import es.android.TurnosAndroid.fragments.DayFragment;
+import es.android.TurnosAndroid.fragments.MonthFragment;
+import es.android.TurnosAndroid.fragments.MyEventsFragment;
+import es.android.TurnosAndroid.model.EventInfo;
+import es.android.TurnosAndroid.model.EventType;
+import es.android.TurnosAndroid.requests.ImportEntries;
 
 public class MainActivity extends FragmentActivity implements EventHandler {
 

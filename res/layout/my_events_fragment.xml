@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <es.android.TurnosAndroid.MyEventsListView
+    <es.android.TurnosAndroid.views.myevents.MyEventsListView
         android:id="@android:id/list"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />

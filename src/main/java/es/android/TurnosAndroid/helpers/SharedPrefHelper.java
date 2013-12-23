@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package es.android.TurnosAndroid;
+package es.android.TurnosAndroid.helpers;
 
 import android.content.Context;
 import android.content.SharedPreferences;

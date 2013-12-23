@@ -17,6 +17,8 @@
 package es.android.TurnosAndroid;
 
 import android.graphics.Rect;
+import es.android.TurnosAndroid.model.Event;
+import es.android.TurnosAndroid.views.day.DayView;
 
 public class EventGeometry {
   // This is the space from the grid line to the event rectangle.
@@ -27,7 +29,7 @@ public class EventGeometry {
   private float mHourGap;
   private float mMinEventHeight;
 
-  void setCellMargin(int cellMargin) {
+  public void setCellMargin(int cellMargin) {
     mCellMargin = cellMargin;
   }
 
@@ -107,14 +109,14 @@ public class EventGeometry {
   /**
    * Returns true if this event intersects the selection region.
    */
-  boolean eventIntersectsSelection(Event event, Rect selection) {
+  public boolean eventIntersectsSelection(Event event, Rect selection) {
     return event.left < selection.right && event.right >= selection.left && event.top < selection.bottom && event.bottom >= selection.top;
   }
 
   /**
    * Computes the distance from the given point to the given event.
    */
-  float pointToEvent(float x, float y, Event event) {
+  public float pointToEvent(float x, float y, Event event) {
     float left = event.left;
     float right = event.right;
     float top = event.top;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package es.android.TurnosAndroid;
+package es.android.TurnosAndroid.fragments;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -27,6 +27,14 @@ import android.view.ViewGroup.LayoutParams;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ViewSwitcher;
+import es.android.TurnosAndroid.*;
+import es.android.TurnosAndroid.controllers.CalendarController;
+import es.android.TurnosAndroid.helpers.Utils;
+import es.android.TurnosAndroid.model.Event;
+import es.android.TurnosAndroid.model.EventInfo;
+import es.android.TurnosAndroid.model.EventType;
+import es.android.TurnosAndroid.requests.EventLoader;
+import es.android.TurnosAndroid.views.day.DayView;
 
 /**
  * This is the base class for Day and Week Activities.

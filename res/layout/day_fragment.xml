@@ -23,7 +23,7 @@
     android:background="@color/day_past_background_color"
     android:foregroundGravity="fill_horizontal|top">
 
-    <!--<es.android.TurnosAndroid.DayView-->
+    <!--<es.android.TurnosAndroid.views.day.DayView-->
             <!--android:id="@+id/day_view"-->
             <!--android:layout_width="match_parent"-->
             <!--android:layout_height="match_parent"/>-->

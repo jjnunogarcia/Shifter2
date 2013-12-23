@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package es.android.TurnosAndroid;
+package es.android.TurnosAndroid.views.month;
 
 import android.content.Context;
 import android.content.res.Configuration;
@@ -24,6 +24,11 @@ import android.view.View.OnTouchListener;
 import android.widget.AbsListView.LayoutParams;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
+import es.android.TurnosAndroid.controllers.CalendarController;
+import es.android.TurnosAndroid.model.EventType;
+import es.android.TurnosAndroid.helpers.Utils;
+import es.android.TurnosAndroid.model.Event;
+import es.android.TurnosAndroid.views.ViewType;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -33,37 +38,37 @@ import java.util.Locale;
 /**
  * <p>
  * This is a specialized adapter for creating a list of weeks with selectable days. It can be configured to display the week number, start the week on a
- * given day, show a reduced number of days, or display an arbitrary number of weeks at a time. See {@link MonthFragment} for usage.
+ * given day, show a reduced number of days, or display an arbitrary number of weeks at a time. See {@link es.android.TurnosAndroid.fragments.MonthFragment} for usage.
  * </p>
  */
 public class MonthAdapter extends BaseAdapter implements OnTouchListener {
-  private static final String   TAG                       = MonthAdapter.class.getSimpleName();
+  private static final String TAG                       = MonthAdapter.class.getSimpleName();
   /**
    * The number of weeks to display at a time.
    */
-  public static final  String   WEEK_PARAMS_NUM_WEEKS     = "num_weeks";
+  public static final  String WEEK_PARAMS_NUM_WEEKS     = "num_weeks";
   /**
    * Which month should be in focus currently.
    */
-  public static final  String   WEEK_PARAMS_FOCUS_MONTH   = "focus_month";
+  public static final  String WEEK_PARAMS_FOCUS_MONTH   = "focus_month";
   /**
    * Whether the week number should be shown. Non-zero to show them.
    */
-  public static final  String   WEEK_PARAMS_SHOW_WEEK     = "week_numbers";
+  public static final  String WEEK_PARAMS_SHOW_WEEK     = "week_numbers";
   /**
    * Which day the week should start on. {@link android.text.format.Time#SUNDAY} through {@link android.text.format.Time#SATURDAY}.
    */
-  public static final  String   WEEK_PARAMS_WEEK_START    = "week_start";
+  public static final  String WEEK_PARAMS_WEEK_START    = "week_start";
   /**
    * The Julian day to highlight as selected.
    */
-  public static final  String   WEEK_PARAMS_JULIAN_DAY    = "selected_day";
-  public static final  String   WEEK_PARAMS_DAYS_PER_WEEK = "days_per_week";
-  private static final int      WEEK_COUNT                = 3497;
-  private static final int      DEFAULT_NUM_WEEKS         = 6;
-  private static final int      DEFAULT_MONTH_FOCUS       = 0;
-  private static final int      DEFAULT_DAYS_PER_WEEK     = 7;
-  private static final long     ANIMATE_TODAY_TIMEOUT     = 1000;
+  public static final  String WEEK_PARAMS_JULIAN_DAY    = "selected_day";
+  public static final  String WEEK_PARAMS_DAYS_PER_WEEK = "days_per_week";
+  private static final int    WEEK_COUNT                = 3497;
+  private static final int    DEFAULT_NUM_WEEKS         = 6;
+  private static final int    DEFAULT_MONTH_FOCUS       = 0;
+  private static final int    DEFAULT_DAYS_PER_WEEK     = 7;
+  private static final long   ANIMATE_TODAY_TIMEOUT     = 1000;
 
   private Context                     context;
   private Time                        selectedDay;
@@ -94,7 +99,7 @@ public class MonthAdapter extends BaseAdapter implements OnTouchListener {
   private long                        clickTime;
 
   // Perform the tap animation in a runnable to allow a delay before showing the tap color. This is done to prevent a click animation when a fling is done.
-  private final        Runnable doClick                   = new Runnable() {
+  private final Runnable doClick = new Runnable() {
     @Override
     public void run() {
       if (clickedView != null) {

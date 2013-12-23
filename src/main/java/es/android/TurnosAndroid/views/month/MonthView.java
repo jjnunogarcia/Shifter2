@@ -1,4 +1,4 @@
-package es.android.TurnosAndroid;
+package es.android.TurnosAndroid.views.month;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -16,6 +16,9 @@ import android.text.format.DateUtils;
 import android.text.format.Time;
 import android.util.Log;
 import android.view.View;
+import es.android.TurnosAndroid.model.Event;
+import es.android.TurnosAndroid.R;
+import es.android.TurnosAndroid.helpers.Utils;
 
 import java.security.InvalidParameterException;
 import java.util.*;
@@ -42,7 +45,7 @@ public class MonthView extends View {
    */
   public static final String VIEW_PARAMS_HEIGHT       = "height";
   /**
-   * This specifies the position (or weeks since the epoch) of this week, calculated using {@link Utils#getWeeksSinceEpochFromJulianDay}
+   * This specifies the position (or weeks since the epoch) of this week, calculated using {@link es.android.TurnosAndroid.helpers.Utils#getWeeksSinceEpochFromJulianDay}
    */
   public static final String VIEW_PARAMS_WEEK         = "week";
   /**

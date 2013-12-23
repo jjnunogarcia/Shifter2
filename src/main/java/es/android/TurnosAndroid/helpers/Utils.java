@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package es.android.TurnosAndroid;
+package es.android.TurnosAndroid.helpers;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -22,6 +22,8 @@ import android.graphics.Color;
 import android.os.Build;
 import android.text.format.Time;
 import android.util.Log;
+import es.android.TurnosAndroid.R;
+import es.android.TurnosAndroid.model.Event;
 
 import java.util.ArrayList;
 import java.util.HashMap;
