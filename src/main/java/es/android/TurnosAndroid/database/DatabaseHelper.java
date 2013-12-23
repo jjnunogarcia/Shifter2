@@ -32,22 +32,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     // TODO it's necessary to create two tables: one for all the different event types and the other to store which events are in which days
     db.execSQL("CREATE TABLE " + DBConstants.EVENTS_TABLE + "(" +
                DBConstants.ID + " integer primary key autoincrement, " +
-               DBConstants.EVENT + " TEXT, " +
-               DBConstants.LOCATION + " TEXT, " +
+               DBConstants.NAME + " TEXT, " +
                DBConstants.DESCRIPTION + " TEXT, " +
-               DBConstants.START + " INTEGER, " +
-               DBConstants.END + " INTEGER, " +
-               DBConstants.CALENDAR_ID + " INTEGER, " +
+               DBConstants.START_TIME + " INTEGER, " +
+               DBConstants.DURATION + " INTEGER, " +
                DBConstants.START_DAY + " INTEGER, " +
                DBConstants.END_DAY + " INTEGER, " +
-               DBConstants.START_TIME + " INTEGER, " +
-               DBConstants.END_TIME + " INTEGER, " +
-               DBConstants.ALL_DAY + " INTEGER, " +
-               DBConstants.DISPLAY_COLOR + " TEXT, " +
-               DBConstants.EVENT_TIME_ZONE + " TEXT, " +
-               DBConstants.HAS_ALARM + " INTEGER, " +
-               DBConstants.ORGANIZER + " TEXT, " +
-               DBConstants.GUESTS_CAN_MODIFY + " INTEGER, " +
-               DBConstants.EVENT_ID + " INTEGER);");
+               DBConstants.LOCATION + " TEXT, " +
+               DBConstants.DISPLAY_COLOR + " TEXT);");
   }
 }

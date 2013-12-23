@@ -154,15 +154,6 @@ public class Utils {
     return false;
   }
 
-  /**
-   * @return true when declined events should be hidden.
-   */
-  public static boolean getHideDeclinedEvents(Context context) {
-//        final SharedPreferences prefs = GeneralPreferences.getSharedPreferences(context);
-//        return prefs.getBoolean(GeneralPreferences.KEY_HIDE_DECLINED, false);
-    return false;
-  }
-
   public static int getDaysPerWeek(Context context) {
 //        final SharedPreferences prefs = GeneralPreferences.getSharedPreferences(context);
 //        return prefs.getInt(GeneralPreferences.KEY_DAYS_PER_WEEK, 7);
