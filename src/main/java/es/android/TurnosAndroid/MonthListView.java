@@ -29,45 +29,24 @@ import android.widget.ListView;
 import java.util.TimeZone;
 
 public class MonthListView extends ListView {
-
-  private static final String TAG    = MonthListView.class.getSimpleName();
-  private static       float  mScale = 0;
-  private VelocityTracker velocityTracker;
-
+  private static final String TAG                               = MonthListView.class.getSimpleName();
   // These define the behavior of the fling. Below MIN_VELOCITY_FOR_FLING, do the system fling
   // behavior. Between MIN_VELOCITY_FOR_FLING and MULTIPLE_MONTH_VELOCITY_THRESHOLD, do one month
   // fling. Above MULTIPLE_MONTH_VELOCITY_THRESHOLD, do multiple month flings according to the
   // fling strength. When doing multiple month fling, the velocity is reduced by this threshold
   // to prevent moving from one month fling to 4 months and above flings.
-  private static int MIN_VELOCITY_FOR_FLING            = 1500;
-  private static int MULTIPLE_MONTH_VELOCITY_THRESHOLD = 2000;
-  private static int FLING_VELOCITY_DIVIDER            = 500;
-  private static int FLING_TIME                        = 1000;
+  private static       int    MIN_VELOCITY_FOR_FLING            = 1500;
+  private static       int    MULTIPLE_MONTH_VELOCITY_THRESHOLD = 2000;
+  private static       int    FLING_VELOCITY_DIVIDER            = 500;
+  private static       int    FLING_TIME                        = 1000;
 
-  // disposable variable used for time calculations
-  private Time     mTempTime;
-  private long     mDownActionTime;
-  private Rect     mFirstViewRect;
-  private Context  context;
-  private TimeZone timeZone;
-
-  // Updates the time zone when it changes
-  private final Runnable mTimezoneUpdater = new Runnable() {
-    @Override
-    public void run() {
-      if (mTempTime != null && context != null) {
-        mTempTime.timezone = timeZone.getDisplayName();
-      }
-    }
-  };
+  private VelocityTracker velocityTracker;
+  private Time            tempTime;
+  private long            downActionTime;
+  private Rect            firstViewRect;
 
   public MonthListView(Context context) {
     super(context);
-    init(context);
-  }
-
-  public MonthListView(Context context, AttributeSet attrs, int defStyle) {
-    super(context, attrs, defStyle);
     init(context);
   }
 
@@ -76,19 +55,21 @@ public class MonthListView extends ListView {
     init(context);
   }
 
-  private void init(Context c) {
-    timeZone = TimeZone.getDefault();
-    mFirstViewRect = new Rect();
-    context = c;
+  public MonthListView(Context context, AttributeSet attrs, int defStyle) {
+    super(context, attrs, defStyle);
+    init(context);
+  }
+
+  private void init(Context context) {
+    TimeZone timeZone = TimeZone.getDefault();
+    firstViewRect = new Rect();
     velocityTracker = VelocityTracker.obtain();
-    mTempTime = new Time(timeZone.getDisplayName());
-    if (mScale == 0) {
-      mScale = c.getResources().getDisplayMetrics().density;
-      if (mScale != 1) {
-        MIN_VELOCITY_FOR_FLING *= mScale;
-        MULTIPLE_MONTH_VELOCITY_THRESHOLD *= mScale;
-        FLING_VELOCITY_DIVIDER *= mScale;
-      }
+    tempTime = new Time(timeZone.getDisplayName());
+    float scale = context.getResources().getDisplayMetrics().density;
+    if (scale != 1) {
+      MIN_VELOCITY_FOR_FLING *= scale;
+      MULTIPLE_MONTH_VELOCITY_THRESHOLD *= scale;
+      FLING_VELOCITY_DIVIDER *= scale;
     }
   }
 
@@ -110,15 +91,15 @@ public class MonthListView extends ListView {
       // Start tracking movement velocity
       case MotionEvent.ACTION_DOWN:
         velocityTracker.clear();
-        mDownActionTime = SystemClock.uptimeMillis();
+        downActionTime = SystemClock.uptimeMillis();
         break;
       // Accumulate velocity and do a custom fling when above threshold
       case MotionEvent.ACTION_UP:
         velocityTracker.addMovement(ev);
         velocityTracker.computeCurrentVelocity(1000);    // in pixels per second
-        float vel = velocityTracker.getYVelocity();
-        if (Math.abs(vel) > MIN_VELOCITY_FOR_FLING) {
-          doFling(vel);
+        float yVelocity = velocityTracker.getYVelocity();
+        if (Math.abs(yVelocity) > MIN_VELOCITY_FOR_FLING) {
+          doFling(yVelocity);
           return true;
         }
         break;
@@ -131,9 +112,8 @@ public class MonthListView extends ListView {
 
   // Do a "snap to start of month" fling
   private void doFling(float velocityY) {
-
     // Stop the list-view movement and take over
-    MotionEvent cancelEvent = MotionEvent.obtain(mDownActionTime, SystemClock.uptimeMillis(), MotionEvent.ACTION_CANCEL, 0, 0, 0);
+    MotionEvent cancelEvent = MotionEvent.obtain(downActionTime, SystemClock.uptimeMillis(), MotionEvent.ACTION_CANCEL, 0, 0, 0);
     onTouchEvent(cancelEvent);
 
     // Below the threshold, fling one month. Above the threshold, fling according to the speed of the fling.
@@ -156,28 +136,28 @@ public class MonthListView extends ListView {
     // Get the day at the top right corner
     int day = getUpperRightJulianDay();
     // Get the day of the first day of the next/previous month (according to scroll direction)
-    mTempTime.setJulianDay(day);
-    mTempTime.monthDay = 1;
-    mTempTime.month += monthsToJump;
-    long timeInMillis = mTempTime.normalize(false);
-    // Since each view is 7 days, round the target day up to make sure the
-    // scroll will be  at least one view.
-    int scrollToDay = Time.getJulianDay(timeInMillis, mTempTime.gmtoff) + ((monthsToJump > 0) ? 6 : 0);
+    tempTime.setJulianDay(day);
+    tempTime.monthDay = 1;
+    tempTime.month += monthsToJump;
+    long timeInMillis = tempTime.normalize(false);
+    // Since each view is 7 days, round the target day up to make sure the scroll will be  at least one view.
+    int scrollToDay = Time.getJulianDay(timeInMillis, tempTime.gmtoff) + ((monthsToJump > 0) ? 6 : 0);
 
-    // Since all views have the same height, scroll by pixels instead of "to position".
-    // Compensate for the top view offset from the top.
+    // Since all views have the same height, scroll by pixels instead of "to position". Compensate for the top view offset from the top.
     View firstView = getChildAt(0);
     int firstViewHeight = firstView.getHeight();
     // Get visible part length
-    firstView.getLocalVisibleRect(mFirstViewRect);
-    int topViewVisiblePart = mFirstViewRect.bottom - mFirstViewRect.top;
+    firstView.getLocalVisibleRect(firstViewRect);
+    int topViewVisiblePart = firstViewRect.bottom - firstViewRect.top;
     int viewsToFling = (scrollToDay - day) / 7 - ((monthsToJump <= 0) ? 1 : 0);
     int offset = (viewsToFling > 0) ? -(firstViewHeight - topViewVisiblePart + MonthFragment.LIST_TOP_OFFSET) : (topViewVisiblePart - MonthFragment.LIST_TOP_OFFSET);
     // Fling
     smoothScrollBy(viewsToFling * firstViewHeight + offset, FLING_TIME);
   }
 
-  // Returns the julian day of the day in the upper right corner
+  /**
+   * @return the julian day of the day in the upper right corner
+   */
   private int getUpperRightJulianDay() {
     MonthView child = (MonthView) getChildAt(0);
     if (child == null) {

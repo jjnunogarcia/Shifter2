@@ -204,26 +204,25 @@ public class Event implements Cloneable {
    * @param endDay
    */
   public static ArrayList<Event> buildEventsFromCursor(Cursor cEvents, Context context, int startDay, int endDay) {
-    if (cEvents == null) {
-      return null;
-    }
-
-    int count = cEvents.getCount();
     ArrayList<Event> events = new ArrayList<Event>();
 
-    if (count == 0) {
-      return events;
-    }
+    if (cEvents != null) {
+      int count = cEvents.getCount();
 
-    Resources res = context.getResources();
-    mNoTitleString = res.getString(R.string.no_title_label);
-    mNoColorColor = res.getColor(R.color.event_center);
-    // Sort events in two passes so we ensure the allday and standard events get sorted in the correct order
-    cEvents.moveToPosition(-1);
-    while (cEvents.moveToNext()) {
-      Event e = generateEventFromCursor(cEvents);
-      if (e.startDay <= endDay && e.endDay >= startDay) {
-        events.add(e);
+      if (count == 0) {
+        return events;
+      }
+
+      Resources res = context.getResources();
+      mNoTitleString = res.getString(R.string.no_title_label);
+      mNoColorColor = res.getColor(R.color.event_center);
+      // Sort events in two passes so we ensure the allday and standard events get sorted in the correct order
+      cEvents.moveToPosition(-1);
+      while (cEvents.moveToNext()) {
+        Event e = generateEventFromCursor(cEvents);
+        if (e.startDay <= endDay && e.endDay >= startDay) {
+          events.add(e);
+        }
       }
     }
 

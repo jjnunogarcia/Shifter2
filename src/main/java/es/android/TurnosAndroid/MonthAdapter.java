@@ -37,6 +37,7 @@ import java.util.Locale;
  * </p>
  */
 public class MonthAdapter extends BaseAdapter implements OnTouchListener {
+  private static final String   TAG                       = MonthAdapter.class.getSimpleName();
   /**
    * The number of weeks to display at a time.
    */
@@ -58,40 +59,11 @@ public class MonthAdapter extends BaseAdapter implements OnTouchListener {
    */
   public static final  String   WEEK_PARAMS_JULIAN_DAY    = "selected_day";
   public static final  String   WEEK_PARAMS_DAYS_PER_WEEK = "days_per_week";
-  private static final String   TAG                       = MonthAdapter.class.getSimpleName();
   private static final int      WEEK_COUNT                = 3497;
   private static final int      DEFAULT_NUM_WEEKS         = 6;
   private static final int      DEFAULT_MONTH_FOCUS       = 0;
   private static final int      DEFAULT_DAYS_PER_WEEK     = 7;
   private static final long     ANIMATE_TODAY_TIMEOUT     = 1000;
-  // Perform the tap animation in a runnable to allow a delay before showing the tap color.
-  // This is done to prevent a click animation when a fling is done.
-  private final        Runnable doClick                   = new Runnable() {
-    @Override
-    public void run() {
-      if (clickedView != null) {
-        clickedView.setClickedDay(clickedXLocation);
-        clickedView = null;
-        // This is a workaround , sometimes the top item on the listview doesn't refresh on invalidate, so this forces a re-draw.
-        listView.invalidate();
-      }
-    }
-  };
-
-  // Performs the single tap operation: go to the tapped day. This is done in a runnable to allow the click animation to finish before switching views
-  private final Runnable doSingleTapUp = new Runnable() {
-    @Override
-    public void run() {
-      if (singleTapUpView != null) {
-        Time day = singleTapUpView.getDayFromLocation(clickedXLocation);
-        if (day != null) {
-          onDayTapped(day);
-        }
-        clearClickedView(singleTapUpView);
-        singleTapUpView = null;
-      }
-    }
-  };
 
   private Context                     context;
   private Time                        selectedDay;
@@ -120,6 +92,34 @@ public class MonthAdapter extends BaseAdapter implements OnTouchListener {
   private MonthView                   singleTapUpView;
   private float                       clickedXLocation;
   private long                        clickTime;
+
+  // Perform the tap animation in a runnable to allow a delay before showing the tap color. This is done to prevent a click animation when a fling is done.
+  private final        Runnable doClick                   = new Runnable() {
+    @Override
+    public void run() {
+      if (clickedView != null) {
+        clickedView.setClickedDay(clickedXLocation);
+        clickedView = null;
+        // This is a workaround , sometimes the top item on the listview doesn't refresh on invalidate, so this forces a re-draw.
+        listView.invalidate();
+      }
+    }
+  };
+
+  // Performs the single tap operation: go to the tapped day. This is done in a runnable to allow the click animation to finish before switching views
+  private final Runnable doSingleTapUp = new Runnable() {
+    @Override
+    public void run() {
+      if (singleTapUpView != null) {
+        Time day = singleTapUpView.getDayFromLocation(clickedXLocation);
+        if (day != null) {
+          onDayTapped(day);
+        }
+        clearClickedView(singleTapUpView);
+        singleTapUpView = null;
+      }
+    }
+  };
 
   public MonthAdapter(Context context, CalendarController calendarController, HashMap<String, Integer> params) {
     this.context = context;

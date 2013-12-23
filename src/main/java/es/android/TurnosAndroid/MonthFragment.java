@@ -256,7 +256,6 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
     setUpHeader();
     setUpListView();
     setUpAdapter();
-    setListAdapter(adapter);
     timeZoneUpdater.run();
 
     adapter.setSelectedDay(selectedDay);
@@ -336,6 +335,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
       adapter.updateParams(weekParams);
     }
     adapter.notifyDataSetChanged();
+    setListAdapter(adapter);
   }
 
   private void updateHeader() {

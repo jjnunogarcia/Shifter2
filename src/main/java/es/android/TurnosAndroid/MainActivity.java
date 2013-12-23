@@ -13,7 +13,6 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.Toast;
 
 public class MainActivity extends FragmentActivity implements EventHandler {
 
@@ -159,7 +158,6 @@ public class MainActivity extends FragmentActivity implements EventHandler {
     drawerList.setItemChecked(position, true);
     setTitle(drawerElements[position]);
     drawerLayout.closeDrawer(drawerList);
-    Toast.makeText(getApplicationContext(), "Clicked element " + position, Toast.LENGTH_SHORT).show();
   }
 
   private void addMonthFragment() {

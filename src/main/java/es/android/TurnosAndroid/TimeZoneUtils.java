@@ -18,7 +18,7 @@ import java.util.Locale;
  * This class contains methods specific to reading and writing time zone values.
  * Date: 03.12.13
  *
- * @author nuno@neofonie.de
+ * @author jjnunogarcia@gmail.com
  */
 public class TimeZoneUtils {
   private static final    String            TAG                      = TimeZoneUtils.class.getSimpleName();

@@ -5,7 +5,7 @@ import android.app.Application;
 /**
  * Date: 18.12.13
  *
- * @author nuno@neofonie.de
+ * @author jjnunogarcia@gmail.com
  */
 public class CustomApplication extends Application {
   private CalendarController calendarController;
