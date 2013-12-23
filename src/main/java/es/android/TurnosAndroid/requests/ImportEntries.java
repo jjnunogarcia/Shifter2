@@ -3,16 +3,8 @@ package es.android.TurnosAndroid.requests;
 import android.content.Context;
 import android.database.Cursor;
 import android.os.AsyncTask;
-<<<<<<< HEAD:src/main/java/es/android/TurnosAndroid/requests/ImportEntries.java
-import android.text.format.Time;
 import es.android.TurnosAndroid.database.CalendarProvider;
 import es.android.TurnosAndroid.database.DBConstants;
-
-import java.util.Calendar;
-import java.util.TimeZone;
-import java.util.concurrent.TimeUnit;
-=======
->>>>>>> 32a8c06efd73f2912cb8bb5aeda1dddc59b22e2e:src/main/java/es/android/TurnosAndroid/ImportEntries.java
 
 public class ImportEntries extends AsyncTask<Void, Void, Void> {
 

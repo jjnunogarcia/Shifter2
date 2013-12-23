@@ -13,7 +13,6 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-<<<<<<< HEAD
 import es.android.TurnosAndroid.controllers.CalendarController;
 import es.android.TurnosAndroid.fragments.DayFragment;
 import es.android.TurnosAndroid.fragments.MonthFragment;
@@ -21,8 +20,6 @@ import es.android.TurnosAndroid.fragments.MyEventsFragment;
 import es.android.TurnosAndroid.model.EventInfo;
 import es.android.TurnosAndroid.model.EventType;
 import es.android.TurnosAndroid.requests.ImportEntries;
-=======
->>>>>>> 32a8c06efd73f2912cb8bb5aeda1dddc59b22e2e
 
 public class MainActivity extends FragmentActivity implements EventHandler, ActionBarInterface {
 
@@ -157,8 +154,6 @@ public class MainActivity extends FragmentActivity implements EventHandler, Acti
     drawerList.setItemChecked(position, true);
     setTitle(drawerElements[position]);
     drawerLayout.closeDrawer(drawerList);
-<<<<<<< HEAD
-=======
   }
 
   @Override
@@ -179,7 +174,6 @@ public class MainActivity extends FragmentActivity implements EventHandler, Acti
   @Override
   public void onDeleteEventClicked() {
     createEventFragment.deleteEvent();
->>>>>>> 32a8c06efd73f2912cb8bb5aeda1dddc59b22e2e
   }
 
   private void addMonthFragment() {

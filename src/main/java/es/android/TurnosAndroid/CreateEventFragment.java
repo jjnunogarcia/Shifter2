@@ -9,6 +9,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
+import es.android.TurnosAndroid.database.CalendarProvider;
+import es.android.TurnosAndroid.database.DBConstants;
 
 /**
  * Date: 19.12.13

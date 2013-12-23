@@ -24,18 +24,10 @@
             android:layout_height="1px"
             android:layout_width="match_parent"/>
 
-<<<<<<< HEAD
     <es.android.TurnosAndroid.views.month.MonthListView
         android:id="@android:id/list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:drawSelectorOnTop="false" />
-=======
-    <es.android.TurnosAndroid.MonthListView
-            android:id="@android:id/list"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:drawSelectorOnTop="false"/>
->>>>>>> 32a8c06efd73f2912cb8bb5aeda1dddc59b22e2e
 
 </LinearLayout>

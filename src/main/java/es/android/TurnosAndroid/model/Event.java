@@ -35,13 +35,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 // TODO: should Event be Parcelable so it can be passed via Intents?
 public class Event implements Cloneable {
   // The projection to use when querying instances to build a list of events
-<<<<<<< HEAD:src/main/java/es/android/TurnosAndroid/model/Event.java
-  public static final  String[] EVENT_PROJECTION       = new String[]{
-      DBConstants.EVENT,
-=======
   public static final  String[] EVENT_PROJECTION       = new String[] {
       DBConstants.NAME,
->>>>>>> 32a8c06efd73f2912cb8bb5aeda1dddc59b22e2e:src/main/java/es/android/TurnosAndroid/Event.java
       DBConstants.DISPLAY_COLOR,
       DBConstants.ID,
       DBConstants.START_DAY,

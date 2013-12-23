@@ -27,6 +27,6 @@
 
         <provider
                 android:name=".database.CalendarProvider"
-                android:authorities="es.android.TurnosAndroid.calendarprovider"/>
+                android:authorities="es.android.TurnosAndroid.database.calendarprovider"/>
     </application>
 </manifest>
