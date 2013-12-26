@@ -48,52 +48,52 @@ public class EventGeometry {
   // Computes the rectangle coordinates of the given event on the screen.
   // Returns true if the rectangle is visible on the screen.
   public boolean computeEventRect(int date, int left, int top, int cellWidth, Event event) {
-    if (event.drawAsAllday()) {
-      return false;
-    }
+//    if (event.drawAsAllday()) {
+//      return false;
+//    }
 
     float cellMinuteHeight = mMinuteHeight;
-    int startDay = event.startDay;
-    int endDay = event.endDay;
+//    int startDay = event.startDay;
+//    int endDay = event.endDay;
 
-    if (startDay > date || endDay < date) {
-      return false;
-    }
+//    if (startDay > date || endDay < date) {
+//      return false;
+//    }
 
-    int startTime = event.startTime;
-    int endTime = event.endTime;
+//    int startTime = event.startTime;
+//    int endTime = event.endTime;
 
     // If the event started on a previous day, then show it starting
     // at the beginning of this day.
-    if (startDay < date) {
-      startTime = 0;
-    }
+//    if (startDay < date) {
+//      startTime = 0;
+//    }
 
     // If the event ends on a future day, then show it extending to
     // the end of this day.
-    if (endDay > date) {
-      endTime = DayView.MINUTES_PER_DAY;
-    }
+//    if (endDay > date) {
+//      endTime = DayView.MINUTES_PER_DAY;
+//    }
 
     int col = event.getColumn();
     int maxCols = event.getMaxColumns();
-    int startHour = startTime / 60;
-    int endHour = endTime / 60;
+//    int startHour = startTime / 60;
+//    int endHour = endTime / 60;
 
     // If the end point aligns on a cell boundary then count it as
     // ending in the previous cell so that we don't cross the border
     // between hours.
-    if (endHour * 60 == endTime) {
-      endHour -= 1;
-    }
+//    if (endHour * 60 == endTime) {
+//      endHour -= 1;
+//    }
 
     event.top = top;
-    event.top += (int) (startTime * cellMinuteHeight);
-    event.top += startHour * mHourGap;
+//    event.top += (int) (startTime * cellMinuteHeight);
+//    event.top += startHour * mHourGap;
 
     event.bottom = top;
-    event.bottom += (int) (endTime * cellMinuteHeight);
-    event.bottom += endHour * mHourGap - 1;
+//    event.bottom += (int) (endTime * cellMinuteHeight);
+//    event.bottom += endHour * mHourGap - 1;
 
     // Make the rectangle be at least mMinEventHeight pixels high
     if (event.bottom < event.top + mMinEventHeight) {

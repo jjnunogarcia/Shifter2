@@ -240,23 +240,23 @@ public class MonthAdapter extends BaseAdapter implements OnTouchListener {
     }
 
     // Compute the new set of days with events
-    for (Event event : events) {
-      int startDay = event.startDay - this.firstJulianDay;
-      int endDay = event.endDay - this.firstJulianDay + 1;
-      if (startDay < numDays || endDay >= 0) {
-        if (startDay < 0) {
-          startDay = 0;
-        }
-        if (startDay <= numDays && endDay >= 0) {
-          if (endDay > numDays) {
-            endDay = numDays;
-          }
-          for (int j = startDay; j < endDay; j++) {
-            eventDayList.get(j).add(event);
-          }
-        }
-      }
-    }
+//    for (Event event : events) {
+//      int startDay = event.startDay - this.firstJulianDay;
+//      int endDay = event.endDay - this.firstJulianDay + 1;
+//      if (startDay < numDays || endDay >= 0) {
+//        if (startDay < 0) {
+//          startDay = 0;
+//        }
+//        if (startDay <= numDays && endDay >= 0) {
+//          if (endDay > numDays) {
+//            endDay = numDays;
+//          }
+//          for (int j = startDay; j < endDay; j++) {
+//            eventDayList.get(j).add(event);
+//          }
+//        }
+//      }
+//    }
 
     refresh();
   }
@@ -378,8 +378,7 @@ public class MonthAdapter extends BaseAdapter implements OnTouchListener {
   public boolean onTouch(View v, MotionEvent event) {
     int action = event.getAction();
 
-    // Event was tapped - switch to the detailed view making sure the click animation
-    // is done first.
+    // Event was tapped - switch to the detailed view making sure the click animation is done first.
     if (gestureDetector.onTouchEvent(event)) {
       singleTapUpView = (MonthView) v;
       long delay = System.currentTimeMillis() - clickTime;

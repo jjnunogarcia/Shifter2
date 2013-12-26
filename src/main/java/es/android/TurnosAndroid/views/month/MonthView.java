@@ -812,15 +812,15 @@ public class MonthView extends View {
          */
     final int BORDER_SPACE = EVENT_SQUARE_BORDER + 1;       // want a 1-pixel gap inside border
     final int STROKE_WIDTH_ADJ = EVENT_SQUARE_BORDER / 2;   // adjust bounds for stroke width
-    boolean allDay = event.allDay;
+//    boolean allDay = event.allDay;
     int eventRequiredSpace = eventHeight;
-    if (allDay) {
+//    if (allDay) {
       // Add a few pixels for the box we draw around all-day events.
-      eventRequiredSpace += BORDER_SPACE * 2;
-    } else if (showTimes) {
+//      eventRequiredSpace += BORDER_SPACE * 2;
+//    } else if (showTimes) {
       // Need room for the "1pm - 2pm" line.
       eventRequiredSpace += extrasHeight;
-    }
+//    }
     int reservedSpace = EVENT_BOTTOM_PADDING;   // leave a bit of room at the bottom
     if (moreEvents) {
       // More events follow.  Leave a bit of space between events.
@@ -839,26 +839,26 @@ public class MonthView extends View {
       return y + eventRequiredSpace;
     }
 
-    boolean isDeclined = event.selfAttendeeStatus == Attendees.ATTENDEE_STATUS_DECLINED;
-    int color = event.color;
-    if (isDeclined) {
-      color = Utils.getDeclinedColorFromColor(color);
-    }
+//    boolean isDeclined = event.selfAttendeeStatus == Attendees.ATTENDEE_STATUS_DECLINED;
+    String color = event.getColor();
+//    if (isDeclined) {
+//      color = Utils.getDeclinedColorFromColor(color);
+//    }
 
     int textX, textY, textRightEdge;
 
-    if (allDay) {
-      // We shift the render offset "inward", because drawRect with a stroke width greater
-      // than 1 draws outside the specified bounds.  (We don't adjust the left edge, since
-      // we want to match the existing appearance of the "event square".)
-      r.left = x;
-      r.right = rightEdge - STROKE_WIDTH_ADJ;
-      r.top = y + STROKE_WIDTH_ADJ;
-      r.bottom = y + eventHeight + BORDER_SPACE * 2 - STROKE_WIDTH_ADJ;
-      textX = x + BORDER_SPACE;
-      textY = y + eventAscentHeight + BORDER_SPACE;
-      textRightEdge = rightEdge - BORDER_SPACE;
-    } else {
+//    if (allDay) {
+//      // We shift the render offset "inward", because drawRect with a stroke width greater
+//      // than 1 draws outside the specified bounds.  (We don't adjust the left edge, since
+//      // we want to match the existing appearance of the "event square".)
+//      r.left = x;
+//      r.right = rightEdge - STROKE_WIDTH_ADJ;
+//      r.top = y + STROKE_WIDTH_ADJ;
+//      r.bottom = y + eventHeight + BORDER_SPACE * 2 - STROKE_WIDTH_ADJ;
+//      textX = x + BORDER_SPACE;
+//      textY = y + eventAscentHeight + BORDER_SPACE;
+//      textRightEdge = rightEdge - BORDER_SPACE;
+//    } else {
       r.left = x;
       r.right = x + EVENT_SQUARE_WIDTH;
       r.bottom = y + eventAscentHeight;
@@ -866,53 +866,53 @@ public class MonthView extends View {
       textX = x + EVENT_SQUARE_WIDTH + EVENT_RIGHT_PADDING;
       textY = y + eventAscentHeight;
       textRightEdge = rightEdge;
-    }
+//    }
 
     Style boxStyle = Style.STROKE;
     boolean solidBackground = false;
-    if (event.selfAttendeeStatus != Attendees.ATTENDEE_STATUS_INVITED) {
-      boxStyle = Style.FILL_AND_STROKE;
-      if (allDay) {
-        solidBackground = true;
-      }
-    }
+//    if (event.selfAttendeeStatus != Attendees.ATTENDEE_STATUS_INVITED) {
+//      boxStyle = Style.FILL_AND_STROKE;
+//      if (allDay) {
+//        solidBackground = true;
+//      }
+//    }
     eventSquarePaint.setStyle(boxStyle);
-    eventSquarePaint.setColor(color);
+//    eventSquarePaint.setColor(color);
     canvas.drawRect(r, eventSquarePaint);
 
     float avail = textRightEdge - textX;
-    CharSequence text = TextUtils.ellipsize(event.title, eventPaint, avail, TextUtils.TruncateAt.END);
+    CharSequence text = TextUtils.ellipsize(event.getName(), eventPaint, avail, TextUtils.TruncateAt.END);
     Paint textPaint;
-    if (solidBackground) {
-      // Text color needs to contrast with solid background.
-      textPaint = solidBackgroundEventPaint;
-    } else if (isDeclined) {
-      // Use "declined event" color.
-      textPaint = declinedEventPaint;
-    } else if (allDay) {
-      // Text inside frame is same color as frame.
-      framedEventPaint.setColor(color);
-      textPaint = framedEventPaint;
-    } else {
-      // Use generic event text color.
-      textPaint = eventPaint;
-    }
-    canvas.drawText(text.toString(), textX, textY, textPaint);
+//    if (solidBackground) {
+//      // Text color needs to contrast with solid background.
+//      textPaint = solidBackgroundEventPaint;
+//    } else if (isDeclined) {
+//      // Use "declined event" color.
+//      textPaint = declinedEventPaint;
+//    } else if (allDay) {
+//      // Text inside frame is same color as frame.
+//      framedEventPaint.setColor(color);
+//      textPaint = framedEventPaint;
+//    } else {
+//      // Use generic event text color.
+//      textPaint = eventPaint;
+//    }
+//    canvas.drawText(text.toString(), textX, textY, textPaint);
     y += eventHeight;
-    if (allDay) {
-      y += BORDER_SPACE * 2;
-    }
+//    if (allDay) {
+//      y += BORDER_SPACE * 2;
+//    }
 
-    if (showTimes && !allDay) {
-      // show start/end time, e.g. "1pm - 2pm"
-      textY = y + extrasAscentHeight;
-      mStringBuilder.setLength(0);
-      text = DateUtils.formatDateRange(getContext(), mFormatter, event.startMillis, event.endMillis, DateUtils.FORMAT_SHOW_TIME | DateUtils.FORMAT_ABBREV_ALL,
-                                       Utils.getTimeZone(getContext(), null)).toString();
-      text = TextUtils.ellipsize(text, eventExtrasPaint, avail, TextUtils.TruncateAt.END);
-      canvas.drawText(text.toString(), textX, textY, isDeclined ? eventDeclinedExtrasPaint : eventExtrasPaint);
-      y += extrasHeight;
-    }
+//    if (showTimes && !allDay) {
+//      // show start/end time, e.g. "1pm - 2pm"
+//      textY = y + extrasAscentHeight;
+//      mStringBuilder.setLength(0);
+//      text = DateUtils.formatDateRange(getContext(), mFormatter, event.startMillis, event.endMillis, DateUtils.FORMAT_SHOW_TIME | DateUtils.FORMAT_ABBREV_ALL,
+//                                       Utils.getTimeZone(getContext(), null)).toString();
+//      text = TextUtils.ellipsize(text, eventExtrasPaint, avail, TextUtils.TruncateAt.END);
+//      canvas.drawText(text.toString(), textX, textY, isDeclined ? eventDeclinedExtrasPaint : eventExtrasPaint);
+//      y += extrasHeight;
+//    }
 
     y += EVENT_LINE_PADDING;
 
@@ -936,16 +936,16 @@ public class MonthView extends View {
     // Draw event and conflict times
     if (dna != null) {
       for (Utils.DNAStrand strand : dna.values()) {
-        if (strand.color == CONFLICT_COLOR || strand.points == null || strand.points.length == 0) {
-          continue;
-        }
-        dnaTimePaint.setColor(strand.color);
+//        if (strand.color == CONFLICT_COLOR || strand.points == null || strand.points.length == 0) {
+//          continue;
+//        }
+//        dnaTimePaint.setColor(strand.color);
         canvas.drawLines(strand.points, dnaTimePaint);
       }
       // Draw black last to make sure it's on top
       Utils.DNAStrand strand = dna.get(CONFLICT_COLOR);
       if (strand != null && strand.points != null && strand.points.length != 0) {
-        dnaTimePaint.setColor(strand.color);
+//        dnaTimePaint.setColor(strand.color);
         canvas.drawLines(strand.points, dnaTimePaint);
       }
       if (mDayXs == null) {

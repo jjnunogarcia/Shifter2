@@ -24,6 +24,11 @@ public class MyEventsAdapter extends BaseAdapter {
     this.events = events;
   }
 
+  public void setMyEvents(ArrayList<Event> events) {
+    this.events = events;
+    notifyDataSetChanged();
+  }
+
   @Override
   public int getCount() {
     return events.size();
@@ -51,8 +56,8 @@ public class MyEventsAdapter extends BaseAdapter {
     }
 
     Event event = events.get(position);
-    TextView eventTitle = (TextView) view.findViewById(R.id.event_title);
-    eventTitle.setText(event.title);
+    TextView eventTitle = (TextView) view.findViewById(R.id.my_events_row_event_title);
+    eventTitle.setText(event.getName());
 
     return view;
   }

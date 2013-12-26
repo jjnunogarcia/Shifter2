@@ -31,30 +31,25 @@ import java.util.Iterator;
 import java.util.LinkedList;
 
 public class Utils {
-  private static final String TAG = Utils.class.getSimpleName();
-
-  public static final int DECLINED_EVENT_ALPHA      = 0x66;
-  public static final int DECLINED_EVENT_TEXT_ALPHA = 0xC0;
-
-  private static final float SATURATION_ADJUST = 1.3f;
-  private static final float INTENSITY_ADJUST  = 0.8f;
-
+  public static final  int           DECLINED_EVENT_ALPHA      = 0x66;
+  public static final  int           DECLINED_EVENT_TEXT_ALPHA = 0xC0;
   // Defines used by the DNA generation code
-  static final int     DAY_IN_MINUTES         = 60 * 24;
-  static final int     WEEK_IN_MINUTES        = DAY_IN_MINUTES * 7;
-  // The work day is being counted as 6am to 8pm
-  static       int     WORK_DAY_MINUTES       = 14 * 60;
-  static       int     WORK_DAY_START_MINUTES = 6 * 60;
-  static       int     WORK_DAY_END_MINUTES   = 20 * 60;
-  static       int     WORK_DAY_END_LENGTH    = (24 * 60) - WORK_DAY_END_MINUTES;
-  static       int     CONFLICT_COLOR         = 0xFF000000;
-  static       boolean mMinutesLoaded         = false;
-
+  static final         int           DAY_IN_MINUTES            = 60 * 24;
+  static final         int           WEEK_IN_MINUTES           = DAY_IN_MINUTES * 7;
   // The name of the shared preferences file. This name must be maintained for historical
   // reasons, as it's what PreferenceManager assigned the first time the file was created.
-  static final String SHARED_PREFS_NAME = "com.android.calendar_preferences";
-
-  private static final TimeZoneUtils timeZoneUtils = new TimeZoneUtils(SHARED_PREFS_NAME);
+  static final         String        SHARED_PREFS_NAME         = "com.android.calendar_preferences";
+  private static final String        TAG                       = Utils.class.getSimpleName();
+  private static final float         SATURATION_ADJUST         = 1.3f;
+  private static final float         INTENSITY_ADJUST          = 0.8f;
+  private static final TimeZoneUtils timeZoneUtils             = new TimeZoneUtils(SHARED_PREFS_NAME);
+  // The work day is being counted as 6am to 8pm
+  static               int           WORK_DAY_MINUTES          = 14 * 60;
+  static               int           WORK_DAY_START_MINUTES    = 6 * 60;
+  static               int           WORK_DAY_END_MINUTES      = 20 * 60;
+  static               int           WORK_DAY_END_LENGTH       = (24 * 60) - WORK_DAY_END_MINUTES;
+  static               String        CONFLICT_COLOR            = "FF000000";
+  static               boolean       mMinutesLoaded            = false;
 
   /**
    * Returns whether the SDK is the Jellybean release or later.
@@ -213,27 +208,6 @@ public class Utils {
     return (0xff000000) | ((r | g | b) >> 8);
   }
 
-  // A single strand represents one color of events. Events are divided up by
-  // color to make them convenient to draw. The black strand is special in
-  // that it holds conflicting events as well as color settings for allday on
-  // each day.
-  public static class DNAStrand {
-    public float[] points;
-    public int[]   allDays; // color for the allday, 0 means no event
-    int position;
-    public int color;
-    int count;
-  }
-
-  // A segment is a single continuous length of time occupied by a single
-  // color. Segments should never span multiple days.
-  private static class DNASegment {
-    int startMinute; // in minutes since the start of the week
-    int endMinute;
-    int color; // Calendar color or black for conflicts
-    int day; // quick reference to the day this segment is on
-  }
-
   /**
    * Converts a list of events to a list of segments to draw. Assumes list is
    * ordered by start time of the events. The function processes events for a
@@ -270,7 +244,7 @@ public class Utils {
         return null;
       }
       Resources res = context.getResources();
-      CONFLICT_COLOR = res.getColor(R.color.month_dna_conflict_time_color);
+      CONFLICT_COLOR = String.valueOf(res.getColor(R.color.month_dna_conflict_time_color));
       WORK_DAY_START_MINUTES = res.getInteger(R.integer.work_start_minutes);
       WORK_DAY_END_MINUTES = res.getInteger(R.integer.work_end_minutes);
       WORK_DAY_END_LENGTH = DAY_IN_MINUTES - WORK_DAY_END_MINUTES;
@@ -288,7 +262,7 @@ public class Utils {
     // the loop
     DNAStrand blackStrand = new DNAStrand();
     blackStrand.color = CONFLICT_COLOR;
-    strands.put(CONFLICT_COLOR, blackStrand);
+    strands.put(Integer.valueOf(CONFLICT_COLOR), blackStrand);
     // the min length is the number of minutes that will occupy
     // MIN_SEGMENT_PIXELS in the 'work day' time slot. This computes the
     // minutes/pixel * minpx where the number of pixels are 3/4 the total
@@ -304,56 +278,53 @@ public class Utils {
     // Go through all the events for the week
     for (Event currEvent : events) {
       // if this event is outside the weeks range skip it
-      if (currEvent.endDay < firstJulianDay || currEvent.startDay > lastJulianDay) {
+      if (currEvent.getEndDay() < firstJulianDay || currEvent.getStartDay() > lastJulianDay) {
         continue;
       }
-      if (currEvent.drawAsAllday()) {
-        addAllDayToStrands(currEvent, strands, firstJulianDay, dayXs.length);
-        continue;
-      }
+//      if (currEvent.drawAsAllday()) {
+//        addAllDayToStrands(currEvent, strands, firstJulianDay, dayXs.length);
+//        continue;
+//      }
       // Copy the event over so we can clip its start and end to our range
       currEvent.copyTo(event);
-      if (event.startDay < firstJulianDay) {
-        event.startDay = firstJulianDay;
-        event.startTime = 0;
+      if (event.getStartDay() < firstJulianDay) {
+        event.setStartDay(firstJulianDay);
+        event.setStartTime(0);
       }
       // If it starts after the work day make sure the start is at least
       // minPixels from midnight
-      if (event.startTime > DAY_IN_MINUTES - minOtherMinutes) {
-        event.startTime = DAY_IN_MINUTES - minOtherMinutes;
+      if (event.getStartTime() > DAY_IN_MINUTES - minOtherMinutes) {
+        event.setStartTime(DAY_IN_MINUTES - minOtherMinutes);
       }
-      if (event.endDay > lastJulianDay) {
-        event.endDay = lastJulianDay;
-        event.endTime = DAY_IN_MINUTES - 1;
+      if (event.getEndDay() > lastJulianDay) {
+        event.setEndDay(lastJulianDay);
+//        event.endTime = DAY_IN_MINUTES - 1;
       }
       // If the end time is before the work day make sure it ends at least
       // minPixels after midnight
-      if (event.endTime < minOtherMinutes) {
-        event.endTime = minOtherMinutes;
-      }
+//      if (event.endTime < minOtherMinutes) {
+//        event.endTime = minOtherMinutes;
+//      }
       // If the start and end are on the same day make sure they are at
       // least minPixels apart. This only needs to be done for times
       // outside the work day as the min distance for within the work day
       // is enforced in the segment code.
-      if (event.startDay == event.endDay &&
-          event.endTime - event.startTime < minOtherMinutes) {
-        // If it's less than minPixels in an area before the work
-        // day
-        if (event.startTime < WORK_DAY_START_MINUTES) {
-          // extend the end to the first easy guarantee that it's
-          // minPixels
-          event.endTime = Math.min(event.startTime + minOtherMinutes,
-                                   WORK_DAY_START_MINUTES + minMinutes);
-          // if it's in the area after the work day
-        } else if (event.endTime > WORK_DAY_END_MINUTES) {
-          // First try shifting the end but not past midnight
-          event.endTime = Math.min(event.endTime + minOtherMinutes, DAY_IN_MINUTES - 1);
-          // if it's still too small move the start back
-          if (event.endTime - event.startTime < minOtherMinutes) {
-            event.startTime = event.endTime - minOtherMinutes;
-          }
-        }
-      }
+//      if (event.startDay == event.endDay && event.endTime - event.startTime < minOtherMinutes) {
+      // If it's less than minPixels in an area before the work day
+//        if (event.startTime < WORK_DAY_START_MINUTES) {
+      // extend the end to the first easy guarantee that it's
+      // minPixels
+//          event.endTime = Math.min(event.startTime + minOtherMinutes, WORK_DAY_START_MINUTES + minMinutes);
+      // if it's in the area after the work day
+//        } else if (event.endTime > WORK_DAY_END_MINUTES) {
+      // First try shifting the end but not past midnight
+//          event.endTime = Math.min(event.endTime + minOtherMinutes, DAY_IN_MINUTES - 1);
+      // if it's still too small move the start back
+//          if (event.endTime - event.startTime < minOtherMinutes) {
+//            event.startTime = event.endTime - minOtherMinutes;
+//          }
+//        }
+//      }
 
       // This handles adding the first segment
       if (segments.size() == 0) {
@@ -363,23 +334,23 @@ public class Utils {
       // Now compare our current start time to the end time of the last
       // segment in the list
       DNASegment lastSegment = segments.getLast();
-      int startMinute = (event.startDay - firstJulianDay) * DAY_IN_MINUTES + event.startTime;
-      int endMinute = Math.max((event.endDay - firstJulianDay) * DAY_IN_MINUTES + event.endTime, startMinute + minMinutes);
+      long startMinute = (event.getStartDay() - firstJulianDay) * DAY_IN_MINUTES + event.getStartTime();
+//      int endMinute = Math.max((event.endDay - firstJulianDay) * DAY_IN_MINUTES + event.endTime, startMinute + minMinutes);
 
       if (startMinute < 0) {
         startMinute = 0;
       }
-      if (endMinute >= WEEK_IN_MINUTES) {
-        endMinute = WEEK_IN_MINUTES - 1;
-      }
+//      if (endMinute >= WEEK_IN_MINUTES) {
+//        endMinute = WEEK_IN_MINUTES - 1;
+//      }
       // If we start before the last segment in the list ends we need to
       // start going through the list as this may conflict with other
       // events
       if (startMinute < lastSegment.endMinute) {
         int i = segments.size();
         // find the last segment this event intersects with
-        while (--i >= 0 && endMinute < segments.get(i).startMinute) {
-        }
+//        while (--i >= 0 && endMinute < segments.get(i).startMinute) {
+//        }
 
         DNASegment currSegment;
         // for each segment this event intersects with
@@ -390,25 +361,25 @@ public class Utils {
           }
           // if the event ends before the segment and wouldn't create
           // a segment that is too small split off the right side
-          if (endMinute < currSegment.endMinute - minMinutes) {
-            DNASegment rhs = new DNASegment();
-            rhs.endMinute = currSegment.endMinute;
-            rhs.color = currSegment.color;
-            rhs.startMinute = endMinute + 1;
-            rhs.day = currSegment.day;
-            currSegment.endMinute = endMinute;
-            segments.add(i + 1, rhs);
-            strands.get(rhs.color).count++;
-          }
+//          if (endMinute < currSegment.endMinute - minMinutes) {
+//            DNASegment rhs = new DNASegment();
+//            rhs.endMinute = currSegment.endMinute;
+//            rhs.color = currSegment.color;
+//            rhs.startMinute = endMinute + 1;
+//            rhs.day = currSegment.day;
+//            currSegment.endMinute = endMinute;
+//            segments.add(i + 1, rhs);
+//            strands.get(rhs.color).count++;
+//          }
           // if the event starts after the segment and wouldn't create
           // a segment that is too small split off the left side
           if (startMinute > currSegment.startMinute + minMinutes) {
             DNASegment lhs = new DNASegment();
             lhs.startMinute = currSegment.startMinute;
             lhs.color = currSegment.color;
-            lhs.endMinute = startMinute - 1;
+//            lhs.endMinute = startMinute - 1;
             lhs.day = currSegment.day;
-            currSegment.startMinute = startMinute;
+//            currSegment.startMinute = startMinute;
             // increment i so that we are at the right position when
             // referencing the segments to the right and left of the
             // current segment.
@@ -419,8 +390,7 @@ public class Utils {
           // the right if they're on the same day and overlap
           if (i + 1 < segments.size()) {
             DNASegment rhs = segments.get(i + 1);
-            if (rhs.color == CONFLICT_COLOR && currSegment.day == rhs.day
-                && rhs.startMinute <= currSegment.endMinute + 1) {
+            if (rhs.color == CONFLICT_COLOR && currSegment.day == rhs.day && rhs.startMinute <= currSegment.endMinute + 1) {
               rhs.startMinute = Math.min(currSegment.startMinute, rhs.startMinute);
               segments.remove(currSegment);
               strands.get(currSegment.color).count--;
@@ -456,10 +426,9 @@ public class Utils {
 
       }
       // If this event extends beyond the last segment add a new segment
-      if (endMinute > lastSegment.endMinute) {
-        addNewSegment(segments, event, strands, firstJulianDay, lastSegment.endMinute,
-                      minMinutes);
-      }
+//      if (endMinute > lastSegment.endMinute) {
+//        addNewSegment(segments, event, strands, firstJulianDay, lastSegment.endMinute, minMinutes);
+//      }
     }
     weaveDNAStrands(segments, firstJulianDay, strands, top, bottom, dayXs);
     return strands;
@@ -474,14 +443,14 @@ public class Utils {
     }
 
     // For each day this event is on update the color
-    int end = Math.min(event.endDay - firstJulianDay, numDays - 1);
-    for (int i = Math.max(event.startDay - firstJulianDay, 0); i <= end; i++) {
-      if (strand.allDays[i] != 0) {
+    long end = Math.min(event.getEndDay() - firstJulianDay, numDays - 1);
+    for (long i = Math.max(event.getStartDay() - firstJulianDay, 0); i <= end; i++) {
+      if (strand.allDays[((int) i)] != 0) {
         // if this day already had a color, it is now a conflict
-        strand.allDays[i] = CONFLICT_COLOR;
+        strand.allDays[((int) i)] = Integer.parseInt(CONFLICT_COLOR);
       } else {
         // else it's just the color of the event
-        strand.allDays[i] = event.color;
+        strand.allDays[((int) i)] = Integer.parseInt(event.getColor());
       }
     }
   }
@@ -504,19 +473,16 @@ public class Utils {
     for (DNASegment segment : segments) {
       // Add the points to the strand of that color
       DNAStrand strand = strands.get(segment.color);
-      int dayIndex = segment.day - firstJulianDay;
-      int dayStartMinute = segment.startMinute % DAY_IN_MINUTES;
-      int dayEndMinute = segment.endMinute % DAY_IN_MINUTES;
+      long dayIndex = segment.day - firstJulianDay;
+      long dayStartMinute = segment.startMinute % DAY_IN_MINUTES;
+      long dayEndMinute = segment.endMinute % DAY_IN_MINUTES;
       int height = bottom - top;
       int workDayHeight = height * 3 / 4;
       int remainderHeight = (height - workDayHeight) / 2;
 
-      int x = dayXs[dayIndex];
-      int y0;
-      int y1;
-
-      y0 = top + getPixelOffsetFromMinutes(dayStartMinute, workDayHeight, remainderHeight);
-      y1 = top + getPixelOffsetFromMinutes(dayEndMinute, workDayHeight, remainderHeight);
+      int x = dayXs[((int) dayIndex)];
+      long y0 = top + getPixelOffsetFromMinutes(dayStartMinute, workDayHeight, remainderHeight);
+      long y1 = top + getPixelOffsetFromMinutes(dayEndMinute, workDayHeight, remainderHeight);
       strand.points[strand.position++] = x;
       strand.points[strand.position++] = y0;
       strand.points[strand.position++] = x;
@@ -528,8 +494,8 @@ public class Utils {
    * Compute a pixel offset from the top for a given minute from the work day
    * height and the height of the top area.
    */
-  private static int getPixelOffsetFromMinutes(int minute, int workDayHeight, int remainderHeight) {
-    int y;
+  private static long getPixelOffsetFromMinutes(long minute, int workDayHeight, int remainderHeight) {
+    long y;
     if (minute < WORK_DAY_START_MINUTES) {
       y = minute * remainderHeight / WORK_DAY_START_MINUTES;
     } else if (minute < WORK_DAY_END_MINUTES) {
@@ -545,67 +511,86 @@ public class Utils {
    * Add a new segment based on the event provided. This will handle splitting segments across day boundaries and ensures a minimum size for segments.
    */
   private static void addNewSegment(LinkedList<DNASegment> segments, Event event, HashMap<Integer, DNAStrand> strands, int firstJulianDay, int minStart, int minMinutes) {
-    if (event.startDay > event.endDay) {
+    if (event.getStartDay() > event.getEndDay()) {
       Log.wtf(TAG, "Event starts after it ends: " + event.toString());
     }
     // If this is a multiday event split it up by day
-    if (event.startDay != event.endDay) {
+    if (event.getStartDay() != event.getEndDay()) {
       Event lhs = new Event();
-      lhs.color = event.color;
-      lhs.startDay = event.startDay;
+      lhs.setColor(event.getColor());
+      lhs.setStartDay(event.getStartDay());
       // the first day we want the start time to be the actual start time
-      lhs.startTime = event.startTime;
-      lhs.endDay = lhs.startDay;
-      lhs.endTime = DAY_IN_MINUTES - 1;
+      lhs.setStartTime(event.getStartTime());
+      lhs.setEndDay(lhs.getStartDay());
+//      lhs.endTime = DAY_IN_MINUTES - 1;
       // Nearly recursive iteration!
-      while (lhs.startDay != event.endDay) {
+      while (lhs.getStartDay() != event.getEndDay()) {
         addNewSegment(segments, lhs, strands, firstJulianDay, minStart, minMinutes);
-        // The days in between are all day, even though that shouldn't
-        // actually happen due to the allday filtering
-        lhs.startDay++;
-        lhs.endDay = lhs.startDay;
-        lhs.startTime = 0;
+        // The days in between are all day, even though that shouldn't actually happen due to the allday filtering
+        lhs.setStartDay(lhs.getStartDay() + 1);
+        lhs.setEndDay(lhs.getStartDay());
+        lhs.setStartTime(0);
         minStart = 0;
       }
       // The last day we want the end time to be the actual end time
-      lhs.endTime = event.endTime;
+//      lhs.endTime = event.endTime;
       event = lhs;
     }
     // Create the new segment and compute its fields
     DNASegment segment = new DNASegment();
-    int dayOffset = (event.startDay - firstJulianDay) * DAY_IN_MINUTES;
-    int endOfDay = dayOffset + DAY_IN_MINUTES - 1;
+    long dayOffset = (event.getStartDay() - firstJulianDay) * DAY_IN_MINUTES;
+    long endOfDay = dayOffset + DAY_IN_MINUTES - 1;
     // clip the start if needed
-    segment.startMinute = Math.max(dayOffset + event.startTime, minStart);
-    // and extend the end if it's too small, but not beyond the end of the
-    // day
-    int minEnd = Math.min(segment.startMinute + minMinutes, endOfDay);
-    segment.endMinute = Math.max(dayOffset + event.endTime, minEnd);
+    segment.startMinute = Math.max(dayOffset + event.getStartTime(), minStart);
+    // and extend the end if it's too small, but not beyond the end of the day
+    long minEnd = Math.min(segment.startMinute + minMinutes, endOfDay);
+//    segment.endMinute = Math.max(dayOffset + event.endTime, minEnd);
     if (segment.endMinute > endOfDay) {
       segment.endMinute = endOfDay;
     }
 
-    segment.color = event.color;
-    segment.day = event.startDay;
+    segment.color = event.getColor();
+    segment.day = event.getStartDay();
     segments.add(segment);
     // increment the count for the correct color or add a new strand if we
     // don't have that color yet
-    DNAStrand strand = getOrCreateStrand(strands, segment.color);
+    DNAStrand strand = getOrCreateStrand(strands, String.valueOf(Integer.parseInt(segment.color)));
     strand.count++;
   }
 
   /**
    * Try to get a strand of the given color. Create it if it doesn't exist.
    */
-  private static DNAStrand getOrCreateStrand(HashMap<Integer, DNAStrand> strands, int color) {
+  private static DNAStrand getOrCreateStrand(HashMap<Integer, DNAStrand> strands, String color) {
     DNAStrand strand = strands.get(color);
     if (strand == null) {
       strand = new DNAStrand();
       strand.color = color;
       strand.count = 0;
-      strands.put(strand.color, strand);
+//      strands.put(strand.color, strand);
     }
     return strand;
+  }
+
+  // A single strand represents one color of events. Events are divided up by
+  // color to make them convenient to draw. The black strand is special in
+  // that it holds conflicting events as well as color settings for allday on
+  // each day.
+  public static class DNAStrand {
+    public float[] points;
+    public int[]   allDays; // color for the allday, 0 means no event
+    public String  color;
+    int position;
+    int count;
+  }
+
+  // A segment is a single continuous length of time occupied by a single
+  // color. Segments should never span multiple days.
+  private static class DNASegment {
+    long   startMinute; // in minutes since the start of the week
+    long   endMinute;
+    String color; // Calendar color or black for conflicts
+    long   day; // quick reference to the day this segment is on
   }
 
 }
