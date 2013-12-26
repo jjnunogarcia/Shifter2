@@ -31,14 +31,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
   private void createTables(SQLiteDatabase db) {
     // TODO it's necessary to create two tables: one for all the different event types and the other to store which events are in which days
     db.execSQL("CREATE TABLE " + DBConstants.EVENTS_TABLE + "(" +
-               DBConstants.ID + " integer primary key autoincrement, " +
+               DBConstants.ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                DBConstants.NAME + " TEXT, " +
                DBConstants.DESCRIPTION + " TEXT, " +
-               DBConstants.START_TIME + " INTEGER, " +
+               DBConstants.START + " INTEGER, " +
                DBConstants.DURATION + " INTEGER, " +
-               DBConstants.START_DAY + " INTEGER, " +
-               DBConstants.END_DAY + " INTEGER, " +
                DBConstants.LOCATION + " TEXT, " +
-               DBConstants.DISPLAY_COLOR + " TEXT);");
+               DBConstants.COLOR + " INTEGER);");
   }
 }

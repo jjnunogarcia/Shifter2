@@ -3,7 +3,7 @@ package es.android.TurnosAndroid.fragments;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
-import android.support.v4.app.LoaderManager;
+import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.view.LayoutInflater;
@@ -21,8 +21,9 @@ import java.util.ArrayList;
  *
  * @author jjnunogarcia@gmail.com
  */
-public class MyEventsFragment extends ListFragment implements LoaderManager.LoaderCallbacks<Cursor> {
-  public static final String TAG = MyEventsFragment.class.getSimpleName();
+public class MyEventsFragment extends ListFragment implements LoaderCallbacks<Cursor> {
+  public static final String TAG       = MyEventsFragment.class.getSimpleName();
+  public static final int    LOADER_ID = 1;
   private MyEventsAdapter adapter;
 
   public MyEventsFragment() {
@@ -40,17 +41,20 @@ public class MyEventsFragment extends ListFragment implements LoaderManager.Load
     // TODO pass events retrieved from content resolver. Probably in the Event.java there's something useful
     adapter = new MyEventsAdapter(getActivity().getApplicationContext(), new ArrayList<Event>());
     setListAdapter(adapter);
-    // TODO move this to loader?
-    Cursor eventsCursor = getActivity().getApplicationContext().getContentResolver().query(CalendarProvider.CONTENT_URI,
-                                                                                           Event.EVENT_PROJECTION,                                                                                           null,
-                                                                                           null,
-                                                                                           Event.SORT_EVENTS_BY);
-    adapter.setMyEvents(Event.getMyEvents(eventsCursor));
+    getActivity().getSupportLoaderManager().initLoader(LOADER_ID, null, this);
+  }
+
+  @Override
+  public void onResume() {
+    super.onResume();
+    if (getActivity() != null && getActivity().getSupportLoaderManager().getLoader(LOADER_ID) != null) {
+      getActivity().getSupportLoaderManager().restartLoader(LOADER_ID, null, this);
+    }
   }
 
   @Override
   public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-    return new CursorLoader(getActivity().getApplicationContext(), CalendarProvider.CONTENT_URI, Event.EVENT_PROJECTION, null, null, null);
+    return new CursorLoader(getActivity().getApplicationContext(), CalendarProvider.CONTENT_URI, Event.EVENT_PROJECTION, null, null, Event.SORT_EVENTS_BY);
   }
 
   @Override

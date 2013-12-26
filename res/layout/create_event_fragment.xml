@@ -1,83 +1,62 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:orientation="vertical"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent">
-
-    <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Nombre"
-            android:id="@+id/textView"/>
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:layout_margin="6dp">
 
     <EditText
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/editText"
-            android:layout_gravity="center_horizontal"/>
-
-    <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Descripción"
-            android:id="@+id/textView2"/>
+        android:id="@+id/create_event_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="text"
+        android:hint="@string/create_event_name"
+        android:textSize="20sp"
+        android:layout_margin="6dp" />
 
     <EditText
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/editText2"
-            android:layout_gravity="center_horizontal"/>
+        android:id="@+id/create_event_description"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="text"
+        android:hint="@string/create_event_description"
+        android:textSize="20sp"
+        android:layout_margin="6dp" />
+
+    <EditText
+        android:id="@+id/create_event_start_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="text"
+        android:hint="@string/create_event_start_time"
+        android:textSize="20sp"
+        android:layout_margin="6dp" />
+
+    <EditText
+        android:id="@+id/create_event_duration"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="text"
+        android:hint="@string/create_event_duration"
+        android:textSize="20sp"
+        android:layout_margin="6dp" />
+
+    <EditText
+        android:id="@+id/create_event_location"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="text"
+        android:hint="@string/create_event_location"
+        android:textSize="20sp"
+        android:layout_margin="6dp" />
 
     <Button
-            style="?android:attr/buttonStyleSmall"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Color"
-            android:id="@+id/button"
-            android:layout_gravity="center_horizontal"/>
+        android:id="@+id/create_event_color"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        style="?android:attr/buttonStyleSmall"
+        android:text="@string/create_event_color"
+        android:textSize="20sp"
+        android:layout_margin="6dp" />
 
-    <Button
-            style="?android:attr/buttonStyleSmall"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Thecolor"
-            android:id="@+id/button2"
-            android:layout_gravity="right"/>
-
-    <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Comienzo"
-            android:id="@+id/textView3"/>
-
-    <EditText
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/editText3"
-            android:layout_gravity="center_horizontal"/>
-
-    <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Duración"
-            android:id="@+id/textView4"/>
-
-    <EditText
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/editText4"
-            android:layout_gravity="center_horizontal"/>
-
-    <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Dónde"
-            android:id="@+id/textView5"/>
-
-    <EditText
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/editText5"
-            android:layout_gravity="center_horizontal"/>
 </LinearLayout>

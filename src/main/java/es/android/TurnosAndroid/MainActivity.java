@@ -39,7 +39,7 @@ public class MainActivity extends FragmentActivity implements EventHandler, Acti
     super.onCreate(savedInstanceState);
     setContentView(R.layout.main_activity);
 
-    new ImportEntries(getApplicationContext()).execute();
+//    new ImportEntries(getApplicationContext()).execute();
     drawerElements = getResources().getStringArray(R.array.drawer_elements);
     drawerTitle = getResources().getString(R.string.drawer_title);
     windowTitle = getTitle();

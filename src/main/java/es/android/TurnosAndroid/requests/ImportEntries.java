@@ -24,8 +24,7 @@ public class ImportEntries extends AsyncTask<Void, Void, Void> {
 //		Long[] times = new Long[2];
 //		if(add){
 //			long time = System.currentTimeMillis();
-    String[] eventHolder = {DBConstants.ID, DBConstants.NAME, DBConstants.DESCRIPTION, DBConstants.START_TIME, DBConstants.DURATION,
-                            DBConstants.START_DAY, DBConstants.END_DAY, DBConstants.LOCATION, DBConstants.DISPLAY_COLOR};
+    String[] eventHolder = {DBConstants.ID, DBConstants.NAME, DBConstants.DESCRIPTION, DBConstants.START, DBConstants.DURATION, DBConstants.LOCATION, DBConstants.COLOR};
     Cursor cursor = context.getContentResolver().query(CalendarProvider.CONTENT_URI, eventHolder, null, null, null);
 
 //    if (cursor != null && cursor.moveToFirst()) {
@@ -63,7 +62,7 @@ public class ImportEntries extends AsyncTask<Void, Void, Void> {
 //          values.put(DBConstants.LOCATION, dblocation);
 //          values.put(DBConstants.START_DAY, startDay);
 //          values.put(DBConstants.END_DAY, endDay);
-//          values.put(DBConstants.START_TIME, startMin);
+//          values.put(DBConstants.START, startMin);
 //          values.put(DBConstants.DURATION, endMin);
 //          context.getContentResolver().insert(CalendarProvider.CONTENT_URI, values);
 //        }

@@ -1,10 +1,12 @@
 package es.android.TurnosAndroid.views.myevents;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import es.android.TurnosAndroid.R;
 import es.android.TurnosAndroid.model.Event;
@@ -56,8 +58,18 @@ public class MyEventsAdapter extends BaseAdapter {
     }
 
     Event event = events.get(position);
-    TextView eventTitle = (TextView) view.findViewById(R.id.my_events_row_event_title);
-    eventTitle.setText(event.getName());
+    TextView name = (TextView) view.findViewById(R.id.my_events_row_name);
+    TextView description = (TextView) view.findViewById(R.id.my_events_row_description);
+    TextView startTime = (TextView) view.findViewById(R.id.my_events_row_start_time);
+    TextView duration = (TextView) view.findViewById(R.id.my_events_row_duration);
+    TextView location = (TextView) view.findViewById(R.id.my_events_row_location);
+    RelativeLayout color = (RelativeLayout) view.findViewById(R.id.my_events_row_color);
+    name.setText(event.getName());
+    description.setText(event.getDescription());
+//    startTime.setText((int) event.getStartTime());
+//    duration.setText((int) event.getDuration());
+    location.setText(event.getLocation());
+//    color.setBackgroundColor(Color.parseColor(event.getColor()));
 
     return view;
   }

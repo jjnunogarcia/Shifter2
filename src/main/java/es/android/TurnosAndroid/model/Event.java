@@ -34,24 +34,13 @@ public class Event implements Cloneable {
       DBConstants.ID,
       DBConstants.NAME,
       DBConstants.DESCRIPTION,
-      DBConstants.START_TIME,
+      DBConstants.START,
       DBConstants.DURATION,
-      DBConstants.START_DAY,
-      DBConstants.END_DAY,
       DBConstants.LOCATION,
-      DBConstants.DISPLAY_COLOR
+      DBConstants.COLOR
   };
   public static final String   SORT_EVENTS_BY   = DBConstants.NAME + " ASC";
   private static String mNoTitleString;
-  private          long   id;
-  private         String name;
-  private         String description;
-  private         long   startTime;      // Start and end time are in minutes since midnight
-  private         long   duration;
-  private         long   startDay;       // start Julian day
-  private         long   endDay;         // end Julian day
-  private         String location;
-  private         String color;
   // The coordinates of the event rectangle drawn on the screen.
   public         float  left;
   public         float  right;
@@ -62,6 +51,15 @@ public class Event implements Cloneable {
   public         Event  nextLeft;
   public         Event  nextUp;
   public         Event  nextDown;
+  private        long   id;
+  private        String name;
+  private        String description;
+  private        long   startTime;      // Start and end time are in minutes since midnight
+  private        long   duration;
+  private        long   startDay;       // start Julian day
+  private        long   endDay;         // end Julian day
+  private        String location;
+  private        String color;
   private        int    column;
   private        int    maxColumns;
 
@@ -74,7 +72,7 @@ public class Event implements Cloneable {
     startDay = 0;
     endDay = 0;
     location = null;
-    color = "";
+    color = "#ff000000";
   }
 
   /**
@@ -139,6 +137,7 @@ public class Event implements Cloneable {
     ArrayList<Event> events = new ArrayList<Event>();
 
     if (cursor != null && cursor.getCount() > 0) {
+//      cursor.moveToFirst();
       while (cursor.moveToNext()) {
         events.add(createEventFromCursor(cursor));
       }
@@ -149,15 +148,13 @@ public class Event implements Cloneable {
 
   private static Event createEventFromCursor(Cursor cursor) {
     Event event = new Event();
-    event.id = cursor.getInt(0);
-    event.name = cursor.getString(1);
-    event.description = cursor.getString(2);
-    event.startTime = cursor.getLong(3);
-    event.duration = cursor.getLong(4);
-    event.startDay = cursor.getLong(5);
-    event.endDay = cursor.getLong(6);
-    event.location = cursor.getString(7);
-    event.color = cursor.getString(8);
+    event.setId(cursor.getInt(cursor.getColumnIndex(DBConstants.ID)));
+    event.setName(cursor.getString(cursor.getColumnIndex(DBConstants.NAME)));
+    event.setDescription(cursor.getString(cursor.getColumnIndex(DBConstants.DESCRIPTION)));
+    event.setStartTime(cursor.getLong(cursor.getColumnIndex(DBConstants.START)));
+    event.setDuration(cursor.getLong(cursor.getColumnIndex(DBConstants.DURATION)));
+    event.setLocation(cursor.getString(cursor.getColumnIndex(DBConstants.LOCATION)));
+    event.setColor(cursor.getString(cursor.getColumnIndex(DBConstants.COLOR)));
 
     return event;
   }
