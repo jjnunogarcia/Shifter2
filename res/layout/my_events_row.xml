@@ -34,6 +34,7 @@
             android:layout_height="wrap_content"
             android:textSize="20sp"
             android:textStyle="bold"
+            android:textColorHint="@android:color/black"
             android:text="Tarde" />
 
         <TextView
@@ -42,6 +43,7 @@
             android:layout_height="wrap_content"
             android:layout_below="@id/my_events_row_name"
             android:layout_marginTop="5dp"
+            android:textColorHint="@android:color/black"
             android:text="Mi turno de tarde" />
 
         <TextView
@@ -50,6 +52,7 @@
             android:layout_height="wrap_content"
             android:layout_below="@id/my_events_row_description"
             android:layout_marginTop="5dp"
+            android:textColorHint="@android:color/black"
             android:text="Comienzo: 16:00" />
 
         <TextView
@@ -58,6 +61,7 @@
             android:layout_height="wrap_content"
             android:layout_alignBaseline="@id/my_events_row_name"
             android:layout_alignParentRight="true"
+            android:textColorHint="@android:color/black"
             android:text="8h" />
 
         <TextView
@@ -66,6 +70,7 @@
             android:layout_height="wrap_content"
             android:layout_alignBaseline="@id/my_events_row_start_time"
             android:layout_alignParentRight="true"
+            android:textColorHint="@android:color/black"
             android:text="Melilla" />
 
     </RelativeLayout>

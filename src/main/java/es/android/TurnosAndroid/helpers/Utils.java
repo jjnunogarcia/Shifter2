@@ -48,7 +48,7 @@ public class Utils {
   static               int           WORK_DAY_START_MINUTES    = 6 * 60;
   static               int           WORK_DAY_END_MINUTES      = 20 * 60;
   static               int           WORK_DAY_END_LENGTH       = (24 * 60) - WORK_DAY_END_MINUTES;
-  static               String        CONFLICT_COLOR            = "FF000000";
+  static               int           CONFLICT_COLOR            = Color.parseColor("#FF000000");
   static               boolean       mMinutesLoaded            = false;
 
   /**
@@ -244,7 +244,7 @@ public class Utils {
         return null;
       }
       Resources res = context.getResources();
-      CONFLICT_COLOR = String.valueOf(res.getColor(R.color.month_dna_conflict_time_color));
+      CONFLICT_COLOR = res.getColor(R.color.month_dna_conflict_time_color);
       WORK_DAY_START_MINUTES = res.getInteger(R.integer.work_start_minutes);
       WORK_DAY_END_MINUTES = res.getInteger(R.integer.work_end_minutes);
       WORK_DAY_END_LENGTH = DAY_IN_MINUTES - WORK_DAY_END_MINUTES;
@@ -262,7 +262,7 @@ public class Utils {
     // the loop
     DNAStrand blackStrand = new DNAStrand();
     blackStrand.color = CONFLICT_COLOR;
-    strands.put(Integer.valueOf(CONFLICT_COLOR), blackStrand);
+    strands.put(CONFLICT_COLOR, blackStrand);
     // the min length is the number of minutes that will occupy
     // MIN_SEGMENT_PIXELS in the 'work day' time slot. This computes the
     // minutes/pixel * minpx where the number of pixels are 3/4 the total
@@ -447,10 +447,10 @@ public class Utils {
     for (long i = Math.max(event.getStartDay() - firstJulianDay, 0); i <= end; i++) {
       if (strand.allDays[((int) i)] != 0) {
         // if this day already had a color, it is now a conflict
-        strand.allDays[((int) i)] = Integer.parseInt(CONFLICT_COLOR);
+        strand.allDays[((int) i)] = CONFLICT_COLOR;
       } else {
         // else it's just the color of the event
-        strand.allDays[((int) i)] = Integer.parseInt(event.getColor());
+        strand.allDays[((int) i)] = event.getColor();
       }
     }
   }
@@ -512,7 +512,7 @@ public class Utils {
    */
   private static void addNewSegment(LinkedList<DNASegment> segments, Event event, HashMap<Integer, DNAStrand> strands, int firstJulianDay, int minStart, int minMinutes) {
     if (event.getStartDay() > event.getEndDay()) {
-      Log.wtf(TAG, "Event starts after it ends: " + event.toString());
+      Log.wtf(TAG, "Event starts after it ends: " + event);
     }
     // If this is a multiday event split it up by day
     if (event.getStartDay() != event.getEndDay()) {
@@ -554,14 +554,14 @@ public class Utils {
     segments.add(segment);
     // increment the count for the correct color or add a new strand if we
     // don't have that color yet
-    DNAStrand strand = getOrCreateStrand(strands, String.valueOf(Integer.parseInt(segment.color)));
+    DNAStrand strand = getOrCreateStrand(strands, segment.color);
     strand.count++;
   }
 
   /**
    * Try to get a strand of the given color. Create it if it doesn't exist.
    */
-  private static DNAStrand getOrCreateStrand(HashMap<Integer, DNAStrand> strands, String color) {
+  private static DNAStrand getOrCreateStrand(HashMap<Integer, DNAStrand> strands, int color) {
     DNAStrand strand = strands.get(color);
     if (strand == null) {
       strand = new DNAStrand();
@@ -572,6 +572,26 @@ public class Utils {
     return strand;
   }
 
+  public static String convertToRGB(int color) {
+    String red = Integer.toHexString(Color.red(color));
+    String green = Integer.toHexString(Color.green(color));
+    String blue = Integer.toHexString(Color.blue(color));
+
+    if (red.length() == 1) {
+      red = "0" + red;
+    }
+
+    if (green.length() == 1) {
+      green = "0" + green;
+    }
+
+    if (blue.length() == 1) {
+      blue = "0" + blue;
+    }
+
+    return "#" + red + green + blue;
+  }
+
   // A single strand represents one color of events. Events are divided up by
   // color to make them convenient to draw. The black strand is special in
   // that it holds conflicting events as well as color settings for allday on
@@ -579,7 +599,7 @@ public class Utils {
   public static class DNAStrand {
     public float[] points;
     public int[]   allDays; // color for the allday, 0 means no event
-    public String  color;
+    public int     color;
     int position;
     int count;
   }
@@ -587,10 +607,10 @@ public class Utils {
   // A segment is a single continuous length of time occupied by a single
   // color. Segments should never span multiple days.
   private static class DNASegment {
-    long   startMinute; // in minutes since the start of the week
-    long   endMinute;
-    String color; // Calendar color or black for conflicts
-    long   day; // quick reference to the day this segment is on
+    long startMinute; // in minutes since the start of the week
+    long endMinute;
+    int  color; // Calendar color or black for conflicts
+    long day; // quick reference to the day this segment is on
   }
 
 }

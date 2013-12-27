@@ -9,16 +9,14 @@ import android.content.res.Resources;
 import android.graphics.*;
 import android.graphics.Paint.Align;
 import android.graphics.Paint.Style;
-import android.provider.CalendarContract.Attendees;
 import android.text.TextPaint;
 import android.text.TextUtils;
-import android.text.format.DateUtils;
 import android.text.format.Time;
 import android.util.Log;
 import android.view.View;
-import es.android.TurnosAndroid.model.Event;
 import es.android.TurnosAndroid.R;
 import es.android.TurnosAndroid.helpers.Utils;
+import es.android.TurnosAndroid.model.Event;
 
 import java.security.InvalidParameterException;
 import java.util.*;
@@ -30,99 +28,93 @@ import java.util.*;
  * </p>
  */
 public class MonthView extends View {
-  private static final String TAG = MonthView.class.getSimpleName();
-
   public static final String VIEW_PARAMS_ORIENTATION    = "orientation";
   public static final String VIEW_PARAMS_ANIMATE_TODAY  = "animate_today";
   public static final int    MONDAY_BEFORE_JULIAN_EPOCH = Time.EPOCH_JULIAN_DAY - 3;
+  /**
+   * This sets the height of this week in pixels
+   */
+  public static final String VIEW_PARAMS_HEIGHT         = "height";
 
   /**
    * These params can be passed into the view to control how it appears. {@link #VIEW_PARAMS_WEEK} is the only required field, though the default
    * values are unlikely to fit most layouts correctly.
    */
   /**
-   * This sets the height of this week in pixels
-   */
-  public static final String VIEW_PARAMS_HEIGHT       = "height";
-  /**
    * This specifies the position (or weeks since the epoch) of this week, calculated using {@link es.android.TurnosAndroid.helpers.Utils#getWeeksSinceEpochFromJulianDay}
    */
-  public static final String VIEW_PARAMS_WEEK         = "week";
+  public static final    String        VIEW_PARAMS_WEEK            = "week";
   /**
    * This sets one of the days in this view as selected {@link android.text.format.Time#SUNDAY} through {@link android.text.format.Time#SATURDAY}.
    */
-  public static final String VIEW_PARAMS_SELECTED_DAY = "selected_day";
+  public static final    String        VIEW_PARAMS_SELECTED_DAY    = "selected_day";
   /**
    * Which day the week should start on. {@link android.text.format.Time#SUNDAY} through {@link android.text.format.Time#SATURDAY}.
    */
-  public static final String VIEW_PARAMS_WEEK_START   = "week_start";
+  public static final    String        VIEW_PARAMS_WEEK_START      = "week_start";
   /**
    * How many days to display at a time. Days will be displayed starting with {@link #weekStart}.
    */
-  public static final String VIEW_PARAMS_NUM_DAYS     = "num_days";
+  public static final    String        VIEW_PARAMS_NUM_DAYS        = "num_days";
   /**
    * Which month is currently in focus, as defined by {@link android.text.format.Time#month} [0-11].
    */
-  public static final String VIEW_PARAMS_FOCUS_MONTH  = "focus_month";
+  public static final    String        VIEW_PARAMS_FOCUS_MONTH     = "focus_month";
   /**
    * If this month should display week numbers. false if 0, true otherwise.
    */
-  public static final String VIEW_PARAMS_SHOW_WK_NUM  = "show_wk_num";
-
-  private static int     TEXT_SIZE_MONTH_NUMBER    = 32;
-  private static int     TEXT_SIZE_EVENT           = 12;
-  private static int     TEXT_SIZE_EVENT_TITLE     = 14;
-  private static int     TEXT_SIZE_WEEK_NUM        = 12;
-  private static int     DNA_MARGIN                = 4;
-  private static int     DNA_ALL_DAY_HEIGHT        = 4;
-  private static int     DNA_MIN_SEGMENT_HEIGHT    = 4;
-  private static int     DNA_WIDTH                 = 8;
-  private static int     DNA_ALL_DAY_WIDTH         = 32;
-  private static int     DNA_SIDE_PADDING          = 6;
-  private static int     CONFLICT_COLOR            = Color.BLACK;
-  private static int     EVENT_TEXT_COLOR          = Color.WHITE;
-  private static int     DEFAULT_EDGE_SPACING      = 0;
-  private static int     SIDE_PADDING_MONTH_NUMBER = 4;
-  private static int     TOP_PADDING_MONTH_NUMBER  = 4;
-  private static int     TOP_PADDING_WEEK_NUMBER   = 4;
-  private static int     SIDE_PADDING_WEEK_NUMBER  = 20;
-  private static int     DAY_SEPARATOR_INNER_WIDTH = 1;
-  private static int     MIN_WEEK_WIDTH            = 50;
-  private static int     EVENT_X_OFFSET_LANDSCAPE  = 38;
-  private static int     EVENT_Y_OFFSET_LANDSCAPE  = 8;
-  private static int     EVENT_Y_OFFSET_PORTRAIT   = 7;
-  private static int     EVENT_SQUARE_WIDTH        = 10;
-  private static int     EVENT_SQUARE_BORDER       = 2;
-  private static int     EVENT_LINE_PADDING        = 2;
-  private static int     EVENT_RIGHT_PADDING       = 4;
-  private static int     EVENT_BOTTOM_PADDING      = 3;
-  private static int     TODAY_HIGHLIGHT_WIDTH     = 2;
-  private static int     SPACING_WEEK_NUMBER       = 24;
-  private static boolean mInitialized              = false;
-
-  private static       StringBuilder mStringBuilder = new StringBuilder(50);
-  // TODO recreate formatter when locale changes
-  private static       Formatter     mFormatter     = new Formatter(mStringBuilder, Locale.getDefault());
-  private static final int           mClickedAlpha  = 128;
-
-  protected static       int DEFAULT_HEIGHT       = 32;
-  protected static       int MIN_HEIGHT           = 10;
-  protected static final int DEFAULT_SELECTED_DAY = -1;
-  protected static final int DEFAULT_WEEK_START   = Time.SUNDAY;
-  protected static final int DEFAULT_NUM_DAYS     = 7;
-  protected static final int DEFAULT_FOCUS_MONTH  = -1;
-
-  protected static int DAY_SEPARATOR_WIDTH = 1;
-
-  protected static int MINI_DAY_NUMBER_TEXT_SIZE   = 14;
-  protected static int MINI_WK_NUMBER_TEXT_SIZE    = 12;
-  protected static int MINI_TODAY_NUMBER_TEXT_SIZE = 18;
-  protected static int MINI_TODAY_OUTLINE_WIDTH    = 2;
-  protected static int WEEK_NUM_MARGIN_BOTTOM      = 4;
-
+  public static final    String        VIEW_PARAMS_SHOW_WK_NUM     = "show_wk_num";
+  protected static final int           DEFAULT_SELECTED_DAY        = -1;
+  protected static final int           DEFAULT_WEEK_START          = Time.SUNDAY;
+  protected static final int           DEFAULT_NUM_DAYS            = 7;
+  protected static final int           DEFAULT_FOCUS_MONTH         = -1;
+  private static final   String        TAG                         = MonthView.class.getSimpleName();
+  private static final   int           mClickedAlpha               = 128;
+  protected static       int           DEFAULT_HEIGHT              = 32;
+  protected static       int           MIN_HEIGHT                  = 10;
+  protected static       int           DAY_SEPARATOR_WIDTH         = 1;
+  protected static       int           MINI_DAY_NUMBER_TEXT_SIZE   = 14;
+  protected static       int           MINI_WK_NUMBER_TEXT_SIZE    = 12;
+  protected static       int           MINI_TODAY_NUMBER_TEXT_SIZE = 18;
+  protected static       int           MINI_TODAY_OUTLINE_WIDTH    = 2;
+  protected static       int           WEEK_NUM_MARGIN_BOTTOM      = 4;
   // used for scaling to the device density
-  protected static float mScale = 0;
-
+  protected static       float         mScale                      = 0;
+  private static         int           TEXT_SIZE_MONTH_NUMBER      = 32;
+  private static         int           TEXT_SIZE_EVENT             = 12;
+  private static         int           TEXT_SIZE_EVENT_TITLE       = 14;
+  private static         int           TEXT_SIZE_WEEK_NUM          = 12;
+  private static         int           DNA_MARGIN                  = 4;
+  private static         int           DNA_ALL_DAY_HEIGHT          = 4;
+  private static         int           DNA_MIN_SEGMENT_HEIGHT      = 4;
+  private static         int           DNA_WIDTH                   = 8;
+  private static         int           DNA_ALL_DAY_WIDTH           = 32;
+  private static         int           DNA_SIDE_PADDING            = 6;
+  private static         int           CONFLICT_COLOR              = Color.BLACK;
+  private static         int           EVENT_TEXT_COLOR            = Color.WHITE;
+  private static         int           DEFAULT_EDGE_SPACING        = 0;
+  private static         int           SIDE_PADDING_MONTH_NUMBER   = 4;
+  private static         int           TOP_PADDING_MONTH_NUMBER    = 4;
+  private static         int           TOP_PADDING_WEEK_NUMBER     = 4;
+  private static         int           SIDE_PADDING_WEEK_NUMBER    = 20;
+  private static         int           DAY_SEPARATOR_INNER_WIDTH   = 1;
+  private static         int           MIN_WEEK_WIDTH              = 50;
+  private static         int           EVENT_X_OFFSET_LANDSCAPE    = 38;
+  private static         int           EVENT_Y_OFFSET_LANDSCAPE    = 8;
+  private static         int           EVENT_Y_OFFSET_PORTRAIT     = 7;
+  private static         int           EVENT_SQUARE_WIDTH          = 10;
+  private static         int           EVENT_SQUARE_BORDER         = 2;
+  private static         int           EVENT_LINE_PADDING          = 2;
+  private static         int           EVENT_RIGHT_PADDING         = 4;
+  private static         int           EVENT_BOTTOM_PADDING        = 3;
+  private static         int           TODAY_HIGHLIGHT_WIDTH       = 2;
+  private static         int           SPACING_WEEK_NUMBER         = 24;
+  private static         boolean       mInitialized                = false;
+  private static         StringBuilder mStringBuilder              = new StringBuilder(50);
+  // TODO recreate formatter when locale changes
+  private static         Formatter     mFormatter                  = new Formatter(mStringBuilder, Locale.getDefault());
+  // How many days to display
+  protected int                               numDays;
   // affects the padding on the sides of this view
   private   int                               padding;
   private   Rect                              r;
@@ -154,8 +146,6 @@ public class MonthView extends View {
   private   int                               selectedDay;
   // Which day of the week to start on [0-6]
   private   int                               weekStart;
-  // How many days to display
-  protected int                               numDays;
   // The timezone to display times/dates in (used for determining when Today is)
   private   String                            timeZone;
   private   int                               focusMonthColor;
@@ -815,11 +805,11 @@ public class MonthView extends View {
 //    boolean allDay = event.allDay;
     int eventRequiredSpace = eventHeight;
 //    if (allDay) {
-      // Add a few pixels for the box we draw around all-day events.
+    // Add a few pixels for the box we draw around all-day events.
 //      eventRequiredSpace += BORDER_SPACE * 2;
 //    } else if (showTimes) {
-      // Need room for the "1pm - 2pm" line.
-      eventRequiredSpace += extrasHeight;
+    // Need room for the "1pm - 2pm" line.
+    eventRequiredSpace += extrasHeight;
 //    }
     int reservedSpace = EVENT_BOTTOM_PADDING;   // leave a bit of room at the bottom
     if (moreEvents) {
@@ -840,7 +830,7 @@ public class MonthView extends View {
     }
 
 //    boolean isDeclined = event.selfAttendeeStatus == Attendees.ATTENDEE_STATUS_DECLINED;
-    String color = event.getColor();
+    int color = event.getColor();
 //    if (isDeclined) {
 //      color = Utils.getDeclinedColorFromColor(color);
 //    }
@@ -859,13 +849,13 @@ public class MonthView extends View {
 //      textY = y + eventAscentHeight + BORDER_SPACE;
 //      textRightEdge = rightEdge - BORDER_SPACE;
 //    } else {
-      r.left = x;
-      r.right = x + EVENT_SQUARE_WIDTH;
-      r.bottom = y + eventAscentHeight;
-      r.top = r.bottom - EVENT_SQUARE_WIDTH;
-      textX = x + EVENT_SQUARE_WIDTH + EVENT_RIGHT_PADDING;
-      textY = y + eventAscentHeight;
-      textRightEdge = rightEdge;
+    r.left = x;
+    r.right = x + EVENT_SQUARE_WIDTH;
+    r.bottom = y + eventAscentHeight;
+    r.top = r.bottom - EVENT_SQUARE_WIDTH;
+    textX = x + EVENT_SQUARE_WIDTH + EVENT_RIGHT_PADDING;
+    textY = y + eventAscentHeight;
+    textRightEdge = rightEdge;
 //    }
 
     Style boxStyle = Style.STROKE;

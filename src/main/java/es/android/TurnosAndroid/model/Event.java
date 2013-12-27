@@ -18,10 +18,9 @@ package es.android.TurnosAndroid.model;
 
 import android.content.ContentUris;
 import android.content.Context;
-import android.content.res.Resources;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.net.Uri;
-import es.android.TurnosAndroid.R;
 import es.android.TurnosAndroid.database.CalendarProvider;
 import es.android.TurnosAndroid.database.DBConstants;
 
@@ -30,38 +29,28 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 // TODO: should Event be Parcelable so it can be passed via Intents?
 public class Event implements Cloneable {
-  public static final String[] EVENT_PROJECTION = new String[]{
-      DBConstants.ID,
-      DBConstants.NAME,
-      DBConstants.DESCRIPTION,
-      DBConstants.START,
-      DBConstants.DURATION,
-      DBConstants.LOCATION,
-      DBConstants.COLOR
-  };
-  public static final String   SORT_EVENTS_BY   = DBConstants.NAME + " ASC";
-  private static String mNoTitleString;
+  public static final String SORT_EVENTS_BY = DBConstants.NAME + " ASC";
   // The coordinates of the event rectangle drawn on the screen.
-  public         float  left;
-  public         float  right;
-  public         float  top;
-  public         float  bottom;
+  public  float  left;
+  public  float  right;
+  public  float  top;
+  public  float  bottom;
   // These 4 fields are used for navigating among events within the selected hour in the Day and Week view.
-  public         Event  nextRight;
-  public         Event  nextLeft;
-  public         Event  nextUp;
-  public         Event  nextDown;
-  private        long   id;
-  private        String name;
-  private        String description;
-  private        long   startTime;      // Start and end time are in minutes since midnight
-  private        long   duration;
-  private        long   startDay;       // start Julian day
-  private        long   endDay;         // end Julian day
-  private        String location;
-  private        String color;
-  private        int    column;
-  private        int    maxColumns;
+  public  Event  nextRight;
+  public  Event  nextLeft;
+  public  Event  nextUp;
+  public  Event  nextDown;
+  private long   id;
+  private String name;
+  private String description;
+  private long   startTime;      // Start and end time are in minutes since midnight
+  private long   duration;
+  private long   startDay;       // start Julian day
+  private long   endDay;         // end Julian day
+  private String location;
+  private int    color;
+  private int    column;
+  private int    maxColumns;
 
   public Event() {
     id = 0;
@@ -72,7 +61,7 @@ public class Event implements Cloneable {
     startDay = 0;
     endDay = 0;
     location = null;
-    color = "#ff000000";
+    color = Color.WHITE;
   }
 
   /**
@@ -89,14 +78,14 @@ public class Event implements Cloneable {
       ContentUris.appendId(builder, startDay);
       ContentUris.appendId(builder, endDay);
 
-      eventsCursor = context.getContentResolver().query(builder.build(), EVENT_PROJECTION, null, null, SORT_EVENTS_BY);
+      eventsCursor = context.getContentResolver().query(builder.build(), DBConstants.EVENT_PROJECTION, null, null, SORT_EVENTS_BY);
 
       // Check if we should return early because there are more recent load requests waiting.
       if (requestId != sequenceNumber.get()) {
         return events;
       }
 
-      events = buildEventsFromCursor(eventsCursor, context, startDay, endDay);
+      events = buildEventsFromCursor(eventsCursor, startDay, endDay);
     } finally {
       if (eventsCursor != null) {
         eventsCursor.close();
@@ -108,22 +97,20 @@ public class Event implements Cloneable {
   /**
    * Adds all the events from the cursors to the events list.
    */
-  public static ArrayList<Event> buildEventsFromCursor(Cursor cEvents, Context context, int startDay, int endDay) {
+  public static ArrayList<Event> buildEventsFromCursor(Cursor cursor, int startDay, int endDay) {
     ArrayList<Event> events = new ArrayList<Event>();
 
-    if (cEvents != null) {
-      int count = cEvents.getCount();
+    if (cursor != null) {
+      int count = cursor.getCount();
 
       if (count == 0) {
         return events;
       }
 
-      Resources res = context.getResources();
-      mNoTitleString = res.getString(R.string.no_title_label);
       // Sort events in two passes so we ensure the allday and standard events get sorted in the correct order
-      cEvents.moveToPosition(-1);
-      while (cEvents.moveToNext()) {
-        Event e = generateEventFromCursor(cEvents);
+      cursor.moveToPosition(-1);
+      while (cursor.moveToNext()) {
+        Event e = generateEventFromCursor(cursor);
         if (e.startDay <= endDay && e.endDay >= startDay) {
           events.add(e);
         }
@@ -137,7 +124,6 @@ public class Event implements Cloneable {
     ArrayList<Event> events = new ArrayList<Event>();
 
     if (cursor != null && cursor.getCount() > 0) {
-//      cursor.moveToFirst();
       while (cursor.moveToNext()) {
         events.add(createEventFromCursor(cursor));
       }
@@ -154,54 +140,25 @@ public class Event implements Cloneable {
     event.setStartTime(cursor.getLong(cursor.getColumnIndex(DBConstants.START)));
     event.setDuration(cursor.getLong(cursor.getColumnIndex(DBConstants.DURATION)));
     event.setLocation(cursor.getString(cursor.getColumnIndex(DBConstants.LOCATION)));
-    event.setColor(cursor.getString(cursor.getColumnIndex(DBConstants.COLOR)));
+    event.setColor(cursor.getInt(cursor.getColumnIndex(DBConstants.COLOR)));
 
     return event;
   }
 
   /**
-   * @param cEvents Cursor pointing at event
+   * @param cursor Cursor pointing at event
    * @return An event created from the cursor
    */
-  private static Event generateEventFromCursor(Cursor cEvents) {
+  private static Event generateEventFromCursor(Cursor cursor) {
     Event event = new Event();
+    event.setId(cursor.getLong(cursor.getColumnIndex(DBConstants.ID)));
+    event.setName(cursor.getString(cursor.getColumnIndex(DBConstants.NAME)));
+    event.setDescription(cursor.getString(cursor.getColumnIndex(DBConstants.DESCRIPTION)));
+    event.setStartTime(cursor.getLong(cursor.getColumnIndex(DBConstants.START)));
+    event.setDuration(cursor.getLong(cursor.getColumnIndex(DBConstants.DURATION)));
+    event.setLocation(cursor.getString(cursor.getColumnIndex(DBConstants.LOCATION)));
+    event.setColor(cursor.getInt(cursor.getColumnIndex(DBConstants.COLOR)));
 
-    event.id = cEvents.getLong(7);
-    event.name = cEvents.getString(1);
-    event.location = cEvents.getString(2);
-
-//        event.id = cEvents.getLong(PROJECTION_EVENT_ID_INDEX);
-//        event.title = cEvents.getString(PROJECTION_TITLE_INDEX);
-//        event.location = cEvents.getString(PROJECTION_LOCATION_INDEX);
-//        event.allDay = cEvents.getInt(PROJECTION_ALL_DAY_INDEX) != 0;
-//        event.organizer = cEvents.getString(PROJECTION_ORGANIZER_INDEX);
-//        event.guestsCanModify = cEvents.getInt(PROJECTION_GUESTS_CAN_INVITE_OTHERS_INDEX) != 0;
-
-    if (event.name == null || event.name.length() == 0) {
-      event.name = mNoTitleString;
-    }
-
-//    if (!cEvents.isNull(PROJECTION_COLOR_INDEX)) {
-    // Read the color from the database
-//      event.color = Utils.getDisplayColorFromColor(cEvents.getInt(PROJECTION_COLOR_INDEX));
-//    } else {
-//      event.color = mNoColorColor;
-//    }
-
-    event.startTime = cEvents.getInt(10);
-    event.startDay = cEvents.getInt(8);
-    event.endDay = cEvents.getInt(9);
-
-    // Check if this is a repeating event
-//        String rrule = cEvents.getString(PROJECTION_RRULE_INDEX);
-//        String rdate = cEvents.getString(PROJECTION_RDATE_INDEX);
-//        if (!TextUtils.isEmpty(rrule) || !TextUtils.isEmpty(rdate)) {
-//            event.isRepeating = true;
-//        } else {
-//            event.isRepeating = false;
-//        }
-//
-//        event.selfAttendeeStatus = cEvents.getInt(PROJECTION_SELF_ATTENDEE_STATUS_INDEX);
     return event;
   }
 
@@ -376,11 +333,11 @@ public class Event implements Cloneable {
     this.location = location;
   }
 
-  public String getColor() {
+  public int getColor() {
     return color;
   }
 
-  public void setColor(String color) {
+  public void setColor(int color) {
     this.color = color;
   }
 }

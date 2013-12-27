@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">TurnosAndroid</string>
-    <string name="no_title_label">(Sin título)</string>
     <string name="day_view_new_event_hint">+ Nuevo evento</string>
     <string name="new_event_dialog_label">"Nuevo evento"</string>
     <string name="new_event_dialog_option">"Nuevo evento"</string>
@@ -25,4 +24,7 @@
         <item>Estadísticas</item>
     </array>
 
+    <!-- Color Picker -->
+    <string name="dialog_color_picker">Color Picker</string>
+    <string name="press_color_to_apply">Press on Color to apply</string>
 </resources>

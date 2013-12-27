@@ -11,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import es.android.TurnosAndroid.R;
 import es.android.TurnosAndroid.database.CalendarProvider;
+import es.android.TurnosAndroid.database.DBConstants;
 import es.android.TurnosAndroid.model.Event;
 import es.android.TurnosAndroid.views.myevents.MyEventsAdapter;
 
@@ -54,7 +55,7 @@ public class MyEventsFragment extends ListFragment implements LoaderCallbacks<Cu
 
   @Override
   public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-    return new CursorLoader(getActivity().getApplicationContext(), CalendarProvider.CONTENT_URI, Event.EVENT_PROJECTION, null, null, Event.SORT_EVENTS_BY);
+    return new CursorLoader(getActivity().getApplicationContext(), CalendarProvider.CONTENT_URI, DBConstants.EVENT_PROJECTION, null, null, Event.SORT_EVENTS_BY);
   }
 
   @Override

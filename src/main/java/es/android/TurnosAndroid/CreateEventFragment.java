@@ -6,28 +6,38 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
+import es.android.TurnosAndroid.colorpicker.ColorPickerDialog;
 import es.android.TurnosAndroid.database.CalendarProvider;
 import es.android.TurnosAndroid.database.DBConstants;
 
 /**
  * Date: 19.12.13
  *
- * @author nuno@neofonie.de
+ * @author jjnunogarcia@gmail.com
  */
-public class CreateEventFragment extends Fragment {
+public class CreateEventFragment extends Fragment implements ColorPickerDialog.OnColorChangedListener {
   public static final String TAG = CreateEventFragment.class.getSimpleName();
   private EditText name;
   private EditText description;
   private EditText startTime;
   private EditText duration;
   private EditText location;
-  private Button   color;
+  private Button   colorButton;
+  private int      colorValue;
+  private OnClickListener onClickListener = new OnClickListener() {
+    @Override
+    public void onClick(View v) {
+      showDialog();
+    }
+  };
 
   public CreateEventFragment() {
   }
@@ -40,8 +50,15 @@ public class CreateEventFragment extends Fragment {
     startTime = (EditText) view.findViewById(R.id.create_event_start_time);
     duration = (EditText) view.findViewById(R.id.create_event_duration);
     location = (EditText) view.findViewById(R.id.create_event_location);
-    color = (Button) view.findViewById(R.id.create_event_color);
+    colorButton = (Button) view.findViewById(R.id.create_event_color);
+    colorValue = Color.BLACK;
     return view;
+  }
+
+  @Override
+  public void onActivityCreated(Bundle savedInstanceState) {
+    super.onActivityCreated(savedInstanceState);
+    colorButton.setOnClickListener(onClickListener);
   }
 
   public void saveEvent() {
@@ -67,5 +84,21 @@ public class CreateEventFragment extends Fragment {
       int rowsDeleted = contentResolver.delete(CalendarProvider.CONTENT_URI, where, selectionArgs);
       Toast.makeText(getActivity().getApplicationContext(), "Rows deleted: " + rowsDeleted, Toast.LENGTH_SHORT).show();
     }
+  }
+
+  private void showDialog() {
+    ColorPickerDialog dialog = new ColorPickerDialog();
+    dialog.setOnColorChangedListener(this);
+    Bundle bundle = new Bundle();
+    bundle.putInt(ColorPickerDialog.INITIAL_COLOR, colorValue);
+    dialog.setArguments(bundle);
+    FragmentTransaction fragmentTransaction = getActivity().getSupportFragmentManager().beginTransaction();
+    fragmentTransaction.add(dialog, ColorPickerDialog.TAG).addToBackStack(ColorPickerDialog.TAG).commit();
+  }
+
+  @Override
+  public void onColorChanged(int color) {
+    colorValue = color;
+    colorButton.setBackgroundColor(color);
   }
 }
