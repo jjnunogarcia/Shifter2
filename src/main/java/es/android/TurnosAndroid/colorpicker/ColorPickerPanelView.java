@@ -8,17 +8,12 @@ import android.util.AttributeSet;
 import android.view.View;
 
 /**
- * This class draws a panel which which will be filled with a color which can be set.
- * It can be used to show the currently selected color which you will get from
+ * This class draws a panel which which will be filled with a color which can be set. It can be used to show the currently selected color which you will get from
  * the {@link ColorPickerView}.
  *
  * @author Daniel Nilsson
  */
 public class ColorPickerPanelView extends View {
-
-  /**
-   * The width in pixels of the border surrounding the color panel.
-   */
   private final static float BORDER_WIDTH_PX = 1;
   private              float density         = 1f;
   private              int   borderColor     = 0xff6E6E6E;
@@ -87,7 +82,6 @@ public class ColorPickerPanelView extends View {
     drawingRect.bottom = h - getPaddingBottom();
 
     setUpColorRect();
-
   }
 
   private void setUpColorRect() {
@@ -100,7 +94,6 @@ public class ColorPickerPanelView extends View {
 
     colorRect = new RectF(left, top, right, bottom);
     alphaPattern = new AlphaPatternDrawable((int) (5 * density));
-
     alphaPattern.setBounds(Math.round(colorRect.left), Math.round(colorRect.top), Math.round(colorRect.right), Math.round(colorRect.bottom));
   }
 
@@ -112,14 +105,4 @@ public class ColorPickerPanelView extends View {
     this.color = color;
     invalidate();
   }
-
-  public int getBorderColor() {
-    return borderColor;
-  }
-
-  public void setBorderColor(int color) {
-    borderColor = color;
-    invalidate();
-  }
-
 }

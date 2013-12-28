@@ -66,7 +66,7 @@ public class ColorPickerDialog extends DialogFragment implements ColorPickerView
     }
 
     oldColor.setColor(initialColor);
-    colorPickerView.setColor(initialColor, true);
+    colorPickerView.setColor(initialColor);
     return view;
   }
 
@@ -79,7 +79,7 @@ public class ColorPickerDialog extends DialogFragment implements ColorPickerView
       if (s.length() > 5 || s.length() < 10) {
         try {
           int c = Color.parseColor(s);
-          colorPickerView.setColor(c, true);
+          colorPickerView.setColor(c);
           hexVal.setTextColor(hexDefaultTextColor);
         } catch (IllegalArgumentException e) {
           hexVal.setTextColor(Color.RED);

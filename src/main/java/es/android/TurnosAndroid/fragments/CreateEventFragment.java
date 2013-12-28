@@ -1,4 +1,4 @@
-package es.android.TurnosAndroid;
+package es.android.TurnosAndroid.fragments;
 
 import android.content.ContentResolver;
 import android.content.ContentValues;
@@ -14,6 +14,9 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
+import es.android.TurnosAndroid.CreateEventActionBarInterface;
+import es.android.TurnosAndroid.MainActivity;
+import es.android.TurnosAndroid.R;
 import es.android.TurnosAndroid.colorpicker.ColorPickerDialog;
 import es.android.TurnosAndroid.database.CalendarProvider;
 import es.android.TurnosAndroid.database.DBConstants;
@@ -23,7 +26,7 @@ import es.android.TurnosAndroid.database.DBConstants;
  *
  * @author jjnunogarcia@gmail.com
  */
-public class CreateEventFragment extends Fragment implements ColorPickerDialog.OnColorChangedListener {
+public class CreateEventFragment extends Fragment implements ColorPickerDialog.OnColorChangedListener, CreateEventActionBarInterface {
   public static final String TAG = CreateEventFragment.class.getSimpleName();
   private EditText name;
   private EditText description;
@@ -59,9 +62,20 @@ public class CreateEventFragment extends Fragment implements ColorPickerDialog.O
   public void onActivityCreated(Bundle savedInstanceState) {
     super.onActivityCreated(savedInstanceState);
     colorButton.setOnClickListener(onClickListener);
+    ((MainActivity) getActivity()).getActionBarManager().setCreateEventActionBarInterface(this);
   }
 
-  public void saveEvent() {
+  @Override
+  public void onSaveEventClicked() {
+    saveEvent();
+  }
+
+  @Override
+  public void onDeleteEventClicked() {
+    deleteEvent();
+  }
+
+  private void saveEvent() {
     if (getActivity() != null) {
       ContentResolver contentResolver = getActivity().getApplicationContext().getContentResolver();
       ContentValues contentValues = new ContentValues();
@@ -70,18 +84,19 @@ public class CreateEventFragment extends Fragment implements ColorPickerDialog.O
       contentValues.put(DBConstants.START, Long.valueOf(startTime.getText().toString()));
       contentValues.put(DBConstants.DURATION, Long.valueOf(duration.getText().toString()));
       contentValues.put(DBConstants.LOCATION, location.getText().toString());
-      contentValues.put(DBConstants.COLOR, Color.parseColor("#ff000000"));
-      Uri eventUri = contentResolver.insert(CalendarProvider.CONTENT_URI, contentValues);
+      contentValues.put(DBConstants.COLOR, colorValue);
+      Uri eventUri = contentResolver.insert(CalendarProvider.EVENTS_URI, contentValues);
+      ((MainActivity) getActivity()).addMyEventsFragment();
       Toast.makeText(getActivity().getApplicationContext(), eventUri.toString(), Toast.LENGTH_SHORT).show();
     }
   }
 
-  public void deleteEvent() {
+  private void deleteEvent() {
     if (getActivity() != null) {
       ContentResolver contentResolver = getActivity().getApplicationContext().getContentResolver();
       String where = DBConstants.ID + "=?";
       String[] selectionArgs = new String[]{"2"};
-      int rowsDeleted = contentResolver.delete(CalendarProvider.CONTENT_URI, where, selectionArgs);
+      int rowsDeleted = contentResolver.delete(CalendarProvider.EVENTS_URI, where, selectionArgs);
       Toast.makeText(getActivity().getApplicationContext(), "Rows deleted: " + rowsDeleted, Toast.LENGTH_SHORT).show();
     }
   }

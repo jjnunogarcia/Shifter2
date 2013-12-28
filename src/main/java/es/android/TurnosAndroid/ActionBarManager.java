@@ -10,13 +10,14 @@ import android.view.MenuItem;
  * @author nuno@neofonie.de
  */
 public class ActionBarManager {
-  private final ActionBar          actionBar;
-  private final ActionBarInterface actionBarInterface;
-  private       Menu               menu;
+  private final ActionBar                     actionBar;
+  private       MonthActionBarInterface       monthActionBarInterface;
+  private       MyEventsActionBarInterface    myEventsActionBarInterface;
+  private       CreateEventActionBarInterface createEventActionBarInterface;
+  private       Menu                          menu;
 
-  public ActionBarManager(ActionBar actionBar, ActionBarInterface actionBarInterface) {
+  public ActionBarManager(ActionBar actionBar) {
     this.actionBar = actionBar;
-    this.actionBarInterface = actionBarInterface;
   }
 
   public void attachInternalMenu(Menu menu) {
@@ -27,16 +28,24 @@ public class ActionBarManager {
   public boolean onActionBarItemSelected(MenuItem item) {
     switch (item.getItemId()) {
       case R.id.today_button:
-        actionBarInterface.onTodayClicked();
+        if (monthActionBarInterface != null) {
+          monthActionBarInterface.onTodayClicked();
+        }
         break;
       case R.id.create_event_button:
-        actionBarInterface.onNewEventClicked();
+        if (myEventsActionBarInterface != null) {
+          myEventsActionBarInterface.onNewEventClicked();
+        }
         break;
       case R.id.save_event_button:
-        actionBarInterface.onSaveEventClicked();
+        if (createEventActionBarInterface != null) {
+          createEventActionBarInterface.onSaveEventClicked();
+        }
         break;
       case R.id.delete_event_button:
-        actionBarInterface.onDeleteEventClicked();
+        if (createEventActionBarInterface != null) {
+          createEventActionBarInterface.onDeleteEventClicked();
+        }
         break;
       default:
         break;
@@ -67,6 +76,18 @@ public class ActionBarManager {
     menu.setGroupVisible(R.id.month_action_bar, false);
     menu.setGroupVisible(R.id.my_events_action_bar, false);
     menu.setGroupVisible(R.id.create_event_action_bar, true);
+  }
+
+  public void setMonthActionBarInterface(MonthActionBarInterface monthActionBarInterface) {
+    this.monthActionBarInterface = monthActionBarInterface;
+  }
+
+  public void setMyEventsActionBarInterface(MyEventsActionBarInterface myEventsActionBarInterface) {
+    this.myEventsActionBarInterface = myEventsActionBarInterface;
+  }
+
+  public void setCreateEventActionBarInterface(CreateEventActionBarInterface createEventActionBarInterface) {
+    this.createEventActionBarInterface = createEventActionBarInterface;
   }
 
 }

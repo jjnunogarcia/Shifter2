@@ -25,11 +25,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
   public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
     Log.w(TAG, "Upgrading database from version " + oldVersion + " to " + newVersion + ", which will destroy all old data");
     db.execSQL("DROP TABLE IF EXISTS " + DBConstants.EVENTS_TABLE);
+    db.execSQL("DROP TABLE IF EXISTS " + DBConstants.CALENDAR_EVENTS_TABLE);
     onCreate(db);
   }
 
   private void createTables(SQLiteDatabase db) {
-    // TODO it's necessary to create two tables: one for all the different event types and the other to store which events are in which days
+    // TODO it's necessary to create two tables: one for all the different event types and the other to store which events are in which days (and other for patterns)
     db.execSQL("CREATE TABLE " + DBConstants.EVENTS_TABLE + "(" +
                DBConstants.ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                DBConstants.NAME + " TEXT, " +
@@ -38,5 +39,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                DBConstants.DURATION + " INTEGER, " +
                DBConstants.LOCATION + " TEXT, " +
                DBConstants.COLOR + " INTEGER);");
+    db.execSQL("CREATE TABLE " + DBConstants.CALENDAR_EVENTS_TABLE + "(" +
+               DBConstants.ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+               DBConstants.DATE + " DATE, " +
+               DBConstants.EVENT_ID + " INTEGER);");
   }
 }

@@ -43,7 +43,6 @@ import es.android.TurnosAndroid.controllers.CalendarController;
 import es.android.TurnosAndroid.database.CalendarProvider;
 import es.android.TurnosAndroid.database.DBConstants;
 import es.android.TurnosAndroid.helpers.Utils;
-import es.android.TurnosAndroid.model.Event;
 import es.android.TurnosAndroid.model.EventInfo;
 import es.android.TurnosAndroid.model.EventType;
 import es.android.TurnosAndroid.views.ViewType;
@@ -58,27 +57,27 @@ import java.util.*;
  * arbitrary number of weeks at a time. By overriding methods and changing variables this fragment can be customized to easily display a month selection component in a given style.
  * </p>
  */
-public class MonthFragment extends ListFragment implements EventHandler, LoaderManager.LoaderCallbacks<Cursor>, OnScrollListener, OnTouchListener {
-  public static final    String        TAG                     = MonthFragment.class.getSimpleName();
+public class MonthFragment extends ListFragment implements EventHandler, LoaderManager.LoaderCallbacks<Cursor>, OnScrollListener, OnTouchListener, MonthActionBarInterface {
+  public static final    String          TAG                   = MonthFragment.class.getSimpleName();
   // The number of days to display in each week
-  public static final    int           DAYS_PER_WEEK           = 7;
+  public static final    int             DAYS_PER_WEEK         = 7;
   // The size of the month name displayed above the week list
-  public static final    String        INITIAL_TIME            = "initial_time";
+  public static final    String          INITIAL_TIME          = "initial_time";
   // Affects when the month selection will change while scrolling up
-  protected static final int           SCROLL_HYST_WEEKS       = 2;
-  protected static final int           GOTO_SCROLL_DURATION    = 500;
+  protected static final int             SCROLL_HYST_WEEKS     = 2;
+  protected static final int             GOTO_SCROLL_DURATION  = 500;
   // How long to wait after receiving an onScrollStateChanged notification before acting on it
-  protected static final int             SCROLL_CHANGE_DELAY     = 40;
-  private static final   int             WEEKS_BUFFER            = 1;
+  protected static final int             SCROLL_CHANGE_DELAY   = 40;
+  private static final   int             WEEKS_BUFFER          = 1;
   // How long to wait after scroll stops before starting the loader
   // Using scroll duration because scroll state changes don't update correctly when a scroll is triggered programmatically.
-  private static final   int           LOADER_DELAY            = 200;
+  private static final   int             LOADER_DELAY          = 200;
   // The minimum time between requeries of the data if the db is changing
-  private static final   int           LOADER_THROTTLE_DELAY   = 500;
-  public static          int           LIST_TOP_OFFSET         = -1;  // so that the top line will be under the separator
-  protected static       StringBuilder mSB                     = new StringBuilder(50);
-  protected static       Formatter     mF                      = new Formatter(mSB, Locale.getDefault());
-  private final          Runnable      timeZoneUpdater         = new Runnable() {
+  private static final   int             LOADER_THROTTLE_DELAY = 500;
+  public static          int             LIST_TOP_OFFSET       = -1;  // so that the top line will be under the separator
+  protected static       StringBuilder   mSB                   = new StringBuilder(50);
+  protected static       Formatter       mF                    = new Formatter(mSB, Locale.getDefault());
+  private final          Runnable        timeZoneUpdater       = new Runnable() {
     @Override
     public void run() {
       String tz = Utils.getTimeZone(context, this);
@@ -94,7 +93,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
       }
     }
   };
-  private final          Runnable      updateLoader            = new Runnable() {
+  private final          Runnable        updateLoader          = new Runnable() {
     @Override
     public void run() {
       if (shouldLoad && cursorLoader != null) {
@@ -109,8 +108,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
       }
     }
   };
-
-  private final Runnable updateAtMidnight = new Runnable() {
+  private final          Runnable        updateAtMidnight      = new Runnable() {
     @Override
     public void run() {
       Time midnight = new Time(firstVisibleDay.timezone);
@@ -129,9 +127,8 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
       }
     }
   };
-
   // This allows us to update our position when a day is tapped
-  private final DataSetObserver observer = new DataSetObserver() {
+  private final          DataSetObserver observer              = new DataSetObserver() {
     @Override
     public void onChanged() {
       Time day = adapter.getSelectedDay();
@@ -140,7 +137,6 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
       }
     }
   };
-
   private Context             context;
   private int                 weekMinVisibleHeight;
   private int                 bottomBuffer;
@@ -236,6 +232,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
 
     context = getActivity().getApplicationContext();
     calendarController = ((CustomApplication) getActivity().getApplication()).getCalendarController();
+    ((MainActivity) getActivity()).getActionBarManager().setMonthActionBarInterface(this);
 
     Resources res = getResources();
     saturdayColor = res.getColor(R.color.month_saturday);
@@ -373,11 +370,17 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
 
   @Override
   public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-//    CursorLoader loader = new CursorLoader(getActivity().getApplicationContext(), eventUri, Event.EVENT_PROJECTION, null, null, null);
+//    CursorLoader loader = new CursorLoader(getActivity().getApplicationContext(),
+//                                           CalendarProvider.CALENDAR_EVENTS_URI, Event.EVENTS_PROJECTION, null, null, null);
 //    firstLoadedJulianDay = Time.getJulianDay(selectedDay.toMillis(true), selectedDay.gmtoff) - (numWeeks * 7 / 2);
 //    eventUri = updateUri();
 //    loader.setUpdateThrottle(LOADER_THROTTLE_DELAY);
 //    return loader;
+
+    String selection = DBConstants.DATE + ">=? AND " + DBConstants.DATE + "<=?";
+    String[] selectionArgs = new String[]{"2013-01-01", "2013-31-12"};
+    String sortOrder = DBConstants.DATE + " ASC";
+//    return new CursorLoader(getActivity().getApplicationContext(), CalendarProvider.CALENDAR_EVENTS_URI, DBConstants.MONTH_PROJECTION, selection, selectionArgs, sortOrder);
     return null;
   }
 
@@ -406,6 +409,11 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
     if (cursorLoader != null) {
       cursorLoader.stopLoading();
     }
+  }
+
+  @Override
+  public void onTodayClicked() {
+    goTo(System.currentTimeMillis(), true, true, false);
   }
 
   @Override
@@ -686,7 +694,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
     long end = tempTime.toMillis(true);
 
     // Create a new uri with the updated times
-    Uri.Builder builder = CalendarProvider.CONTENT_URI.buildUpon();
+    Uri.Builder builder = CalendarProvider.EVENTS_URI.buildUpon();
     ContentUris.appendId(builder, start);
     ContentUris.appendId(builder, end);
     return builder.build();

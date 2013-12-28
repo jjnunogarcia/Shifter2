@@ -27,25 +27,10 @@ import android.view.View;
 public class ColorPickerView extends View {
   private final static int   PANEL_SAT_VAL                 = 0;
   private final static int   PANEL_HUE                     = 1;
-  /**
-   * The width in pixels of the border surrounding all color panels.
-   */
   private final static float BORDER_WIDTH_PX               = 1;
-  /**
-   * The dp which the tracker of the hue or alpha panel will extend outside of its bounds.
-   */
   private static       float RECTANGLE_TRACKER_OFFSET      = 2f;
-  /**
-   * The width in dp of the hue panel.
-   */
   private              float HUE_PANEL_WIDTH               = 30f;
-  /**
-   * The distance in dp between the different color panels.
-   */
   private              float PANEL_SPACING                 = 10f;
-  /**
-   * The radius in dp of the color palette tracker circle.
-   */
   private              float PALETTE_CIRCLE_TRACKER_RADIUS = 5f;
   private float                  density;
   private OnColorChangedListener colorChangedListener;
@@ -142,7 +127,6 @@ public class ColorPickerView extends View {
   }
 
   private int[] buildHueColorArray() {
-
     int[] hue = new int[361];
 
     int count = 0;
@@ -155,7 +139,6 @@ public class ColorPickerView extends View {
 
   @Override
   protected void onDraw(Canvas canvas) {
-
     if (drawingRect.width() <= 0 || drawingRect.height() <= 0) {
       return;
     }
@@ -183,13 +166,13 @@ public class ColorPickerView extends View {
     satValPaint.setShader(mShader);
     canvas.drawRect(rect, satValPaint);
 
-    Point p = satValToPoint(sat, val);
+    Point point = satValToPoint(sat, val);
 
     satValTrackerPaint.setColor(0xff000000);
-    canvas.drawCircle(p.x, p.y, PALETTE_CIRCLE_TRACKER_RADIUS - 1f * density, satValTrackerPaint);
+    canvas.drawCircle(point.x, point.y, PALETTE_CIRCLE_TRACKER_RADIUS - 1f * density, satValTrackerPaint);
 
     satValTrackerPaint.setColor(0xffdddddd);
-    canvas.drawCircle(p.x, p.y, PALETTE_CIRCLE_TRACKER_RADIUS, satValTrackerPaint);
+    canvas.drawCircle(point.x, point.y, PALETTE_CIRCLE_TRACKER_RADIUS, satValTrackerPaint);
   }
 
   private void drawHuePanel(Canvas canvas) {
@@ -217,9 +200,7 @@ public class ColorPickerView extends View {
     r.top = p.y - rectHeight;
     r.bottom = p.y + rectHeight;
 
-
     canvas.drawRoundRect(r, 2, 2, hueTrackerPaint);
-
   }
 
   private Point hueToPoint(float hue) {
@@ -473,7 +454,6 @@ public class ColorPickerView extends View {
 
   private void setUpHueRect() {
     final RectF dRect = drawingRect;
-
     float left = dRect.right - HUE_PANEL_WIDTH + BORDER_WIDTH_PX;
     float top = dRect.top + BORDER_WIDTH_PX;
     float bottom = dRect.bottom - BORDER_WIDTH_PX;
@@ -482,19 +462,11 @@ public class ColorPickerView extends View {
     hueRect = new RectF(left, top, right, bottom);
   }
 
-  public void setOnColorChangedListener(OnColorChangedListener listener) {
-    this.colorChangedListener = listener;
-  }
-
   public int getColor() {
     return Color.HSVToColor(alpha, new float[]{hue, sat, val});
   }
 
   public void setColor(int color) {
-    setColor(color, false);
-  }
-
-  public void setColor(int color, boolean callback) {
     int alpha = Color.alpha(color);
     float[] hsv = new float[3];
     Color.colorToHSV(color, hsv);
@@ -504,7 +476,7 @@ public class ColorPickerView extends View {
     sat = hsv[1];
     val = hsv[2];
 
-    if (callback && colorChangedListener != null) {
+    if (colorChangedListener != null) {
       colorChangedListener.onColorChanged(Color.HSVToColor(this.alpha, new float[]{hue, sat, val}));
     }
 
@@ -519,6 +491,10 @@ public class ColorPickerView extends View {
    */
   public float getDrawingOffset() {
     return drawingOffset;
+  }
+
+  public void setOnColorChangedListener(OnColorChangedListener listener) {
+    this.colorChangedListener = listener;
   }
 
   public interface OnColorChangedListener {

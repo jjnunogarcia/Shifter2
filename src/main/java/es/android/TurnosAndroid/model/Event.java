@@ -73,12 +73,12 @@ public class Event implements Cloneable {
 
     try {
       int endDay = startDay + days - 1;
-      Uri.Builder builder = CalendarProvider.CONTENT_URI.buildUpon();
+      Uri.Builder builder = CalendarProvider.EVENTS_URI.buildUpon();
       // TODO are the two following lines really necessary?
       ContentUris.appendId(builder, startDay);
       ContentUris.appendId(builder, endDay);
 
-      eventsCursor = context.getContentResolver().query(builder.build(), DBConstants.EVENT_PROJECTION, null, null, SORT_EVENTS_BY);
+      eventsCursor = context.getContentResolver().query(builder.build(), DBConstants.EVENTS_PROJECTION, null, null, SORT_EVENTS_BY);
 
       // Check if we should return early because there are more recent load requests waiting.
       if (requestId != sequenceNumber.get()) {

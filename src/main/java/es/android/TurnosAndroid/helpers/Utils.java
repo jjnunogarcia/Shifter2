@@ -18,11 +18,14 @@ package es.android.TurnosAndroid.helpers;
 
 import android.content.Context;
 import android.content.res.Resources;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.os.Build;
 import android.text.format.Time;
 import android.util.Log;
 import es.android.TurnosAndroid.R;
+import es.android.TurnosAndroid.database.DBConstants;
+import es.android.TurnosAndroid.model.CalendarEvent;
 import es.android.TurnosAndroid.model.Event;
 
 import java.util.ArrayList;
@@ -31,25 +34,21 @@ import java.util.Iterator;
 import java.util.LinkedList;
 
 public class Utils {
-  public static final  int           DECLINED_EVENT_ALPHA      = 0x66;
-  public static final  int           DECLINED_EVENT_TEXT_ALPHA = 0xC0;
   // Defines used by the DNA generation code
-  static final         int           DAY_IN_MINUTES            = 60 * 24;
-  static final         int           WEEK_IN_MINUTES           = DAY_IN_MINUTES * 7;
+  static final         int           DAY_IN_MINUTES         = 60 * 24;
+  static final         int           WEEK_IN_MINUTES        = DAY_IN_MINUTES * 7;
   // The name of the shared preferences file. This name must be maintained for historical
   // reasons, as it's what PreferenceManager assigned the first time the file was created.
-  static final         String        SHARED_PREFS_NAME         = "com.android.calendar_preferences";
-  private static final String        TAG                       = Utils.class.getSimpleName();
-  private static final float         SATURATION_ADJUST         = 1.3f;
-  private static final float         INTENSITY_ADJUST          = 0.8f;
-  private static final TimeZoneUtils timeZoneUtils             = new TimeZoneUtils(SHARED_PREFS_NAME);
+  static final         String        SHARED_PREFS_NAME      = "calendar_preferences";
+  private static final String        TAG                    = Utils.class.getSimpleName();
+  private static final TimeZoneUtils timeZoneUtils          = new TimeZoneUtils(SHARED_PREFS_NAME);
   // The work day is being counted as 6am to 8pm
-  static               int           WORK_DAY_MINUTES          = 14 * 60;
-  static               int           WORK_DAY_START_MINUTES    = 6 * 60;
-  static               int           WORK_DAY_END_MINUTES      = 20 * 60;
-  static               int           WORK_DAY_END_LENGTH       = (24 * 60) - WORK_DAY_END_MINUTES;
-  static               int           CONFLICT_COLOR            = Color.parseColor("#FF000000");
-  static               boolean       mMinutesLoaded            = false;
+  static               int           WORK_DAY_MINUTES       = 14 * 60;
+  static               int           WORK_DAY_START_MINUTES = 6 * 60;
+  static               int           WORK_DAY_END_MINUTES   = 20 * 60;
+  static               int           WORK_DAY_END_LENGTH    = (24 * 60) - WORK_DAY_END_MINUTES;
+  static               int           CONFLICT_COLOR         = Color.parseColor("#FF000000");
+  static               boolean       minutesLoaded          = false;
 
   /**
    * Returns whether the SDK is the Jellybean release or later.
@@ -181,33 +180,6 @@ public class Utils {
            || (firstDayOfWeek == Time.SATURDAY && column == 1);
   }
 
-  public static boolean getConfigBool(Context c, int key) {
-    return c.getResources().getBoolean(key);
-  }
-
-  public static int getDisplayColorFromColor(int color) {
-    if (!isJellybeanOrLater()) {
-      return color;
-    }
-
-    float[] hsv = new float[3];
-    Color.colorToHSV(color, hsv);
-    hsv[1] = Math.min(hsv[1] * SATURATION_ADJUST, 1.0f);
-    hsv[2] = hsv[2] * INTENSITY_ADJUST;
-    return Color.HSVToColor(hsv);
-  }
-
-  // This takes a color and computes what it would look like blended with
-  // white. The result is the color that should be used for declined events.
-  public static int getDeclinedColorFromColor(int color) {
-    int bg = 0xffffffff;
-    int a = DECLINED_EVENT_ALPHA;
-    int r = (((color & 0x00ff0000) * a) + ((bg & 0x00ff0000) * (0xff - a))) & 0xff000000;
-    int g = (((color & 0x0000ff00) * a) + ((bg & 0x0000ff00) * (0xff - a))) & 0x00ff0000;
-    int b = (((color & 0x000000ff) * a) + ((bg & 0x000000ff) * (0xff - a))) & 0x0000ff00;
-    return (0xff000000) | ((r | g | b) >> 8);
-  }
-
   /**
    * Converts a list of events to a list of segments to draw. Assumes list is
    * ordered by start time of the events. The function processes events for a
@@ -239,7 +211,7 @@ public class Utils {
    */
   public static HashMap<Integer, DNAStrand> createDNAStrands(int firstJulianDay, ArrayList<Event> events, int top, int bottom, int minPixels, int[] dayXs, Context context) {
 
-    if (!mMinutesLoaded) {
+    if (!minutesLoaded) {
       if (context == null) {
         return null;
       }
@@ -249,7 +221,7 @@ public class Utils {
       WORK_DAY_END_MINUTES = res.getInteger(R.integer.work_end_minutes);
       WORK_DAY_END_LENGTH = DAY_IN_MINUTES - WORK_DAY_END_MINUTES;
       WORK_DAY_MINUTES = WORK_DAY_END_MINUTES - WORK_DAY_START_MINUTES;
-      mMinutesLoaded = true;
+      minutesLoaded = true;
     }
 
     if (events == null || events.isEmpty() || dayXs == null || dayXs.length < 1 || bottom - top < 8 || minPixels < 0) {
@@ -592,6 +564,26 @@ public class Utils {
     return "#" + red + green + blue;
   }
 
+  private static ArrayList<CalendarEvent> getCalendarEvents(Cursor cursor) {
+    ArrayList<CalendarEvent> calendarEvents = new ArrayList<CalendarEvent>();
+
+    if (cursor != null && cursor.getCount() > 0) {
+      while (cursor.moveToNext()) {
+        calendarEvents.add(createCalendarEventFromCursor(cursor));
+      }
+    }
+
+    return calendarEvents;
+  }
+
+  private static CalendarEvent createCalendarEventFromCursor(Cursor cursor) {
+    CalendarEvent calendarEvent = new CalendarEvent();
+    calendarEvent.setId(cursor.getInt(cursor.getColumnIndex(DBConstants.ID)));
+//    calendarEvent.setDay(cursor.getInt(cursor.getColumnIndex(DBConstants.DATE)));
+//    calendarEvent.setEvents(cursor.getInt(cursor.getColumnIndex(DBConstants.EVENT_ID)));
+    return calendarEvent;
+  }
+
   // A single strand represents one color of events. Events are divided up by
   // color to make them convenient to draw. The black strand is special in
   // that it holds conflicting events as well as color settings for allday on
@@ -612,5 +604,4 @@ public class Utils {
     int  color; // Calendar color or black for conflicts
     long day; // quick reference to the day this segment is on
   }
-
 }

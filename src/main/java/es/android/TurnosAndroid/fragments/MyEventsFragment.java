@@ -9,6 +9,8 @@ import android.support.v4.content.Loader;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import es.android.TurnosAndroid.MainActivity;
+import es.android.TurnosAndroid.MyEventsActionBarInterface;
 import es.android.TurnosAndroid.R;
 import es.android.TurnosAndroid.database.CalendarProvider;
 import es.android.TurnosAndroid.database.DBConstants;
@@ -22,7 +24,7 @@ import java.util.ArrayList;
  *
  * @author jjnunogarcia@gmail.com
  */
-public class MyEventsFragment extends ListFragment implements LoaderCallbacks<Cursor> {
+public class MyEventsFragment extends ListFragment implements LoaderCallbacks<Cursor>, MyEventsActionBarInterface {
   public static final String TAG       = MyEventsFragment.class.getSimpleName();
   public static final int    LOADER_ID = 1;
   private MyEventsAdapter adapter;
@@ -43,6 +45,7 @@ public class MyEventsFragment extends ListFragment implements LoaderCallbacks<Cu
     adapter = new MyEventsAdapter(getActivity().getApplicationContext(), new ArrayList<Event>());
     setListAdapter(adapter);
     getActivity().getSupportLoaderManager().initLoader(LOADER_ID, null, this);
+    ((MainActivity) getActivity()).getActionBarManager().setMyEventsActionBarInterface(this);
   }
 
   @Override
@@ -55,14 +58,20 @@ public class MyEventsFragment extends ListFragment implements LoaderCallbacks<Cu
 
   @Override
   public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-    return new CursorLoader(getActivity().getApplicationContext(), CalendarProvider.CONTENT_URI, DBConstants.EVENT_PROJECTION, null, null, Event.SORT_EVENTS_BY);
+    return new CursorLoader(getActivity().getApplicationContext(), CalendarProvider.EVENTS_URI, DBConstants.EVENTS_PROJECTION, null, null, Event.SORT_EVENTS_BY);
   }
 
   @Override
   public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+    // TODO maybe getMyEvents shouldn't be en Event class
     adapter.setMyEvents(Event.getMyEvents(data));
   }
 
   @Override
   public void onLoaderReset(Loader<Cursor> loader) {}
+
+  @Override
+  public void onNewEventClicked() {
+    ((MainActivity) getActivity()).addCreateEventFragment();
+  }
 }

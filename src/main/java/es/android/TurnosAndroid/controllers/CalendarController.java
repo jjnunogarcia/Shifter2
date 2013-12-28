@@ -275,7 +275,7 @@ public class CalendarController {
 //
 //    public void launchViewEvent(long eventId, long startMillis, long endMillis, int response) {
 //        Intent intent = new Intent(Intent.ACTION_VIEW);
-//        Uri eventUri = ContentUris.withAppendedId(Events.CONTENT_URI, eventId);
+//        Uri eventUri = ContentUris.withAppendedId(Events.EVENTS_URI, eventId);
 //        intent.setData(eventUri);
 //        intent.setClass(context, AllInOneActivity.class);
 //        intent.putExtra(EXTRA_EVENT_BEGIN_TIME, startMillis);

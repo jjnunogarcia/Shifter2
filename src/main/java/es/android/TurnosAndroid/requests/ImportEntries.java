@@ -25,7 +25,7 @@ public class ImportEntries extends AsyncTask<Void, Void, Void> {
 //		if(add){
 //			long time = System.currentTimeMillis();
     String[] eventHolder = {DBConstants.ID, DBConstants.NAME, DBConstants.DESCRIPTION, DBConstants.START, DBConstants.DURATION, DBConstants.LOCATION, DBConstants.COLOR};
-    Cursor cursor = context.getContentResolver().query(CalendarProvider.CONTENT_URI, eventHolder, null, null, null);
+    Cursor cursor = context.getContentResolver().query(CalendarProvider.EVENTS_URI, eventHolder, null, null, null);
 
 //    if (cursor != null && cursor.moveToFirst()) {
 //      do {
@@ -35,7 +35,7 @@ public class ImportEntries extends AsyncTask<Void, Void, Void> {
 //        String dblocation = cursor.getString(3);
 //        String dbdesc = cursor.getString(4);
 //		            times = checkTimes(eventID);
-//        Cursor e = context.getContentResolver().query(CalendarProvider.CONTENT_URI, eventHolder, DBConstants.EVENT_ID + "=?",
+//        Cursor e = context.getContentResolver().query(CalendarProvider.EVENTS_URI, eventHolder, DBConstants.EVENT_ID + "=?",
 //                                                      new String[] {String.valueOf(eventID)}, null);
 //        if (e == null || !e.moveToFirst()) {
 //          ContentValues values = new ContentValues();
@@ -64,7 +64,7 @@ public class ImportEntries extends AsyncTask<Void, Void, Void> {
 //          values.put(DBConstants.END_DAY, endDay);
 //          values.put(DBConstants.START, startMin);
 //          values.put(DBConstants.DURATION, endMin);
-//          context.getContentResolver().insert(CalendarProvider.CONTENT_URI, values);
+//          context.getContentResolver().insert(CalendarProvider.EVENTS_URI, values);
 //        }
 //        if (e != null) {
 //          e.close();
@@ -77,7 +77,7 @@ public class ImportEntries extends AsyncTask<Void, Void, Void> {
     }
 //		}else{
 //			String[] eventHolder = {Events._ID,Events.CALENDAR_ID,Events.NAME,Events.EVENT_LOCATION,Events.DESCRIPTION,Events.DTSTART,Events.DTEND};
-//			Cursor cursor = getContentResolver().query(Events.CONTENT_URI,eventHolder,null,null,null);
+//			Cursor cursor = getContentResolver().query(Events.EVENTS_URI,eventHolder,null,null,null);
 //			int value = cursor.getCount();
 //			int count = 0;
 //			if(cursor != null && cursor.moveToFirst()){
@@ -97,7 +97,7 @@ public class ImportEntries extends AsyncTask<Void, Void, Void> {
 //                    if(times[0] != null && times[1] != null){
 //                    	long alert = Long.parseLong(reminders) * (60*1000);
 //        	            long trueStart = times[0] - alert;
-//                    	Cursor e = getContentResolver().query(CalendarProvider.CONTENT_URI, new String[] {CalendarProvider.ID},
+//                    	Cursor e = getContentResolver().query(CalendarProvider.EVENTS_URI, new String[] {CalendarProvider.ID},
 //        	            		CalendarProvider.EVENT_ID+"=?",new String[] {String.valueOf(eventID)},null);
 //                    	if(e != null && e.moveToFirst()){
 //                    		ContentValues values = new ContentValues();
@@ -110,7 +110,7 @@ public class ImportEntries extends AsyncTask<Void, Void, Void> {
 //        	    			values.put(CalendarProvider.CALENDAR_ID, calID);
 //        	    			values.put(CalendarProvider.REMINDERS, reminders);
 //        	    			values.put(CalendarProvider.START_WITH_REMINDER, trueStart);
-//        	    			getContentResolver().update(CalendarProvider.CONTENT_URI, values,
+//        	    			getContentResolver().update(CalendarProvider.EVENTS_URI, values,
 //        	    					CalendarProvider.EVENT_ID+"=?", new String[] {String.valueOf(eventID)});
 //                    	}else{
 //                    		ContentValues values = new ContentValues();
@@ -127,7 +127,7 @@ public class ImportEntries extends AsyncTask<Void, Void, Void> {
 //        	    			values.put(CalendarProvider.CALENDAR_ID, calID);
 //        	    			values.put(CalendarProvider.REMINDERS, reminders);
 //        	    			values.put(CalendarProvider.START_WITH_REMINDER, trueStart);
-//        	            	getContentResolver().insert(CalendarProvider.CONTENT_URI, values);
+//        	            	getContentResolver().insert(CalendarProvider.EVENTS_URI, values);
 //                    	}
 //                    	e.close();
 //                    }
