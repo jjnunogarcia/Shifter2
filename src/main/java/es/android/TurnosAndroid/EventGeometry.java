@@ -18,7 +18,6 @@ package es.android.TurnosAndroid;
 
 import android.graphics.Rect;
 import es.android.TurnosAndroid.model.Event;
-import es.android.TurnosAndroid.views.day.DayView;
 
 public class EventGeometry {
   // This is the space from the grid line to the event rectangle.

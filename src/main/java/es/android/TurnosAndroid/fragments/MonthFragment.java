@@ -1,19 +1,3 @@
-/*
- * Copyright (C) 2010 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package es.android.TurnosAndroid.fragments;
 
 import android.content.ContentUris;
@@ -26,7 +10,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.ListFragment;
 import android.support.v4.app.LoaderManager;
-import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
@@ -41,10 +24,12 @@ import android.widget.TextView;
 import es.android.TurnosAndroid.*;
 import es.android.TurnosAndroid.controllers.CalendarController;
 import es.android.TurnosAndroid.database.CalendarProvider;
-import es.android.TurnosAndroid.database.DBConstants;
 import es.android.TurnosAndroid.helpers.Utils;
+import es.android.TurnosAndroid.model.CalendarEvent;
+import es.android.TurnosAndroid.model.Event;
 import es.android.TurnosAndroid.model.EventInfo;
 import es.android.TurnosAndroid.model.EventType;
+import es.android.TurnosAndroid.requests.CalendarEventsLoader;
 import es.android.TurnosAndroid.views.ViewType;
 import es.android.TurnosAndroid.views.month.MonthAdapter;
 import es.android.TurnosAndroid.views.month.MonthView;
@@ -102,7 +87,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
 
         // Start the loader again
         eventUri = updateUri();
-        cursorLoader.setUri(eventUri);
+//        cursorLoader.setUri(eventUri);
         cursorLoader.startLoading();
         cursorLoader.onContentChanged();
       }
@@ -137,43 +122,43 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
       }
     }
   };
-  private Context             context;
-  private int                 weekMinVisibleHeight;
-  private int                 bottomBuffer;
-  private Handler             handler;
-  private CursorLoader        cursorLoader;
-  private Uri                 eventUri;
-  private Time                desiredDay;
-  private boolean             shouldLoad;
-  private boolean             userScrolled;
-  private int                 firstLoadedJulianDay;
-  private int                 lastLoadedJulianDay;
-  private Time                selectedDay;
-  private MonthAdapter        adapter;
-  private ListView            listView;
-  private ViewGroup           dayNamesHeader;
-  private String[]            dayLabels;
-  private Time                tempTime;
-  private int                 firstDayOfWeek;
-  private Time                firstDayOfMonth;
-  private Time                firstVisibleDay;
-  private TextView            monthName;
-  private int                 currentMonthDisplayed;
-  private long                previousScrollPosition;
-  private boolean             isScrollingUp;
-  private int                 previousScrollState;
-  private int                 currentScrollState;
-  private int                 saturdayColor;
-  private int                 sundayColor;
-  private int                 dayNameColor;
-  private int                 numWeeks;
-  private boolean             showWeekNumber;
-  private int                 daysPerWeek;
-  private float               friction;
-  private ScrollStateRunnable scrollStateChangedRunnable;
-  private long                initialTime;
-  private CalendarController  calendarController;
-  private TextView            header;
+  private Context              context;
+  private int                  weekMinVisibleHeight;
+  private int                  bottomBuffer;
+  private Handler              handler;
+  private CalendarEventsLoader cursorLoader;
+  private Uri                  eventUri;
+  private Time                 desiredDay;
+  private boolean              shouldLoad;
+  private boolean              userScrolled;
+  private int                  firstLoadedJulianDay;
+  private int                  lastLoadedJulianDay;
+  private Time                 selectedDay;
+  private MonthAdapter         adapter;
+  private ListView             listView;
+  private ViewGroup            dayNamesHeader;
+  private String[]             dayLabels;
+  private Time                 tempTime;
+  private int                  firstDayOfWeek;
+  private Time                 firstDayOfMonth;
+  private Time                 firstVisibleDay;
+  private TextView             monthName;
+  private int                  currentMonthDisplayed;
+  private long                 previousScrollPosition;
+  private boolean              isScrollingUp;
+  private int                  previousScrollState;
+  private int                  currentScrollState;
+  private int                  saturdayColor;
+  private int                  sundayColor;
+  private int                  dayNameColor;
+  private int                  numWeeks;
+  private boolean              showWeekNumber;
+  private int                  daysPerWeek;
+  private float                friction;
+  private ScrollStateRunnable  scrollStateChangedRunnable;
+  private long                 initialTime;
+  private CalendarController   calendarController;
+  private TextView             header;
 
   public MonthFragment() {
     weekMinVisibleHeight = 12;
@@ -267,7 +252,16 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
         tempTime.setJulianDay(julianDay + DAYS_PER_WEEK);
         setMonthDisplayed(tempTime, true);
 
-        cursorLoader = (CursorLoader) getLoaderManager().initLoader(0, null, MonthFragment.this);
+        cursorLoader = (CalendarEventsLoader) getLoaderManager().initLoader(0, null, MonthFragment.this);
+//        ContentValues contentValues = new ContentValues();
+//        GregorianCalendar initialDay = new GregorianCalendar();
+//        GregorianCalendar finalDay = new GregorianCalendar();
+//        initialDay.set(2013, Calendar.JANUARY, 31);
+//        finalDay.set(2013, Calendar.DECEMBER, 1);
+//        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+//        contentValues.put(DBConstants.DATE, sdf.format(initialDay.getTime()));
+//        contentValues.put(DBConstants.EVENT_ID, 0);
+//        getActivity().getApplicationContext().getContentResolver().insert(CalendarProvider.CALENDAR_EVENTS_URI, contentValues);
         adapter.setListView(listView);
 
         goTo(initialTime, false, true, true);
@@ -377,11 +371,11 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
 //    loader.setUpdateThrottle(LOADER_THROTTLE_DELAY);
 //    return loader;
 
-    String selection = DBConstants.DATE + ">=? AND " + DBConstants.DATE + "<=?";
-    String[] selectionArgs = new String[]{"2013-01-01", "2013-31-12"};
-    String sortOrder = DBConstants.DATE + " ASC";
-//    return new CursorLoader(getActivity().getApplicationContext(), CalendarProvider.CALENDAR_EVENTS_URI, DBConstants.MONTH_PROJECTION, selection, selectionArgs, sortOrder);
-    return null;
+    GregorianCalendar initialDay = new GregorianCalendar();
+    GregorianCalendar finalDay = new GregorianCalendar();
+    initialDay.set(2013, Calendar.JANUARY, 1);
+    finalDay.set(2013, Calendar.DECEMBER, 31);
+    return new CalendarEventsLoader(getActivity().getApplicationContext(), initialDay.getTimeInMillis(), finalDay.getTimeInMillis());
   }
 
   @Override
@@ -395,9 +389,9 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
 //      // We've started a new query since this loader ran so ignore the result
 //      return;
 //    }
-//
+    ArrayList<CalendarEvent> calendarEvents = Event.getCalendarEvents(data);
 //    ArrayList<Event> events = Event.buildEventsFromCursor(data, context, firstLoadedJulianDay, lastLoadedJulianDay);
-//    adapter.setEvents(firstLoadedJulianDay, lastLoadedJulianDay - firstLoadedJulianDay + 1, events);
+    adapter.setEvents(firstLoadedJulianDay, lastLoadedJulianDay - firstLoadedJulianDay + 1, calendarEvents);
   }
 
   @Override
@@ -702,9 +696,6 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
 
   /**
    * Sets the month displayed at the top of this view based on time. Override to add custom events when the title is changed.
-   *
-   * @param time            A day in the new focus month.
-   * @param updateHighlight TODO(epastern):
    */
   private void setMonthDisplayed(Time time, boolean updateHighlight) {
     CharSequence oldMonth = monthName.getText();

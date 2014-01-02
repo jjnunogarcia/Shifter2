@@ -17,7 +17,6 @@ import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
-import android.provider.CalendarContract.Attendees;
 import android.text.Layout.Alignment;
 import android.text.SpannableStringBuilder;
 import android.text.StaticLayout;
@@ -1380,9 +1379,6 @@ public class DayView extends View implements View.OnCreateContextMenuListener, S
 
   private View switchViews(boolean forward, float xOffSet, float width, float velocity) {
     animationDistance = width - xOffSet;
-    if (DEBUG) {
-      Log.d(TAG, "switchViews(" + forward + ") O:" + xOffSet + " Dist:" + animationDistance);
-    }
 
     float progress = Math.abs(xOffSet) / width;
     if (progress > 1.0f) {
@@ -1582,7 +1578,7 @@ public class DayView extends View implements View.OnCreateContextMenuListener, S
     // load events in the background
 //        context.startProgressSpinner();
     final ArrayList<Event> events = new ArrayList<Event>();
-    eventLoader.loadEventsInBackground(numDays, events, firstJulianDay, new Runnable() {
+    Runnable successCallback = new Runnable() {
       @Override
       public void run() {
         boolean fadeinEvents = firstJulianDay != loadedFirstJulianDay;
@@ -1631,7 +1627,8 @@ public class DayView extends View implements View.OnCreateContextMenuListener, S
           invalidate();
         }
       }
-    }, cancelCallback);
+    };
+//    eventLoader.loadEventsInBackground(numDays, events, firstJulianDay, successCallback, cancelCallback);
   }
 
   public void stopEventsAnimation() {
@@ -1665,7 +1662,7 @@ public class DayView extends View implements View.OnCreateContextMenuListener, S
         continue;
       }
 //      if (event.drawAsAllday()) {
-        // Count all the events being drawn as allDay events
+      // Count all the events being drawn as allDay events
 //        final int firstDay = Math.max(event.startDay, firstJulianDay);
 //        final int lastDay = Math.min(event.endDay, lastJulianDay);
 //        for (int day = firstDay; day <= lastDay; day++) {
@@ -1688,18 +1685,18 @@ public class DayView extends View implements View.OnCreateContextMenuListener, S
 //          hasAllDayEvent[((int) day)] = true;
 //        }
 //      } else {
-        long daynum = event.getStartDay() - firstJulianDay;
-        long hour = event.getStartTime() / 60;
-        if (daynum >= 0 && hour < earliestStartHour[((int) daynum)]) {
-          earliestStartHour[((int) daynum)] = (int) hour;
-        }
+      long daynum = event.getStartDay() - firstJulianDay;
+      long hour = event.getStartTime() / 60;
+      if (daynum >= 0 && hour < earliestStartHour[((int) daynum)]) {
+        earliestStartHour[((int) daynum)] = (int) hour;
+      }
 
-        // Also check the end hour in case the event spans more than one day.
-        daynum = event.getEndDay() - firstJulianDay;
+      // Also check the end hour in case the event spans more than one day.
+      daynum = event.getEndDay() - firstJulianDay;
 //        hour = event.endTime / 60;
-        if (daynum < numDays && hour < earliestStartHour[((int) daynum)]) {
-          earliestStartHour[((int) daynum)] = (int) hour;
-        }
+      if (daynum < numDays && hour < earliestStartHour[((int) daynum)]) {
+        earliestStartHour[((int) daynum)] = (int) hour;
+      }
 //      }
     }
     maxAlldayEvents = maxAllDayEvents;
@@ -3116,9 +3113,9 @@ public class DayView extends View implements View.OnCreateContextMenuListener, S
 //      flags = DateUtils.FORMAT_UTC | DateUtils.FORMAT_SHOW_DATE
 //              | DateUtils.FORMAT_SHOW_WEEKDAY | DateUtils.FORMAT_ABBREV_ALL;
 //    } else {
-      flags = DateUtils.FORMAT_SHOW_TIME | DateUtils.FORMAT_SHOW_DATE
-              | DateUtils.FORMAT_SHOW_WEEKDAY | DateUtils.FORMAT_ABBREV_ALL
-              | DateUtils.FORMAT_CAP_NOON_MIDNIGHT;
+    flags = DateUtils.FORMAT_SHOW_TIME | DateUtils.FORMAT_SHOW_DATE
+            | DateUtils.FORMAT_SHOW_WEEKDAY | DateUtils.FORMAT_ABBREV_ALL
+            | DateUtils.FORMAT_CAP_NOON_MIDNIGHT;
 //    }
     if (DateFormat.is24HourFormat(context)) {
       flags |= DateUtils.FORMAT_24HOUR;
@@ -3332,7 +3329,7 @@ public class DayView extends View implements View.OnCreateContextMenuListener, S
       // Y location is affected by the position of the event in the scrolling
       // view (viewStartY) and the presence of all day events (firstCell)
 //      if (!selectedEvent.allDay) {
-        yLocation += (firstCell - viewStartY);
+      yLocation += (firstCell - viewStartY);
 //      }
       clickedYLocation = yLocation;
       long clearDelay = (CLICK_DISPLAY_DURATION + onDownDelay) - (System.currentTimeMillis() - downTouchTime);
@@ -3804,7 +3801,7 @@ public class DayView extends View implements View.OnCreateContextMenuListener, S
       for (int i = 0; i < numEvents; i++) {
         Event event = events.get(i);
 //        if (!event.drawAsAllday() || (!showAllAllDayEvents && event.getColumn() >= maxUnexpandedColumn)) {
-          // Don't check non-allday events or events that aren't shown
+        // Don't check non-allday events or events that aren't shown
 //          continue;
 //        }
 

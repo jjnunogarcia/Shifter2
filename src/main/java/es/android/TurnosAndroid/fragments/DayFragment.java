@@ -92,7 +92,6 @@ public class DayFragment extends Fragment implements EventHandler, ViewSwitcher.
     }
 
     View view = inflater.inflate(R.layout.day_fragment, null);
-
     viewSwitcher = (ViewSwitcher) view.findViewById(R.id.switcher);
 
     return view;
@@ -127,7 +126,7 @@ public class DayFragment extends Fragment implements EventHandler, ViewSwitcher.
   @Override
   public void onResume() {
     super.onResume();
-    eventLoader.startBackgroundThread();
+//    eventLoader.startBackgroundThread();
     timeZoneUpdater.run();
     eventsChanged();
     DayView view = (DayView) viewSwitcher.getCurrentView();
@@ -156,7 +155,7 @@ public class DayFragment extends Fragment implements EventHandler, ViewSwitcher.
     view.cleanup();
     view = (DayView) viewSwitcher.getNextView();
     view.cleanup();
-    eventLoader.stopBackgroundThread();
+//    eventLoader.stopBackgroundThread();
 
     // Stop events cross-fade animation
     view.stopEventsAnimation();

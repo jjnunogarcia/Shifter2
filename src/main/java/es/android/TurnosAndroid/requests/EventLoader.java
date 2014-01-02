@@ -33,7 +33,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class EventLoader {
   private static final String TAG = EventLoader.class.getSimpleName();
-
   private Context                          context;
   private Handler                          handler;
   private AtomicInteger                    sequenceNumber;
@@ -147,8 +146,8 @@ public class EventLoader {
       //query which days have events
       Cursor cursor = EventDays.query(cr, startDay, numDays, PROJECTION);
       try {
-        int startDayColumnIndex = cursor.getColumnIndexOrThrow(EventDays.STARTDAY);
-        int endDayColumnIndex = cursor.getColumnIndexOrThrow(EventDays.ENDDAY);
+        int startDayColumnIndex = cursor.getColumnIndex(EventDays.STARTDAY);
+        int endDayColumnIndex = cursor.getColumnIndex(EventDays.ENDDAY);
 
         //Set all the days with events to true
         while (cursor.moveToNext()) {

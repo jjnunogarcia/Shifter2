@@ -14,10 +14,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import es.android.TurnosAndroid.controllers.CalendarController;
-import es.android.TurnosAndroid.fragments.CreateEventFragment;
-import es.android.TurnosAndroid.fragments.DayFragment;
-import es.android.TurnosAndroid.fragments.MonthFragment;
-import es.android.TurnosAndroid.fragments.MyEventsFragment;
+import es.android.TurnosAndroid.fragments.*;
 import es.android.TurnosAndroid.model.EventInfo;
 import es.android.TurnosAndroid.model.EventType;
 
@@ -36,7 +33,6 @@ public class MainActivity extends FragmentActivity implements EventHandler {
     setContentView(R.layout.main_activity);
 
     // TODO load entries depending on the initial view
-//    new ImportEntries(getApplicationContext()).execute();
     drawerElements = getResources().getStringArray(R.array.drawer_elements);
     drawerTitle = getResources().getString(R.string.drawer_title);
     windowTitle = getTitle();
@@ -111,7 +107,7 @@ public class MainActivity extends FragmentActivity implements EventHandler {
     }
 
 //    if (event.eventType == EventType.VIEW_EVENT) {
-      //					FragmentTransaction ft = getFragmentManager().beginTransaction();
+    //					FragmentTransaction ft = getFragmentManager().beginTransaction();
 //					edit = new EditEvent(event.id);
 //					ft.replace(R.id.cal_frame, edit).addToBackStack(null).commit();
 //    }
@@ -140,6 +136,9 @@ public class MainActivity extends FragmentActivity implements EventHandler {
           break;
         case 1:
           addMyEventsFragment();
+          break;
+        case 2:
+          addMyPatternsFragment();
           break;
         default:
           break;
@@ -181,10 +180,16 @@ public class MainActivity extends FragmentActivity implements EventHandler {
 
   public void addCreateEventFragment() {
     FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-    CreateEventFragment createEventFragment;
-    createEventFragment = new CreateEventFragment();
+    CreateEventFragment createEventFragment = new CreateEventFragment();
     ft.replace(R.id.calendar_frame, createEventFragment, CreateEventFragment.TAG).addToBackStack(CreateEventFragment.TAG).commit();
     actionBarManager.setCreateEventFragmentActionBar();
+  }
+
+  public void addMyPatternsFragment() {
+    FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+    MyPatternsFragment myPatternsFragment = new MyPatternsFragment();
+    ft.replace(R.id.calendar_frame, myPatternsFragment, MyPatternsFragment.TAG).commit();
+    actionBarManager.setMyPatternsFragmentActionBar();
   }
 
   public ActionBarManager getActionBarManager() {

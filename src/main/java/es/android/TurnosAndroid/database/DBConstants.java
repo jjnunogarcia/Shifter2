@@ -24,7 +24,7 @@ public class DBConstants {
       LOCATION,
       COLOR
   };
-  public static final String   CALENDAR_EVENTS_TABLE = "calendar_events";
+  public static final String   CALENDAR_EVENTS_TABLE = "calendarevents";
   public static final String   DATE                  = "date";
   public static final String   EVENT_ID              = "event_id";
   public static final String[] MONTH_PROJECTION      = new String[]{
@@ -38,4 +38,10 @@ public class DBConstants {
       LOCATION,
       COLOR
   };
+  public static final String   PATTERNS_TABLE        = "patterns";
+  public static final String[] PATTERNS_PROJECTION   = new String[]{
+      // TODO fill the fields
+  };
+  // TODO
+  public static final String   SORT_PATTERNS_BY      = "";
 }

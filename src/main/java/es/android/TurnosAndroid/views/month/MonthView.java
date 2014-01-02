@@ -16,6 +16,7 @@ import android.util.Log;
 import android.view.View;
 import es.android.TurnosAndroid.R;
 import es.android.TurnosAndroid.helpers.Utils;
+import es.android.TurnosAndroid.model.CalendarEvent;
 import es.android.TurnosAndroid.model.Event;
 
 import java.security.InvalidParameterException;
@@ -79,7 +80,7 @@ public class MonthView extends View {
   protected static       int           MINI_TODAY_OUTLINE_WIDTH    = 2;
   protected static       int           WEEK_NUM_MARGIN_BOTTOM      = 4;
   // used for scaling to the device density
-  protected static       float         mScale                      = 0;
+  protected static       float         scale                       = 0;
   private static         int           TEXT_SIZE_MONTH_NUMBER      = 32;
   private static         int           TEXT_SIZE_EVENT             = 12;
   private static         int           TEXT_SIZE_EVENT_TITLE       = 14;
@@ -154,8 +155,8 @@ public class MonthView extends View {
   private   boolean                           hasToday;
   private   int                               todayIndex;
   private   int                               orientation;
-  private   List<ArrayList<Event>>            events;
-  private   ArrayList<Event>                  unsortedEvents;
+  private   List<ArrayList<CalendarEvent>>    calendarEvents;
+  private   ArrayList<CalendarEvent>          unsortedEvents;
   private   HashMap<Integer, Utils.DNAStrand> dna;
   private   TextPaint                         eventPaint;
   private   TextPaint                         solidBackgroundEventPaint;
@@ -218,7 +219,7 @@ public class MonthView extends View {
     hasToday = false;
     todayIndex = -1;
     orientation = Configuration.ORIENTATION_LANDSCAPE;
-    events = null;
+    calendarEvents = null;
     unsortedEvents = null;
     dna = null;
     clickedDayIndex = -1;
@@ -226,17 +227,17 @@ public class MonthView extends View {
     todayAnimator = null;
     mAnimatorListener = new TodayAnimatorListener();
 
-    if (mScale == 0) {
-      mScale = context.getResources().getDisplayMetrics().density;
-      if (mScale != 1) {
-        DEFAULT_HEIGHT *= mScale;
-        MIN_HEIGHT *= mScale;
-        MINI_DAY_NUMBER_TEXT_SIZE *= mScale;
-        MINI_TODAY_NUMBER_TEXT_SIZE *= mScale;
-        MINI_TODAY_OUTLINE_WIDTH *= mScale;
-        WEEK_NUM_MARGIN_BOTTOM *= mScale;
-        DAY_SEPARATOR_WIDTH *= mScale;
-        MINI_WK_NUMBER_TEXT_SIZE *= mScale;
+    if (scale == 0) {
+      scale = context.getResources().getDisplayMetrics().density;
+      if (scale != 1) {
+        DEFAULT_HEIGHT *= scale;
+        MIN_HEIGHT *= scale;
+        MINI_DAY_NUMBER_TEXT_SIZE *= scale;
+        MINI_TODAY_NUMBER_TEXT_SIZE *= scale;
+        MINI_TODAY_OUTLINE_WIDTH *= scale;
+        WEEK_NUM_MARGIN_BOTTOM *= scale;
+        DAY_SEPARATOR_WIDTH *= scale;
+        MINI_WK_NUMBER_TEXT_SIZE *= scale;
       }
     }
 
@@ -246,7 +247,7 @@ public class MonthView extends View {
 
   // Sets the list of events for this week. Takes a sorted list of arrays divided up by day for generating the large month version and the full
   // arraylist sorted by start time to generate the dna version.
-  public void setEvents(List<ArrayList<Event>> sortedEvents, ArrayList<Event> unsortedEvents) {
+  public void setEvents(List<ArrayList<CalendarEvent>> sortedEvents, ArrayList<CalendarEvent> unsortedEvents) {
     setEvents(sortedEvents);
     // The MIN_WEEK_WIDTH is a hack to prevent the view from trying to generate dna bits before its width has been fixed.
     createDna(unsortedEvents);
@@ -256,10 +257,9 @@ public class MonthView extends View {
    * Sets up the dna bits for the view. This will return early if the view isn't in a state that will create a valid set of dna yet (such as the
    * views width not being set correctly yet).
    */
-  public void createDna(ArrayList<Event> unsortedEvents) {
+  public void createDna(ArrayList<CalendarEvent> unsortedEvents) {
     if (unsortedEvents == null || width <= MIN_WEEK_WIDTH || getContext() == null) {
-      // Stash the list of events for use when this view is ready, or
-      // just clear it if a null set has been passed to this view
+      // Stash the list of events for use when this view is ready, or just clear it if a null set has been passed to this view
       this.unsortedEvents = unsortedEvents;
       dna = null;
       return;
@@ -268,7 +268,7 @@ public class MonthView extends View {
       this.unsortedEvents = null;
     }
     // Create the drawing coordinates for dna
-    int numDays = events.size();
+    int numDays = calendarEvents.size();
     int effectiveWidth = width - padding * 2;
     if (showWeekNum) {
       effectiveWidth -= SPACING_WEEK_NUMBER;
@@ -278,7 +278,6 @@ public class MonthView extends View {
     mDayXs = new int[numDays];
     for (int day = 0; day < numDays; day++) {
       mDayXs[day] = computeDayLeftPosition(day) + DNA_WIDTH / 2 + DNA_SIDE_PADDING;
-
     }
 
     int top = DAY_SEPARATOR_INNER_WIDTH + DNA_MARGIN + DNA_ALL_DAY_HEIGHT + 1;
@@ -286,8 +285,8 @@ public class MonthView extends View {
     dna = Utils.createDNAStrands(firstJulianDay, unsortedEvents, top, bottom, DNA_MIN_SEGMENT_HEIGHT, mDayXs, getContext());
   }
 
-  public void setEvents(List<ArrayList<Event>> sortedEvents) {
-    events = sortedEvents;
+  public void setEvents(List<ArrayList<CalendarEvent>> sortedEvents) {
+    calendarEvents = sortedEvents;
     if (sortedEvents == null) {
       return;
     }
@@ -295,7 +294,7 @@ public class MonthView extends View {
       if (Log.isLoggable(TAG, Log.ERROR)) {
         Log.wtf(TAG, "Events size must be same as days displayed: size=" + sortedEvents.size() + " days=" + numDays);
       }
-      events = null;
+      calendarEvents = null;
     }
   }
 
@@ -315,9 +314,6 @@ public class MonthView extends View {
     clickedDayColor = res.getColor(R.color.day_clicked_background_color);
   }
 
-  /**
-   * Sets up the text and style properties for painting. Override this if you want to use a different paint.
-   */
   private void initView() {
     p.setFakeBoldText(false);
     p.setAntiAlias(true);
@@ -339,33 +335,33 @@ public class MonthView extends View {
       SIDE_PADDING_MONTH_NUMBER = resources.getInteger(R.integer.month_day_number_margin);
       CONFLICT_COLOR = resources.getColor(R.color.month_dna_conflict_time_color);
       EVENT_TEXT_COLOR = resources.getColor(R.color.calendar_event_text_color);
-      if (mScale != 1) {
-        TOP_PADDING_MONTH_NUMBER *= mScale;
-        TOP_PADDING_WEEK_NUMBER *= mScale;
-        SIDE_PADDING_MONTH_NUMBER *= mScale;
-        SIDE_PADDING_WEEK_NUMBER *= mScale;
-        SPACING_WEEK_NUMBER *= mScale;
-        TEXT_SIZE_MONTH_NUMBER *= mScale;
-        TEXT_SIZE_EVENT *= mScale;
-        TEXT_SIZE_EVENT_TITLE *= mScale;
-        TEXT_SIZE_WEEK_NUM *= mScale;
-        DAY_SEPARATOR_INNER_WIDTH *= mScale;
-        EVENT_X_OFFSET_LANDSCAPE *= mScale;
-        EVENT_Y_OFFSET_LANDSCAPE *= mScale;
-        EVENT_Y_OFFSET_PORTRAIT *= mScale;
-        EVENT_SQUARE_WIDTH *= mScale;
-        EVENT_SQUARE_BORDER *= mScale;
-        EVENT_LINE_PADDING *= mScale;
-        EVENT_BOTTOM_PADDING *= mScale;
-        EVENT_RIGHT_PADDING *= mScale;
-        DNA_MARGIN *= mScale;
-        DNA_WIDTH *= mScale;
-        DNA_ALL_DAY_HEIGHT *= mScale;
-        DNA_MIN_SEGMENT_HEIGHT *= mScale;
-        DNA_SIDE_PADDING *= mScale;
-        DEFAULT_EDGE_SPACING *= mScale;
-        DNA_ALL_DAY_WIDTH *= mScale;
-        TODAY_HIGHLIGHT_WIDTH *= mScale;
+      if (scale != 1) {
+        TOP_PADDING_MONTH_NUMBER *= scale;
+        TOP_PADDING_WEEK_NUMBER *= scale;
+        SIDE_PADDING_MONTH_NUMBER *= scale;
+        SIDE_PADDING_WEEK_NUMBER *= scale;
+        SPACING_WEEK_NUMBER *= scale;
+        TEXT_SIZE_MONTH_NUMBER *= scale;
+        TEXT_SIZE_EVENT *= scale;
+        TEXT_SIZE_EVENT_TITLE *= scale;
+        TEXT_SIZE_WEEK_NUM *= scale;
+        DAY_SEPARATOR_INNER_WIDTH *= scale;
+        EVENT_X_OFFSET_LANDSCAPE *= scale;
+        EVENT_Y_OFFSET_LANDSCAPE *= scale;
+        EVENT_Y_OFFSET_PORTRAIT *= scale;
+        EVENT_SQUARE_WIDTH *= scale;
+        EVENT_SQUARE_BORDER *= scale;
+        EVENT_LINE_PADDING *= scale;
+        EVENT_BOTTOM_PADDING *= scale;
+        EVENT_RIGHT_PADDING *= scale;
+        DNA_MARGIN *= scale;
+        DNA_WIDTH *= scale;
+        DNA_ALL_DAY_HEIGHT *= scale;
+        DNA_MIN_SEGMENT_HEIGHT *= scale;
+        DNA_SIDE_PADDING *= scale;
+        DEFAULT_EDGE_SPACING *= scale;
+        DNA_ALL_DAY_WIDTH *= scale;
+        TODAY_HIGHLIGHT_WIDTH *= scale;
       }
       TOP_PADDING_MONTH_NUMBER += DNA_ALL_DAY_HEIGHT + DNA_MARGIN;
       mInitialized = true;
@@ -614,7 +610,7 @@ public class MonthView extends View {
   // Computes the x position for the left side of the given day
   private int computeDayLeftPosition(int day) {
     int effectiveWidth = width;
-    int x = 0;
+    int x;
     int xOffset = 0;
     if (showWeekNum) {
       xOffset = SPACING_WEEK_NUMBER + padding;
@@ -726,12 +722,12 @@ public class MonthView extends View {
    */
   private void drawWeekNums(Canvas canvas) {
     int y;
-
     int i = 0;
     int offset = -1;
     int todayIndex = this.todayIndex;
     int x;
     int numCount = numDays;
+
     if (showWeekNum) {
       x = SIDE_PADDING_WEEK_NUMBER + padding;
       y = weekNumAscentHeight + TOP_PADDING_WEEK_NUMBER;
@@ -740,14 +736,13 @@ public class MonthView extends View {
       i++;
       todayIndex++;
       offset++;
-
     }
 
     y = monthNumAscentHeight + TOP_PADDING_MONTH_NUMBER;
-
     boolean isFocusMonth = focusDay[i];
     boolean isBold = false;
     monthNumPaint.setColor(isFocusMonth ? monthNumColor : monthNumOtherColor);
+
     for (; i < numCount; i++) {
       if (hasToday && todayIndex == i) {
         monthNumPaint.setColor(monthNumTodayColor);

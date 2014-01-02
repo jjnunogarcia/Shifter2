@@ -9,15 +9,15 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
-import android.text.TextUtils;
 
 import java.util.HashMap;
 
 public class CalendarProvider extends ContentProvider {
 
   private static final String AUTHORITY           = "es.android.TurnosAndroid.database.calendarprovider";
-  public static final  Uri    EVENTS_URI          = Uri.parse("content://" + AUTHORITY + "/events");
-  public static final  Uri    CALENDAR_EVENTS_URI = Uri.parse("content://" + AUTHORITY + "/calendarevents");
+  public static final  Uri    EVENTS_URI          = Uri.parse("content://" + AUTHORITY + "/" + DBConstants.EVENTS_TABLE);
+  public static final  Uri    CALENDAR_EVENTS_URI = Uri.parse("content://" + AUTHORITY + "/" + DBConstants.CALENDAR_EVENTS_TABLE);
+  public static final  Uri    PATTERNS_URI        = Uri.parse("content://" + AUTHORITY + "/" + DBConstants.PATTERNS_TABLE);
   private static final UriMatcher              uriMatcher;
   private static final HashMap<String, String> MY_EVENTS_PROJECTION_MAP;
   private static final HashMap<String, String> CALENDAR_EVENTS_PROJECTION_MAP;
@@ -26,6 +26,7 @@ public class CalendarProvider extends ContentProvider {
     uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
     uriMatcher.addURI(AUTHORITY, DBConstants.EVENTS_TABLE, 1);
     uriMatcher.addURI(AUTHORITY, DBConstants.CALENDAR_EVENTS_TABLE, 2);
+    uriMatcher.addURI(AUTHORITY, DBConstants.PATTERNS_TABLE, 3);
 
     MY_EVENTS_PROJECTION_MAP = new HashMap<String, String>();
     MY_EVENTS_PROJECTION_MAP.put(DBConstants.ID, DBConstants.ID);
@@ -70,14 +71,26 @@ public class CalendarProvider extends ContentProvider {
 
   @Override
   public Uri insert(Uri uri, ContentValues values) {
-    long rowID = db.insert(DBConstants.EVENTS_TABLE, null, values);
-    Uri _uri;
-    if (rowID > 0) {
-      _uri = ContentUris.withAppendedId(EVENTS_URI, rowID);
-      getContext().getContentResolver().notifyChange(uri, null);
-    } else {
-      throw new SQLException("Failed to insert row into " + uri);
+    Uri _uri = null;
+
+    if (uriMatcher.match(uri) == 1) {
+      long rowID = db.insert(DBConstants.EVENTS_TABLE, null, values);
+      if (rowID > 0) {
+        _uri = ContentUris.withAppendedId(EVENTS_URI, rowID);
+        getContext().getContentResolver().notifyChange(uri, null);
+      } else {
+        throw new SQLException("Failed to insert row into " + uri);
+      }
+    } else if (uriMatcher.match(uri) == 2) {
+      long rowID = db.insert(DBConstants.CALENDAR_EVENTS_TABLE, null, values);
+      if (rowID > 0) {
+        _uri = ContentUris.withAppendedId(CALENDAR_EVENTS_URI, rowID);
+        getContext().getContentResolver().notifyChange(uri, null);
+      } else {
+        throw new SQLException("Failed to insert row into " + uri);
+      }
     }
+
     return _uri;
   }
 

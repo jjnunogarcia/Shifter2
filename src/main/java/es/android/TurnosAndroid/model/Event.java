@@ -24,7 +24,11 @@ import android.net.Uri;
 import es.android.TurnosAndroid.database.CalendarProvider;
 import es.android.TurnosAndroid.database.DBConstants;
 
+import java.text.ParsePosition;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.concurrent.atomic.AtomicInteger;
 
 // TODO: should Event be Parcelable so it can be passed via Intents?
@@ -118,6 +122,31 @@ public class Event implements Cloneable {
     }
 
     return events;
+  }
+
+  public static ArrayList<CalendarEvent> getCalendarEvents(Cursor cursor) {
+    ArrayList<CalendarEvent> calendarEvents = new ArrayList<CalendarEvent>();
+
+    if (cursor != null && cursor.getCount() > 0) {
+      while (cursor.moveToNext()) {
+        calendarEvents.add(createCalendarEventFromCursor(cursor));
+      }
+    }
+
+    return calendarEvents;
+  }
+
+  private static CalendarEvent createCalendarEventFromCursor(Cursor cursor) {
+    CalendarEvent calendarEvent = new CalendarEvent();
+    calendarEvent.setId(cursor.getInt(cursor.getColumnIndex(DBConstants.ID)));
+    String dateString = cursor.getString(cursor.getColumnIndex(DBConstants.DATE));
+    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+    Date date = simpleDateFormat.parse(dateString, new ParsePosition(0));
+    GregorianCalendar calendar = new GregorianCalendar();
+    calendar.setTime(date);
+//    calendarEvent.setEvent(generateEventFromCursor(cursor));
+
+    return calendarEvent;
   }
 
   public static ArrayList<Event> getMyEvents(Cursor cursor) {

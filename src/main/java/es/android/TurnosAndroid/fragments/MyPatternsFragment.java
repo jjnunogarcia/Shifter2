@@ -9,13 +9,11 @@ import android.support.v4.content.Loader;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import es.android.TurnosAndroid.MainActivity;
-import es.android.TurnosAndroid.MyEventsActionBarInterface;
 import es.android.TurnosAndroid.R;
 import es.android.TurnosAndroid.database.CalendarProvider;
 import es.android.TurnosAndroid.database.DBConstants;
-import es.android.TurnosAndroid.model.Event;
-import es.android.TurnosAndroid.views.myevents.MyEventsAdapter;
+import es.android.TurnosAndroid.model.Pattern;
+import es.android.TurnosAndroid.views.mypatterns.MyPatternsAdapter;
 
 import java.util.ArrayList;
 
@@ -24,27 +22,26 @@ import java.util.ArrayList;
  *
  * @author jjnunogarcia@gmail.com
  */
-public class MyEventsFragment extends ListFragment implements LoaderCallbacks<Cursor>, MyEventsActionBarInterface {
-  public static final String TAG       = MyEventsFragment.class.getSimpleName();
-  public static final int    LOADER_ID = 1;
-  private MyEventsAdapter adapter;
+public class MyPatternsFragment extends ListFragment implements LoaderCallbacks<Cursor> {
+  public static final String TAG       = MyPatternsFragment.class.getSimpleName();
+  public static final int    LOADER_ID = 2;
+  private MyPatternsAdapter adapter;
 
-  public MyEventsFragment() {
+  public MyPatternsFragment() {
   }
 
   @Override
   public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-    View view = inflater.inflate(R.layout.my_events_fragment, container, false);
+    View view = inflater.inflate(R.layout.my_patterns_fragment, container, false);
     return view;
   }
 
   @Override
   public void onActivityCreated(Bundle savedInstanceState) {
     super.onActivityCreated(savedInstanceState);
-    adapter = new MyEventsAdapter(getActivity().getApplicationContext(), new ArrayList<Event>());
+    adapter = new MyPatternsAdapter(getActivity().getApplicationContext(), new ArrayList<Pattern>());
     setListAdapter(adapter);
     getActivity().getSupportLoaderManager().initLoader(LOADER_ID, null, this);
-    ((MainActivity) getActivity()).getActionBarManager().setMyEventsActionBarInterface(this);
   }
 
   @Override
@@ -57,20 +54,14 @@ public class MyEventsFragment extends ListFragment implements LoaderCallbacks<Cu
 
   @Override
   public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-    return new CursorLoader(getActivity().getApplicationContext(), CalendarProvider.EVENTS_URI, DBConstants.EVENTS_PROJECTION, null, null, Event.SORT_EVENTS_BY);
+    return new CursorLoader(getActivity().getApplicationContext(), CalendarProvider.PATTERNS_URI, DBConstants.PATTERNS_PROJECTION, null, null, DBConstants.SORT_PATTERNS_BY);
   }
 
   @Override
   public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-    // TODO maybe getMyEvents shouldn't be en Event class
-    adapter.setMyEvents(Event.getMyEvents(data));
+//    adapter.setMyPatterns(Utils.getMyPatterns(data));
   }
 
   @Override
   public void onLoaderReset(Loader<Cursor> loader) {}
-
-  @Override
-  public void onNewEventClicked() {
-    ((MainActivity) getActivity()).addCreateEventFragment();
-  }
 }

@@ -7,7 +7,7 @@ import android.view.MenuItem;
 /**
  * Date: 19.12.13
  *
- * @author nuno@neofonie.de
+ * @author jjnunogarcia@gmail.com
  */
 public class ActionBarManager {
   private final ActionBar                     actionBar;
@@ -78,6 +78,10 @@ public class ActionBarManager {
     menu.setGroupVisible(R.id.create_event_action_bar, true);
   }
 
+  public void setMyPatternsFragmentActionBar() {
+    // TODO
+  }
+
   public void setMonthActionBarInterface(MonthActionBarInterface monthActionBarInterface) {
     this.monthActionBarInterface = monthActionBarInterface;
   }
@@ -89,5 +93,4 @@ public class ActionBarManager {
   public void setCreateEventActionBarInterface(CreateEventActionBarInterface createEventActionBarInterface) {
     this.createEventActionBarInterface = createEventActionBarInterface;
   }
-
 }

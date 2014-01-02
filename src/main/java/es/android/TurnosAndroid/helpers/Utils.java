@@ -181,10 +181,10 @@ public class Utils {
   }
 
   /**
-   * Converts a list of events to a list of segments to draw. Assumes list is
-   * ordered by start time of the events. The function processes events for a
+   * Converts a list of calendarEvents to a list of segments to draw. Assumes list is
+   * ordered by start time of the calendarEvents. The function processes calendarEvents for a
    * range of days from firstJulianDay to firstJulianDay + dayXs.length - 1.
-   * The algorithm goes over all the events and creates a set of segments
+   * The algorithm goes over all the calendarEvents and creates a set of segments
    * ordered by start time. This list of segments is then converted into a
    * HashMap of strands which contain the draw points and are organized by
    * color. The strands can then be drawn by setting the paint color to each
@@ -201,15 +201,15 @@ public class Utils {
    * for conflicts in the first or last 1/8th, which may be smaller</li>
    * </ul>
    *
-   * @param firstJulianDay The julian day of the first day of events
-   * @param events         A list of events sorted by start time
+   * @param firstJulianDay The julian day of the first day of calendarEvents
+   * @param calendarEvents         A list of calendarEvents sorted by start time
    * @param top            The lowest y value the dna should be drawn at
    * @param bottom         The highest y value the dna should be drawn at
    * @param dayXs          An array of x values to draw the dna at, one for each day
    * @param conflictColor  the color to use for conflicts
    * @return
    */
-  public static HashMap<Integer, DNAStrand> createDNAStrands(int firstJulianDay, ArrayList<Event> events, int top, int bottom, int minPixels, int[] dayXs, Context context) {
+  public static HashMap<Integer, DNAStrand> createDNAStrands(int firstJulianDay, ArrayList<CalendarEvent> calendarEvents, int top, int bottom, int minPixels, int[] dayXs, Context context) {
 
     if (!minutesLoaded) {
       if (context == null) {
@@ -224,7 +224,7 @@ public class Utils {
       minutesLoaded = true;
     }
 
-    if (events == null || events.isEmpty() || dayXs == null || dayXs.length < 1 || bottom - top < 8 || minPixels < 0) {
+    if (calendarEvents == null || calendarEvents.isEmpty() || dayXs == null || dayXs.length < 1 || bottom - top < 8 || minPixels < 0) {
       return null;
     }
 
@@ -247,18 +247,18 @@ public class Utils {
     int lastJulianDay = firstJulianDay + dayXs.length - 1;
 
     Event event = new Event();
-    // Go through all the events for the week
-    for (Event currEvent : events) {
+    // Go through all the calendarEvents for the week
+    for (CalendarEvent currEvent : calendarEvents) {
       // if this event is outside the weeks range skip it
-      if (currEvent.getEndDay() < firstJulianDay || currEvent.getStartDay() > lastJulianDay) {
-        continue;
-      }
+//      if (currEvent.getEndDay() < firstJulianDay || currEvent.getStartDay() > lastJulianDay) {
+//        continue;
+//      }
 //      if (currEvent.drawAsAllday()) {
 //        addAllDayToStrands(currEvent, strands, firstJulianDay, dayXs.length);
 //        continue;
 //      }
       // Copy the event over so we can clip its start and end to our range
-      currEvent.copyTo(event);
+      currEvent.getEvent().copyTo(event);
       if (event.getStartDay() < firstJulianDay) {
         event.setStartDay(firstJulianDay);
         event.setStartTime(0);
@@ -317,7 +317,7 @@ public class Utils {
 //      }
       // If we start before the last segment in the list ends we need to
       // start going through the list as this may conflict with other
-      // events
+      // calendarEvents
       if (startMinute < lastSegment.endMinute) {
         int i = segments.size();
         // find the last segment this event intersects with
