@@ -140,6 +140,9 @@ public class MainActivity extends FragmentActivity implements EventHandler {
         case 2:
           addMyPatternsFragment();
           break;
+        case 3:
+          addStatisticsFragment();
+          break;
         default:
           break;
       }
@@ -190,6 +193,13 @@ public class MainActivity extends FragmentActivity implements EventHandler {
     MyPatternsFragment myPatternsFragment = new MyPatternsFragment();
     ft.replace(R.id.calendar_frame, myPatternsFragment, MyPatternsFragment.TAG).commit();
     actionBarManager.setMyPatternsFragmentActionBar();
+  }
+
+  public void addStatisticsFragment() {
+    FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+    StatisticsFragment statisticsFragment = new StatisticsFragment();
+    ft.replace(R.id.calendar_frame, statisticsFragment, StatisticsFragment.TAG).commit();
+    actionBarManager.setStatisticsFragmentActionBar();
   }
 
   public ActionBarManager getActionBarManager() {

@@ -82,6 +82,10 @@ public class ActionBarManager {
     // TODO
   }
 
+  public void setStatisticsFragmentActionBar() {
+    // TODO
+  }
+
   public void setMonthActionBarInterface(MonthActionBarInterface monthActionBarInterface) {
     this.monthActionBarInterface = monthActionBarInterface;
   }

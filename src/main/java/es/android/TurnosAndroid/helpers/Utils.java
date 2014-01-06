@@ -132,9 +132,9 @@ public class Utils {
 //        if (startDay == Calendar.SATURDAY) {
 //            return Time.SATURDAY;
 //        } else if (startDay == Calendar.MONDAY) {
-//            return Time.MONDAY;
+            return Time.MONDAY;
 //        } else {
-    return Time.SUNDAY;
+//    return Time.SUNDAY;
 //        }
   }
 
@@ -370,8 +370,7 @@ public class Utils {
               currSegment = rhs;
             }
           }
-          // if the left side is black merge this with the segment to
-          // the left if they're on the same day and overlap
+          // if the left side is black merge this with the segment to the left if they're on the same day and overlap
           if (i - 1 >= 0) {
             DNASegment lhs = segments.get(i - 1);
             if (lhs.color == CONFLICT_COLOR && currSegment.day == lhs.day
@@ -381,14 +380,11 @@ public class Utils {
               strands.get(currSegment.color).count--;
               // point at the new current segment
               currSegment = lhs;
-              // point i at the new current segment in case new
-              // code is added
+              // point i at the new current segment in case new code is added
               i--;
             }
           }
-          // if we're still not black, decrement the count for the
-          // color being removed, change this to black, and increment
-          // the black count
+          // if we're still not black, decrement the count for the color being removed, change this to black, and increment the black count
           if (currSegment.color != CONFLICT_COLOR) {
             strands.get(currSegment.color).count--;
             currSegment.color = CONFLICT_COLOR;
@@ -463,8 +459,7 @@ public class Utils {
   }
 
   /**
-   * Compute a pixel offset from the top for a given minute from the work day
-   * height and the height of the top area.
+   * Compute a pixel offset from the top for a given minute from the work day height and the height of the top area.
    */
   private static long getPixelOffsetFromMinutes(long minute, int workDayHeight, int remainderHeight) {
     long y;
@@ -473,8 +468,7 @@ public class Utils {
     } else if (minute < WORK_DAY_END_MINUTES) {
       y = remainderHeight + (minute - WORK_DAY_START_MINUTES) * workDayHeight / WORK_DAY_MINUTES;
     } else {
-      y = remainderHeight + workDayHeight + (minute - WORK_DAY_END_MINUTES) * remainderHeight
-                                            / WORK_DAY_END_LENGTH;
+      y = remainderHeight + workDayHeight + (minute - WORK_DAY_END_MINUTES) * remainderHeight / WORK_DAY_END_LENGTH;
     }
     return y;
   }
@@ -564,30 +558,8 @@ public class Utils {
     return "#" + red + green + blue;
   }
 
-  private static ArrayList<CalendarEvent> getCalendarEvents(Cursor cursor) {
-    ArrayList<CalendarEvent> calendarEvents = new ArrayList<CalendarEvent>();
-
-    if (cursor != null && cursor.getCount() > 0) {
-      while (cursor.moveToNext()) {
-        calendarEvents.add(createCalendarEventFromCursor(cursor));
-      }
-    }
-
-    return calendarEvents;
-  }
-
-  private static CalendarEvent createCalendarEventFromCursor(Cursor cursor) {
-    CalendarEvent calendarEvent = new CalendarEvent();
-    calendarEvent.setId(cursor.getInt(cursor.getColumnIndex(DBConstants.ID)));
-//    calendarEvent.setDay(cursor.getInt(cursor.getColumnIndex(DBConstants.DATE)));
-//    calendarEvent.setEvents(cursor.getInt(cursor.getColumnIndex(DBConstants.EVENT_ID)));
-    return calendarEvent;
-  }
-
-  // A single strand represents one color of events. Events are divided up by
-  // color to make them convenient to draw. The black strand is special in
-  // that it holds conflicting events as well as color settings for allday on
-  // each day.
+  // A single strand represents one color of events. Events are divided up by color to make them convenient to draw. The black strand is special in
+  // that it holds conflicting events as well as color settings for allday on each day.
   public static class DNAStrand {
     public float[] points;
     public int[]   allDays; // color for the allday, 0 means no event
@@ -596,8 +568,7 @@ public class Utils {
     int count;
   }
 
-  // A segment is a single continuous length of time occupied by a single
-  // color. Segments should never span multiple days.
+  // A segment is a single continuous length of time occupied by a single color. Segments should never span multiple days.
   private static class DNASegment {
     long startMinute; // in minutes since the start of the week
     long endMinute;

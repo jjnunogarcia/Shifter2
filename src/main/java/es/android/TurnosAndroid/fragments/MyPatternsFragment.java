@@ -41,7 +41,7 @@ public class MyPatternsFragment extends ListFragment implements LoaderCallbacks<
     super.onActivityCreated(savedInstanceState);
     adapter = new MyPatternsAdapter(getActivity().getApplicationContext(), new ArrayList<Pattern>());
     setListAdapter(adapter);
-    getActivity().getSupportLoaderManager().initLoader(LOADER_ID, null, this);
+//    getActivity().getSupportLoaderManager().initLoader(LOADER_ID, null, this);
   }
 
   @Override
