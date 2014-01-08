@@ -11,6 +11,7 @@
     <string name="create_event_button">Nuevo turno</string>
     <string name="save_event_button">Guardar</string>
     <string name="delete_event_button">Eliminar</string>
+    <string name="create_pattern_button">Nuevo patrón</string>
     <string name="create_event_name">Nombre</string>
     <string name="create_event_description">Descripción</string>
     <string name="create_event_start_time">Comienzo</string>

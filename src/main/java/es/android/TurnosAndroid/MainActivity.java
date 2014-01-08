@@ -170,7 +170,7 @@ public class MainActivity extends FragmentActivity implements EventHandler {
     bundle.putInt(DayFragment.NUM_OF_DAYS, 1);
     DayFragment dayFragment = new DayFragment();
     dayFragment.setArguments(bundle);
-    ft.replace(R.id.calendar_frame, dayFragment, DayFragment.TAG).addToBackStack(DayFragment.TAG).commit();
+    ft.replace(R.id.calendar_frame, dayFragment, DayFragment.TAG).commit();
     actionBarManager.setDayFragmentActionBar();
   }
 

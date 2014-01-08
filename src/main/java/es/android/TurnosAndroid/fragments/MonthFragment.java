@@ -153,7 +153,6 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
   private int                  dayNameColor;
   private int                  numWeeks;
   private boolean              showWeekNumber;
-  private int                  daysPerWeek;
   private float                friction;
   private ScrollStateRunnable  scrollStateChangedRunnable;
   private long                 initialTime;
@@ -176,7 +175,6 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
     dayNameColor = 0;
     numWeeks = 6;
     showWeekNumber = false;
-    daysPerWeek = 7;
     friction = 1.0f;
     shouldLoad = true;
     userScrolled = false;
@@ -255,12 +253,9 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
         cursorLoader = (CalendarEventsLoader) getLoaderManager().initLoader(0, null, MonthFragment.this);
 //        ContentValues contentValues = new ContentValues();
 //        GregorianCalendar initialDay = new GregorianCalendar();
-//        GregorianCalendar finalDay = new GregorianCalendar();
 //        initialDay.set(2013, Calendar.JANUARY, 31);
-//        finalDay.set(2013, Calendar.DECEMBER, 1);
-//        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-//        contentValues.put(DBConstants.DATE, sdf.format(initialDay.getTime()));
-//        contentValues.put(DBConstants.EVENT_ID, 0);
+//        contentValues.put(DBConstants.DATE, initialDay.getTimeInMillis());
+//        contentValues.put(DBConstants.EVENT_ID, 1);
 //        getActivity().getApplicationContext().getContentResolver().insert(CalendarProvider.CALENDAR_EVENTS_URI, contentValues);
         adapter.setListView(listView);
 
@@ -272,7 +267,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
   @Override
   public void onResume() {
     super.onResume();
-    setUpAdapter();
+//    setUpAdapter();
     doResumeUpdates();
   }
 
@@ -312,7 +307,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
     weekParams.put(MonthAdapter.WEEK_PARAMS_SHOW_WEEK, showWeekNumber ? 1 : 0);
     weekParams.put(MonthAdapter.WEEK_PARAMS_WEEK_START, firstDayOfWeek);
     weekParams.put(MonthAdapter.WEEK_PARAMS_JULIAN_DAY, Time.getJulianDay(selectedDay.toMillis(true), selectedDay.gmtoff));
-    weekParams.put(MonthAdapter.WEEK_PARAMS_DAYS_PER_WEEK, daysPerWeek);
+    weekParams.put(MonthAdapter.WEEK_PARAMS_DAYS_PER_WEEK, DAYS_PER_WEEK);
 
     if (adapter == null) {
       adapter = new MonthAdapter(getActivity().getApplicationContext(), calendarController, weekParams);
@@ -320,7 +315,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
     } else {
       adapter.updateParams(weekParams);
     }
-    adapter.notifyDataSetChanged();
+
     setListAdapter(adapter);
   }
 
@@ -331,21 +326,18 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
       header.setVisibility(View.GONE);
     }
     int offset = firstDayOfWeek - 1;
-    for (int i = 1; i < 8; i++) {
+
+    for (int i = 1; i <= DAYS_PER_WEEK; i++) {
       header = (TextView) dayNamesHeader.getChildAt(i);
-      if (i < daysPerWeek + 1) {
-        int position = (offset + i) % 7;
-        header.setText(dayLabels[position]);
-        header.setVisibility(View.VISIBLE);
-        if (position == Time.SATURDAY) {
-          header.setTextColor(saturdayColor);
-        } else if (position == Time.SUNDAY) {
-          header.setTextColor(sundayColor);
-        } else {
-          header.setTextColor(dayNameColor);
-        }
+      int position = (offset + i) % 7;
+      header.setText(dayLabels[position]);
+      header.setVisibility(View.VISIBLE);
+      if (position == Time.SATURDAY) {
+        header.setTextColor(saturdayColor);
+      } else if (position == Time.SUNDAY) {
+        header.setTextColor(sundayColor);
       } else {
-        header.setVisibility(View.GONE);
+        header.setTextColor(dayNameColor);
       }
     }
     dayNamesHeader.invalidate();
@@ -354,7 +346,6 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
   private void doResumeUpdates() {
     firstDayOfWeek = Utils.getFirstDayOfWeek(context);
     showWeekNumber = Utils.getShowWeekNumber(context);
-    daysPerWeek = Utils.getDaysPerWeek(context);
     updateHeader();
     adapter.setSelectedDay(selectedDay);
     timeZoneUpdater.run();
@@ -419,9 +410,9 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
   public void handleEvent(EventInfo event) {
     if (event.eventType == EventType.GO_TO) {
       boolean animate = true;
-      if (daysPerWeek * numWeeks * 2 < Math.abs(Time.getJulianDay(event.selectedTime.toMillis(true), event.selectedTime.gmtoff)
-                                                - Time.getJulianDay(firstVisibleDay.toMillis(true), firstVisibleDay.gmtoff)
-                                                - daysPerWeek * numWeeks / 2)) {
+      if (DAYS_PER_WEEK * numWeeks * 2 < Math.abs(Time.getJulianDay(event.selectedTime.toMillis(true), event.selectedTime.gmtoff)
+                                                  - Time.getJulianDay(firstVisibleDay.toMillis(true), firstVisibleDay.gmtoff)
+                                                  - DAYS_PER_WEEK * numWeeks / 2)) {
         animate = false;
       }
       desiredDay.set(event.selectedTime);
@@ -489,7 +480,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
     long millis = tempTime.normalize(true);
     // Get the week we're going to
     // TODO push Util function into Calendar public api.
-    int position = getWeeksSinceEpochFromJulianDay(Time.getJulianDay(millis, tempTime.gmtoff), firstDayOfWeek);
+    int position = Utils.getWeeksSinceEpochFromJulianDay(Time.getJulianDay(millis, tempTime.gmtoff), firstDayOfWeek);
 
     View child;
     int i = 0;
@@ -525,7 +516,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
       firstDayOfMonth.monthDay = 1;
       millis = firstDayOfMonth.normalize(true);
       setMonthDisplayed(firstDayOfMonth, true);
-      position = getWeeksSinceEpochFromJulianDay(Time.getJulianDay(millis, firstDayOfMonth.gmtoff), firstDayOfWeek);
+      position = Utils.getWeeksSinceEpochFromJulianDay(Time.getJulianDay(millis, firstDayOfMonth.gmtoff), firstDayOfWeek);
 
       previousScrollState = OnScrollListener.SCROLL_STATE_FLING;
       if (animate) {
@@ -541,15 +532,6 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
       setMonthDisplayed(selectedDay, true);
     }
     return false;
-  }
-
-  private int getWeeksSinceEpochFromJulianDay(int julianDay, int firstDayOfWeek) {
-    int diff = Time.THURSDAY - firstDayOfWeek;
-    if (diff < 0) {
-      diff += 7;
-    }
-    int refDay = Time.EPOCH_JULIAN_DAY - diff;
-    return (julianDay - refDay) / 7;
   }
 
   /**
@@ -604,7 +586,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
    *
    * @param view The ListView containing the weeks
    */
-  private void updateMonthHighlight(AbsListView view) {
+  private void updateMonthHighlight(ListView view) {
     MonthView child = (MonthView) view.getChildAt(0);
     if (child == null) {
       return;
@@ -612,9 +594,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
 
     // Figure out where we are
     int offset = child.getBottom() < weekMinVisibleHeight ? 1 : 0;
-    // Use some hysteresis for checking which month to highlight. This
-    // causes the month to transition when two full weeks of a month are
-    // visible.
+    // Use some hysteresis for checking which month to highlight. This causes the month to transition when two full weeks of a month are visible.
     child = (MonthView) view.getChildAt(SCROLL_HYST_WEEKS + offset);
 
     if (child == null) {
@@ -639,8 +619,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
       monthDiff = month - currentMonthDisplayed;
     }
 
-    // Only switch months if we're scrolling away from the currently
-    // selected month
+    // Only switch months if we're scrolling away from the currently selected month
     if (monthDiff != 0) {
       int julianDay = child.getFirstJulianDay();
       if (isScrollingUp) {

@@ -17,6 +17,13 @@
                 android:id="@+id/delete_event_button"
                 android:title="@string/delete_event_button"/>
     </group>
+    <group android:id="@+id/my_patterns_action_bar">
+        <item
+                android:id="@+id/create_pattern_button"
+                android:title="@string/create_pattern_button"/>
+    </group>
+    <group android:id="@+id/statistics_action_bar">
+    </group>
     <!--<item-->
     <!--android:id="@+id/menu_settings"-->
     <!--android:orderInCategory="100"-->

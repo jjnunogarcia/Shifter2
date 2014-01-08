@@ -14,6 +14,7 @@ import es.android.TurnosAndroid.MyEventsActionBarInterface;
 import es.android.TurnosAndroid.R;
 import es.android.TurnosAndroid.database.CalendarProvider;
 import es.android.TurnosAndroid.database.DBConstants;
+import es.android.TurnosAndroid.helpers.Utils;
 import es.android.TurnosAndroid.model.Event;
 import es.android.TurnosAndroid.views.myevents.MyEventsAdapter;
 
@@ -63,7 +64,7 @@ public class MyEventsFragment extends ListFragment implements LoaderCallbacks<Cu
   @Override
   public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
     // TODO maybe getMyEvents shouldn't be en Event class
-    adapter.setMyEvents(Event.getMyEvents(data));
+    adapter.setMyEvents(Utils.getMyEvents(data));
   }
 
   @Override

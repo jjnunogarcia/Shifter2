@@ -27,15 +27,19 @@ public class CalendarEventsLoader extends AsyncTaskLoader {
     DatabaseHelper databaseHelper = new DatabaseHelper(context);
     SQLiteDatabase db = databaseHelper.getReadableDatabase();
 
-    String query = "SELECT * FROM " + DBConstants.CALENDAR_EVENTS_TABLE + " a INNER JOIN " +
-                   DBConstants.EVENTS_TABLE + " b ON a." + DBConstants.EVENT_ID + " = b." + DBConstants.ID +
-                   " WHERE a." + DBConstants.DATE + ">=? AND a." + DBConstants.DATE + "<=?";
+//    String query = "SELECT * FROM " + DBConstants.CALENDAR_EVENTS_TABLE + " AS a JOIN " +
+//                   DBConstants.EVENTS_TABLE + " AS b ON a." + DBConstants.EVENT_ID + " = b." + DBConstants.ID +
+//                   " WHERE a." + DBConstants.DATE + ">=? AND a." + DBConstants.DATE + "<=?";
 
-//    String query = "SELECT * FROM " + DBConstants.CALENDAR_EVENTS_TABLE + " a INNER JOIN " +
-//                   DBConstants.EVENTS_TABLE + " b ON a." + DBConstants.EVENT_ID + " = b." + DBConstants.ID + ";";
-    String[] selectionArgs = new String[]{String.valueOf(initialDay), String.valueOf(finalDay)};
+    String query = "SELECT * FROM " + DBConstants.CALENDAR_EVENTS_TABLE + ", " +
+                   DBConstants.EVENTS_TABLE + " WHERE " + DBConstants.CALENDAR_EVENTS_TABLE + "." + DBConstants.EVENT_ID + "=" +
+                   DBConstants.EVENTS_TABLE + "." + DBConstants.ID;
 
-    return db.rawQuery(query, selectionArgs);
-//    return db.rawQuery(query, null);
+//    String query = "SELECT " + DBConstants.DATE + " FROM " + DBConstants.CALENDAR_EVENTS_TABLE;
+
+    String[] selectionArgs = new String[] {String.valueOf(initialDay), String.valueOf(finalDay)};
+
+//    return db.rawQuery(query, selectionArgs);
+    return db.rawQuery(query, null);
   }
 }

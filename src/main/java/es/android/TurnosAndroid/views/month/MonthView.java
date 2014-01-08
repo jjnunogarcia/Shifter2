@@ -115,85 +115,85 @@ public class MonthView extends View {
   // TODO recreate formatter when locale changes
   private static         Formatter     mFormatter                  = new Formatter(mStringBuilder, Locale.getDefault());
   // How many days to display
-  protected int                               numDays;
+  protected int                                 numDays;
   // affects the padding on the sides of this view
-  private   int                               padding;
-  private   Rect                              r;
-  private   Paint                             p;
-  private   Paint                             monthNumPaint;
+  private   int                                 padding;
+  private   Rect                                r;
+  private   Paint                               p;
+  private   Paint                               monthNumPaint;
   // Cache the number strings so we don't have to recompute them each time
-  private   String[]                          dayNumbers;
+  private   String[]                            dayNumbers;
   // Quick lookup for checking which days are in the focus month
-  private   boolean[]                         focusDay;
+  private   boolean[]                           focusDay;
   // Quick lookup for checking which days are in an odd month (to set a different background)
-  private   boolean[]                         oddMonth;
+  private   boolean[]                           oddMonth;
   // The Julian day of the first day displayed by this item
-  private   int                               firstJulianDay;
+  private   int                                 firstJulianDay;
   // The month of the first day in this week
-  private   int                               firstMonth;
+  private   int                                 firstMonth;
   // The month of the last day in this week
-  private   int                               lastMonth;
+  private   int                                 lastMonth;
   // The position of this week, equivalent to weeks since the week of Jan 1st, 1970
-  private   int                               week;
+  private   int                                 week;
   // Quick reference to the width of this view, matches parent
-  private   int                               width;
+  private   int                                 width;
   // The height this view should draw at in pixels, set by height param
-  private   int                               height;
+  private   int                                 height;
   // Whether the week number should be shown
-  private   boolean                           showWeekNum;
+  private   boolean                             showWeekNum;
   // If this view contains the selected day
-  private   boolean                           hasSelectedDay;
+  private   boolean                             hasSelectedDay;
   // Which day is selected [0-6] or -1 if no day is selected
-  private   int                               selectedDay;
+  private   int                                 selectedDay;
   // Which day of the week to start on [0-6]
-  private   int                               weekStart;
+  private   int                                 weekStart;
   // The timezone to display times/dates in (used for determining when Today is)
-  private   String                            timeZone;
-  private   int                               focusMonthColor;
-  private   int                               weekNumColor;
-  private   Time                              today;
-  private   boolean                           hasToday;
-  private   int                               todayIndex;
-  private   int                               orientation;
-  private   List<ArrayList<CalendarEvent>>    calendarEvents;
-  private   ArrayList<CalendarEvent>          unsortedEvents;
-  private   HashMap<Integer, Utils.DNAStrand> dna;
-  private   TextPaint                         eventPaint;
-  private   TextPaint                         solidBackgroundEventPaint;
-  private   TextPaint                         framedEventPaint;
-  private   TextPaint                         declinedEventPaint;
-  private   TextPaint                         eventExtrasPaint;
-  private   TextPaint                         eventDeclinedExtrasPaint;
-  private   Paint                             weekNumPaint;
-  private   Paint                             dnaAllDayPaint;
-  private   Paint                             dnaTimePaint;
-  private   Paint                             eventSquarePaint;
-  private   int                               monthNumHeight;
-  private   int                               monthNumAscentHeight;
-  private   int                               eventHeight;
-  private   int                               eventAscentHeight;
-  private   int                               extrasHeight;
-  private   int                               extrasAscentHeight;
-  private   int                               extrasDescent;
-  private   int                               weekNumAscentHeight;
-  private   int                               monthBGOtherColor;
-  private   int                               monthBGTodayColor;
-  private   int                               monthNumColor;
-  private   int                               monthNumOtherColor;
-  private   int                               monthNumTodayColor;
-  private   int                               monthEventColor;
-  private   int                               monthDeclinedEventColor;
-  private   int                               monthDeclinedExtrasColor;
-  private   int                               monthEventExtraColor;
-  private   int                               clickedDayColor;
-  private   int                               daySeparatorInnerColor;
-  private   int                               todayAnimateColor;
-  private   boolean                           animateToday;
-  private   int                               clickedDayIndex;
-  private   int                               animateTodayAlpha;
-  private   ObjectAnimator                    todayAnimator;
-  private   int[]                             mDayXs;
-  private   TodayAnimatorListener             mAnimatorListener;
+  private   String                              timeZone;
+  private   int                                 focusMonthColor;
+  private   int                                 weekNumColor;
+  private   Time                                today;
+  private   boolean                             hasToday;
+  private   int                                 todayIndex;
+  private   int                                 orientation;
+  private   List<ArrayList<CalendarEvent>>      calendarEvents;
+  private   ArrayList<CalendarEvent>            unsortedEvents;
+  private   HashMap<Integer, Utils.EventStrand> dna;
+  private   TextPaint                           eventPaint;
+  private   TextPaint                           solidBackgroundEventPaint;
+  private   TextPaint                           framedEventPaint;
+  private   TextPaint                           declinedEventPaint;
+  private   TextPaint                           eventExtrasPaint;
+  private   TextPaint                           eventDeclinedExtrasPaint;
+  private   Paint                               weekNumPaint;
+  private   Paint                               dnaAllDayPaint;
+  private   Paint                               dnaTimePaint;
+  private   Paint                               eventSquarePaint;
+  private   int                                 monthNumHeight;
+  private   int                                 monthNumAscentHeight;
+  private   int                                 eventHeight;
+  private   int                                 eventAscentHeight;
+  private   int                                 extrasHeight;
+  private   int                                 extrasAscentHeight;
+  private   int                                 extrasDescent;
+  private   int                                 weekNumAscentHeight;
+  private   int                                 monthBGOtherColor;
+  private   int                                 monthBGTodayColor;
+  private   int                                 monthNumColor;
+  private   int                                 monthNumOtherColor;
+  private   int                                 monthNumTodayColor;
+  private   int                                 monthEventColor;
+  private   int                                 monthDeclinedEventColor;
+  private   int                                 monthDeclinedExtrasColor;
+  private   int                                 monthEventExtraColor;
+  private   int                                 clickedDayColor;
+  private   int                                 daySeparatorInnerColor;
+  private   int                                 todayAnimateColor;
+  private   boolean                             animateToday;
+  private   int                                 clickedDayIndex;
+  private   int                                 animateTodayAlpha;
+  private   ObjectAnimator                      todayAnimator;
+  private   int[]                               mDayXs;
+  private   TodayAnimatorListener               mAnimatorListener;
 
   public MonthView(Context context) {
     super(context);
@@ -254,8 +254,7 @@ public class MonthView extends View {
   }
 
   /**
-   * Sets up the dna bits for the view. This will return early if the view isn't in a state that will create a valid set of dna yet (such as the
-   * views width not being set correctly yet).
+   * Sets up the dna bits for the view. This will return early if the view isn't in a state that will create a valid set of dna yet (such as the views width not being set correctly yet).
    */
   public void createDna(ArrayList<CalendarEvent> unsortedEvents) {
     if (unsortedEvents == null || width <= MIN_WEEK_WIDTH || getContext() == null) {
@@ -287,10 +286,7 @@ public class MonthView extends View {
 
   public void setEvents(List<ArrayList<CalendarEvent>> sortedEvents) {
     calendarEvents = sortedEvents;
-    if (sortedEvents == null) {
-      return;
-    }
-    if (sortedEvents.size() != numDays) {
+    if (sortedEvents != null && sortedEvents.size() != numDays) {
       if (Log.isLoggable(TAG, Log.ERROR)) {
         Log.wtf(TAG, "Events size must be same as days displayed: size=" + sortedEvents.size() + " days=" + numDays);
       }
@@ -920,7 +916,7 @@ public class MonthView extends View {
   private void drawDNA(Canvas canvas) {
     // Draw event and conflict times
     if (dna != null) {
-      for (Utils.DNAStrand strand : dna.values()) {
+      for (Utils.EventStrand strand : dna.values()) {
 //        if (strand.color == CONFLICT_COLOR || strand.points == null || strand.points.length == 0) {
 //          continue;
 //        }
@@ -928,7 +924,7 @@ public class MonthView extends View {
         canvas.drawLines(strand.points, dnaTimePaint);
       }
       // Draw black last to make sure it's on top
-      Utils.DNAStrand strand = dna.get(CONFLICT_COLOR);
+      Utils.EventStrand strand = dna.get(CONFLICT_COLOR);
       if (strand != null && strand.points != null && strand.points.length != 0) {
 //        dnaTimePaint.setColor(strand.color);
         canvas.drawLines(strand.points, dnaTimePaint);

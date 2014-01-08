@@ -58,32 +58,48 @@ public class ActionBarManager {
     menu.setGroupVisible(R.id.month_action_bar, true);
     menu.setGroupVisible(R.id.my_events_action_bar, false);
     menu.setGroupVisible(R.id.create_event_action_bar, false);
+    menu.setGroupVisible(R.id.my_patterns_action_bar, false);
+    menu.setGroupVisible(R.id.statistics_action_bar, false);
   }
 
   public void setDayFragmentActionBar() {
     menu.setGroupVisible(R.id.month_action_bar, false);
     menu.setGroupVisible(R.id.my_events_action_bar, false);
     menu.setGroupVisible(R.id.create_event_action_bar, false);
+    menu.setGroupVisible(R.id.my_patterns_action_bar, false);
+    menu.setGroupVisible(R.id.statistics_action_bar, false);
   }
 
   public void setMyEventsFragmentActionBar() {
     menu.setGroupVisible(R.id.month_action_bar, false);
     menu.setGroupVisible(R.id.my_events_action_bar, true);
     menu.setGroupVisible(R.id.create_event_action_bar, false);
+    menu.setGroupVisible(R.id.my_patterns_action_bar, false);
+    menu.setGroupVisible(R.id.statistics_action_bar, false);
   }
 
   public void setCreateEventFragmentActionBar() {
     menu.setGroupVisible(R.id.month_action_bar, false);
     menu.setGroupVisible(R.id.my_events_action_bar, false);
     menu.setGroupVisible(R.id.create_event_action_bar, true);
+    menu.setGroupVisible(R.id.my_patterns_action_bar, false);
+    menu.setGroupVisible(R.id.statistics_action_bar, false);
   }
 
   public void setMyPatternsFragmentActionBar() {
-    // TODO
+    menu.setGroupVisible(R.id.month_action_bar, false);
+    menu.setGroupVisible(R.id.my_events_action_bar, false);
+    menu.setGroupVisible(R.id.create_event_action_bar, false);
+    menu.setGroupVisible(R.id.my_patterns_action_bar, true);
+    menu.setGroupVisible(R.id.statistics_action_bar, false);
   }
 
   public void setStatisticsFragmentActionBar() {
-    // TODO
+    menu.setGroupVisible(R.id.month_action_bar, false);
+    menu.setGroupVisible(R.id.my_events_action_bar, false);
+    menu.setGroupVisible(R.id.create_event_action_bar, false);
+    menu.setGroupVisible(R.id.my_patterns_action_bar, false);
+    menu.setGroupVisible(R.id.statistics_action_bar, true);
   }
 
   public void setMonthActionBarInterface(MonthActionBarInterface monthActionBarInterface) {

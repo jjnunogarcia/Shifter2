@@ -1,18 +1,16 @@
 package es.android.TurnosAndroid.model;
 
-import java.sql.Date;
-
 /**
  * User: Jesús
  * Date: 28/12/13
  */
 public class CalendarEvent {
   private int   id;
-  private Date  day;
+  private long  day;
   private Event event;
 
   public CalendarEvent() {
-    day = new Date(System.currentTimeMillis());
+    day = System.currentTimeMillis();
     event = new Event();
   }
 
@@ -24,11 +22,11 @@ public class CalendarEvent {
     this.id = id;
   }
 
-  public Date getDay() {
+  public long getDay() {
     return day;
   }
 
-  public void setDay(Date day) {
+  public void setDay(long day) {
     this.day = day;
   }
 

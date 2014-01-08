@@ -23,16 +23,15 @@ import android.graphics.Color;
 import android.net.Uri;
 import es.android.TurnosAndroid.database.CalendarProvider;
 import es.android.TurnosAndroid.database.DBConstants;
+import es.android.TurnosAndroid.helpers.Utils;
 
-import java.text.ParsePosition;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.concurrent.atomic.AtomicInteger;
 
 // TODO: should Event be Parcelable so it can be passed via Intents?
-public class Event implements Cloneable {
+public class Event {
   public static final String SORT_EVENTS_BY = DBConstants.NAME + " ASC";
   // The coordinates of the event rectangle drawn on the screen.
   public  float  left;
@@ -66,6 +65,18 @@ public class Event implements Cloneable {
     endDay = 0;
     location = null;
     color = Color.WHITE;
+  }
+
+  public Event(Event event) {
+    id = event.getId();
+    name = event.getName();
+    description = event.getDescription();
+    startTime = event.getStartTime();
+    duration = event.getDuration();
+    startDay = event.getStartDay();
+    endDay = event.getEndDay();
+    location = event.getLocation();
+    color = event.getColor();
   }
 
   /**
@@ -114,7 +125,7 @@ public class Event implements Cloneable {
       // Sort events in two passes so we ensure the allday and standard events get sorted in the correct order
       cursor.moveToPosition(-1);
       while (cursor.moveToNext()) {
-        Event e = generateEventFromCursor(cursor);
+        Event e = Utils.createEventFromCursor(cursor);
         if (e.startDay <= endDay && e.endDay >= startDay) {
           events.add(e);
         }
@@ -139,56 +150,12 @@ public class Event implements Cloneable {
   private static CalendarEvent createCalendarEventFromCursor(Cursor cursor) {
     CalendarEvent calendarEvent = new CalendarEvent();
     calendarEvent.setId(cursor.getInt(cursor.getColumnIndex(DBConstants.ID)));
-    String dateString = cursor.getString(cursor.getColumnIndex(DBConstants.DATE));
-    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
-    Date date = simpleDateFormat.parse(dateString, new ParsePosition(0));
+    long date = cursor.getLong(cursor.getColumnIndex(DBConstants.DATE));
     GregorianCalendar calendar = new GregorianCalendar();
-    calendar.setTime(date);
-//    calendarEvent.setEvent(generateEventFromCursor(cursor));
+    calendar.setTime(new Date(date));
+    calendarEvent.setEvent(Utils.createEventFromCursor(cursor));
 
     return calendarEvent;
-  }
-
-  public static ArrayList<Event> getMyEvents(Cursor cursor) {
-    ArrayList<Event> events = new ArrayList<Event>();
-
-    if (cursor != null && cursor.getCount() > 0) {
-      while (cursor.moveToNext()) {
-        events.add(createEventFromCursor(cursor));
-      }
-    }
-
-    return events;
-  }
-
-  private static Event createEventFromCursor(Cursor cursor) {
-    Event event = new Event();
-    event.setId(cursor.getInt(cursor.getColumnIndex(DBConstants.ID)));
-    event.setName(cursor.getString(cursor.getColumnIndex(DBConstants.NAME)));
-    event.setDescription(cursor.getString(cursor.getColumnIndex(DBConstants.DESCRIPTION)));
-    event.setStartTime(cursor.getLong(cursor.getColumnIndex(DBConstants.START)));
-    event.setDuration(cursor.getLong(cursor.getColumnIndex(DBConstants.DURATION)));
-    event.setLocation(cursor.getString(cursor.getColumnIndex(DBConstants.LOCATION)));
-    event.setColor(cursor.getInt(cursor.getColumnIndex(DBConstants.COLOR)));
-
-    return event;
-  }
-
-  /**
-   * @param cursor Cursor pointing at event
-   * @return An event created from the cursor
-   */
-  private static Event generateEventFromCursor(Cursor cursor) {
-    Event event = new Event();
-    event.setId(cursor.getLong(cursor.getColumnIndex(DBConstants.ID)));
-    event.setName(cursor.getString(cursor.getColumnIndex(DBConstants.NAME)));
-    event.setDescription(cursor.getString(cursor.getColumnIndex(DBConstants.DESCRIPTION)));
-    event.setStartTime(cursor.getLong(cursor.getColumnIndex(DBConstants.START)));
-    event.setDuration(cursor.getLong(cursor.getColumnIndex(DBConstants.DURATION)));
-    event.setLocation(cursor.getString(cursor.getColumnIndex(DBConstants.LOCATION)));
-    event.setColor(cursor.getInt(cursor.getColumnIndex(DBConstants.COLOR)));
-
-    return event;
   }
 
   /**
@@ -251,35 +218,6 @@ public class Event implements Cloneable {
       }
     }
     return 64;
-  }
-
-  @Override
-  public final Object clone() throws CloneNotSupportedException {
-    super.clone();
-    Event event = new Event();
-    event.id = id;
-    event.name = name;
-    event.description = description;
-    event.startTime = startTime;
-    event.duration = duration;
-    event.startDay = startDay;
-    event.endDay = endDay;
-    event.location = location;
-    event.color = color;
-
-    return event;
-  }
-
-  public final void copyTo(Event dest) {
-    dest.id = id;
-    dest.name = name;
-    dest.description = description;
-    dest.startTime = startTime;
-    dest.duration = duration;
-    dest.startDay = startDay;
-    dest.endDay = endDay;
-    dest.location = location;
-    dest.color = color;
   }
 
   public int getColumn() {
