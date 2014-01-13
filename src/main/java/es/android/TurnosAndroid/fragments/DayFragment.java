@@ -29,6 +29,7 @@ import android.view.animation.AnimationUtils;
 import android.widget.ViewSwitcher;
 import es.android.TurnosAndroid.*;
 import es.android.TurnosAndroid.controllers.CalendarController;
+import es.android.TurnosAndroid.helpers.TimeZoneUtils;
 import es.android.TurnosAndroid.helpers.Utils;
 import es.android.TurnosAndroid.model.Event;
 import es.android.TurnosAndroid.model.EventInfo;
@@ -53,7 +54,7 @@ public class DayFragment extends Fragment implements EventHandler, ViewSwitcher.
     @Override
     public void run() {
       if (DayFragment.this.isAdded()) {
-        selectedDay.timezone = Utils.getTimeZone(getActivity().getApplicationContext(), this);
+        selectedDay.timezone = TimeZoneUtils.getTimeZone(getActivity().getApplicationContext(), this);
         selectedDay.normalize(true);
       }
     }

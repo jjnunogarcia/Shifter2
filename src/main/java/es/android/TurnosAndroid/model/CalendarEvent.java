@@ -7,6 +7,7 @@ package es.android.TurnosAndroid.model;
 public class CalendarEvent {
   private int   id;
   private long  day;
+  // TODO Insert for every day a list of events instead?
   private Event event;
 
   public CalendarEvent() {

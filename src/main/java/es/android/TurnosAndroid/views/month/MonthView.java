@@ -4,16 +4,16 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
 import android.content.Context;
-import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.*;
 import android.graphics.Paint.Align;
 import android.graphics.Paint.Style;
 import android.text.TextPaint;
-import android.text.TextUtils;
 import android.text.format.Time;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AbsListView;
 import es.android.TurnosAndroid.R;
 import es.android.TurnosAndroid.helpers.Utils;
 import es.android.TurnosAndroid.model.CalendarEvent;
@@ -29,7 +29,6 @@ import java.util.*;
  * </p>
  */
 public class MonthView extends View {
-  public static final String VIEW_PARAMS_ORIENTATION    = "orientation";
   public static final String VIEW_PARAMS_ANIMATE_TODAY  = "animate_today";
   public static final int    MONDAY_BEFORE_JULIAN_EPOCH = Time.EPOCH_JULIAN_DAY - 3;
   /**
@@ -89,7 +88,6 @@ public class MonthView extends View {
   private static         int           DNA_ALL_DAY_HEIGHT          = 4;
   private static         int           DNA_MIN_SEGMENT_HEIGHT      = 4;
   private static         int           DNA_WIDTH                   = 8;
-  private static         int           DNA_ALL_DAY_WIDTH           = 32;
   private static         int           DNA_SIDE_PADDING            = 6;
   private static         int           CONFLICT_COLOR              = Color.BLACK;
   private static         int           EVENT_TEXT_COLOR            = Color.WHITE;
@@ -110,14 +108,12 @@ public class MonthView extends View {
   private static         int           EVENT_BOTTOM_PADDING        = 3;
   private static         int           TODAY_HIGHLIGHT_WIDTH       = 2;
   private static         int           SPACING_WEEK_NUMBER         = 24;
-  private static         boolean       mInitialized                = false;
+  private static         boolean       initialized                 = false;
   private static         StringBuilder mStringBuilder              = new StringBuilder(50);
   // TODO recreate formatter when locale changes
   private static         Formatter     mFormatter                  = new Formatter(mStringBuilder, Locale.getDefault());
   // How many days to display
   protected int                                 numDays;
-  // affects the padding on the sides of this view
-  private   int                                 padding;
   private   Rect                                r;
   private   Paint                               p;
   private   Paint                               monthNumPaint;
@@ -154,21 +150,17 @@ public class MonthView extends View {
   private   Time                                today;
   private   boolean                             hasToday;
   private   int                                 todayIndex;
-  private   int                                 orientation;
   private   List<ArrayList<CalendarEvent>>      calendarEvents;
   private   ArrayList<CalendarEvent>            unsortedEvents;
   private   HashMap<Integer, Utils.EventStrand> dna;
   private   TextPaint                           eventPaint;
   private   TextPaint                           solidBackgroundEventPaint;
-  private   TextPaint                           framedEventPaint;
   private   TextPaint                           declinedEventPaint;
   private   TextPaint                           eventExtrasPaint;
   private   TextPaint                           eventDeclinedExtrasPaint;
   private   Paint                               weekNumPaint;
-  private   Paint                               dnaAllDayPaint;
   private   Paint                               dnaTimePaint;
   private   Paint                               eventSquarePaint;
-  private   int                                 monthNumHeight;
   private   int                                 monthNumAscentHeight;
   private   int                                 eventHeight;
   private   int                                 eventAscentHeight;
@@ -193,7 +185,7 @@ public class MonthView extends View {
   private   int                                 animateTodayAlpha;
   private   ObjectAnimator                      todayAnimator;
   private   int[]                               mDayXs;
-  private   TodayAnimatorListener               mAnimatorListener;
+  private   TodayAnimatorListener               animatorListener;
 
   public MonthView(Context context) {
     super(context);
@@ -201,7 +193,6 @@ public class MonthView extends View {
 
     focusMonthColor = res.getColor(R.color.month_mini_day_number);
     weekNumColor = res.getColor(R.color.month_week_num_color);
-    padding = 0;
     r = new Rect();
     p = new Paint();
     firstJulianDay = -1;
@@ -218,14 +209,13 @@ public class MonthView extends View {
     today = new Time();
     hasToday = false;
     todayIndex = -1;
-    orientation = Configuration.ORIENTATION_LANDSCAPE;
     calendarEvents = null;
     unsortedEvents = null;
     dna = null;
     clickedDayIndex = -1;
     animateTodayAlpha = 0;
     todayAnimator = null;
-    mAnimatorListener = new TodayAnimatorListener();
+    animatorListener = new TodayAnimatorListener();
 
     if (scale == 0) {
       scale = context.getResources().getDisplayMetrics().density;
@@ -245,71 +235,6 @@ public class MonthView extends View {
     initView();
   }
 
-  // Sets the list of events for this week. Takes a sorted list of arrays divided up by day for generating the large month version and the full
-  // arraylist sorted by start time to generate the dna version.
-  public void setEvents(List<ArrayList<CalendarEvent>> sortedEvents, ArrayList<CalendarEvent> unsortedEvents) {
-    setEvents(sortedEvents);
-    // The MIN_WEEK_WIDTH is a hack to prevent the view from trying to generate dna bits before its width has been fixed.
-    createDna(unsortedEvents);
-  }
-
-  /**
-   * Sets up the dna bits for the view. This will return early if the view isn't in a state that will create a valid set of dna yet (such as the views width not being set correctly yet).
-   */
-  public void createDna(ArrayList<CalendarEvent> unsortedEvents) {
-    if (unsortedEvents == null || width <= MIN_WEEK_WIDTH || getContext() == null) {
-      // Stash the list of events for use when this view is ready, or just clear it if a null set has been passed to this view
-      this.unsortedEvents = unsortedEvents;
-      dna = null;
-      return;
-    } else {
-      // clear the cached set of events since we're ready to build it now
-      this.unsortedEvents = null;
-    }
-    // Create the drawing coordinates for dna
-    int numDays = calendarEvents.size();
-    int effectiveWidth = width - padding * 2;
-    if (showWeekNum) {
-      effectiveWidth -= SPACING_WEEK_NUMBER;
-    }
-    DNA_ALL_DAY_WIDTH = effectiveWidth / numDays - 2 * DNA_SIDE_PADDING;
-    dnaAllDayPaint.setStrokeWidth(DNA_ALL_DAY_WIDTH);
-    mDayXs = new int[numDays];
-    for (int day = 0; day < numDays; day++) {
-      mDayXs[day] = computeDayLeftPosition(day) + DNA_WIDTH / 2 + DNA_SIDE_PADDING;
-    }
-
-    int top = DAY_SEPARATOR_INNER_WIDTH + DNA_MARGIN + DNA_ALL_DAY_HEIGHT + 1;
-    int bottom = height - DNA_MARGIN;
-    dna = Utils.createDNAStrands(firstJulianDay, unsortedEvents, top, bottom, DNA_MIN_SEGMENT_HEIGHT, mDayXs, getContext());
-  }
-
-  public void setEvents(List<ArrayList<CalendarEvent>> sortedEvents) {
-    calendarEvents = sortedEvents;
-    if (sortedEvents != null && sortedEvents.size() != numDays) {
-      if (Log.isLoggable(TAG, Log.ERROR)) {
-        Log.wtf(TAG, "Events size must be same as days displayed: size=" + sortedEvents.size() + " days=" + numDays);
-      }
-      calendarEvents = null;
-    }
-  }
-
-  private void loadColors(Context context) {
-    Resources res = context.getResources();
-    monthNumColor = res.getColor(R.color.month_day_number);
-    monthNumOtherColor = res.getColor(R.color.month_day_number_other);
-    monthNumTodayColor = res.getColor(R.color.month_today_number);
-    monthEventColor = res.getColor(R.color.month_event_color);
-    monthDeclinedEventColor = res.getColor(R.color.agenda_item_declined_color);
-    monthDeclinedExtrasColor = res.getColor(R.color.agenda_item_where_declined_text_color);
-    monthEventExtraColor = res.getColor(R.color.month_event_extra_color);
-    monthBGTodayColor = res.getColor(R.color.month_today_bgcolor);
-    monthBGOtherColor = res.getColor(R.color.month_other_bgcolor);
-    daySeparatorInnerColor = res.getColor(R.color.month_grid_lines);
-    todayAnimateColor = res.getColor(R.color.today_highlight_color);
-    clickedDayColor = res.getColor(R.color.day_clicked_background_color);
-  }
-
   private void initView() {
     p.setFakeBoldText(false);
     p.setAntiAlias(true);
@@ -324,7 +249,7 @@ public class MonthView extends View {
     monthNumPaint.setStyle(Style.FILL);
     monthNumPaint.setTextAlign(Align.CENTER);
 
-    if (!mInitialized) {
+    if (!initialized) {
       Resources resources = getContext().getResources();
       TEXT_SIZE_EVENT_TITLE = resources.getInteger(R.integer.text_size_event_title);
       TEXT_SIZE_MONTH_NUMBER = resources.getInteger(R.integer.text_size_month_number);
@@ -356,13 +281,12 @@ public class MonthView extends View {
         DNA_MIN_SEGMENT_HEIGHT *= scale;
         DNA_SIDE_PADDING *= scale;
         DEFAULT_EDGE_SPACING *= scale;
-        DNA_ALL_DAY_WIDTH *= scale;
         TODAY_HIGHLIGHT_WIDTH *= scale;
       }
       TOP_PADDING_MONTH_NUMBER += DNA_ALL_DAY_HEIGHT + DNA_MARGIN;
-      mInitialized = true;
+      initialized = true;
     }
-    padding = DEFAULT_EDGE_SPACING;
+
     loadColors(getContext());
 
     monthNumPaint = new Paint();
@@ -375,7 +299,6 @@ public class MonthView extends View {
     monthNumPaint.setTypeface(Typeface.DEFAULT);
 
     monthNumAscentHeight = (int) (-monthNumPaint.ascent() + 0.5f);
-    monthNumHeight = (int) (monthNumPaint.descent() - monthNumPaint.ascent() + 0.5f);
 
     eventPaint = new TextPaint();
     eventPaint.setFakeBoldText(true);
@@ -385,7 +308,6 @@ public class MonthView extends View {
 
     solidBackgroundEventPaint = new TextPaint(eventPaint);
     solidBackgroundEventPaint.setColor(EVENT_TEXT_COLOR);
-    framedEventPaint = new TextPaint(solidBackgroundEventPaint);
 
     declinedEventPaint = new TextPaint();
     declinedEventPaint.setFakeBoldText(true);
@@ -427,18 +349,78 @@ public class MonthView extends View {
 
     weekNumAscentHeight = (int) (-weekNumPaint.ascent() + 0.5f);
 
-    dnaAllDayPaint = new Paint();
     dnaTimePaint = new Paint();
     dnaTimePaint.setStyle(Style.FILL_AND_STROKE);
     dnaTimePaint.setStrokeWidth(DNA_WIDTH);
     dnaTimePaint.setAntiAlias(false);
-    dnaAllDayPaint.setStyle(Style.FILL_AND_STROKE);
-    dnaAllDayPaint.setStrokeWidth(DNA_ALL_DAY_WIDTH);
-    dnaAllDayPaint.setAntiAlias(false);
 
     eventSquarePaint = new Paint();
     eventSquarePaint.setStrokeWidth(EVENT_SQUARE_BORDER);
     eventSquarePaint.setAntiAlias(false);
+
+    setLayoutParams(new AbsListView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+    setClickable(true);
+  }
+
+  private void loadColors(Context context) {
+    Resources res = context.getResources();
+    monthNumColor = res.getColor(R.color.month_day_number);
+    monthNumOtherColor = res.getColor(R.color.month_day_number_other);
+    monthNumTodayColor = res.getColor(R.color.month_today_number);
+    monthEventColor = res.getColor(R.color.month_event_color);
+    monthDeclinedEventColor = res.getColor(R.color.agenda_item_declined_color);
+    monthDeclinedExtrasColor = res.getColor(R.color.agenda_item_where_declined_text_color);
+    monthEventExtraColor = res.getColor(R.color.month_event_extra_color);
+    monthBGTodayColor = res.getColor(R.color.month_today_bgcolor);
+    monthBGOtherColor = res.getColor(R.color.month_other_bgcolor);
+    daySeparatorInnerColor = res.getColor(R.color.month_grid_lines);
+    todayAnimateColor = res.getColor(R.color.today_highlight_color);
+    clickedDayColor = res.getColor(R.color.day_clicked_background_color);
+  }
+
+  // Sets the list of events for this week. Takes a sorted list of arrays divided up by day for generating the large month version and the full
+  // arraylist sorted by start time to generate the dna version.
+  public void setEvents(List<ArrayList<CalendarEvent>> sortedEvents, ArrayList<CalendarEvent> unsortedEvents) {
+    setEvents(sortedEvents);
+    // The MIN_WEEK_WIDTH is a hack to prevent the view from trying to generate dna bits before its width has been fixed.
+    createDna(unsortedEvents);
+  }
+
+  private void setEvents(List<ArrayList<CalendarEvent>> sortedEvents) {
+    calendarEvents = sortedEvents;
+    if (sortedEvents != null && sortedEvents.size() != numDays) {
+      if (Log.isLoggable(TAG, Log.ERROR)) {
+        Log.wtf(TAG, "Events size must be same as days displayed: size=" + sortedEvents.size() + " days=" + numDays);
+      }
+      calendarEvents = null;
+    }
+  }
+
+  /**
+   * Sets up the dna bits for the view. This will return early if the view isn't in a state that will create a valid set of dna yet (such as the views width not being set correctly yet).
+   */
+  private void createDna(ArrayList<CalendarEvent> unsortedEvents) {
+    if (unsortedEvents == null || width <= MIN_WEEK_WIDTH || getContext() == null) {
+      // Stash the list of events for use when this view is ready, or just clear it if a null set has been passed to this view
+      this.unsortedEvents = unsortedEvents;
+      dna = null;
+      return;
+    }
+
+    // clear the cached set of events since we're ready to build it now
+    this.unsortedEvents = null;
+
+    // Create the drawing coordinates for dna
+    int numDays = calendarEvents.size();
+    mDayXs = new int[numDays];
+
+    for (int day = 0; day < numDays; day++) {
+      mDayXs[day] = computeDayLeftPosition(day) + DNA_WIDTH / 2 + DNA_SIDE_PADDING;
+    }
+
+    int top = DAY_SEPARATOR_INNER_WIDTH + DNA_MARGIN + DNA_ALL_DAY_HEIGHT + 1;
+    int bottom = height - DNA_MARGIN;
+    dna = Utils.createDNAStrands(firstJulianDay, unsortedEvents, top, bottom, DNA_MIN_SEGMENT_HEIGHT, mDayXs, getContext());
   }
 
   /**
@@ -495,8 +477,7 @@ public class MonthView extends View {
     }
 
     // Now adjust our starting day based on the start day of the week
-    // If the week is set to start on a Saturday the first week will be
-    // Dec 27th 1969 -Jan 2nd, 1970
+    // If the week is set to start on a Saturday the first week will be Dec 27th 1969 -Jan 2nd, 1970
     if (time.weekDay != weekStart) {
       int diff = time.weekDay - weekStart;
       if (diff < 0) {
@@ -536,25 +517,19 @@ public class MonthView extends View {
     lastMonth = time.month;
 
     updateSelectionPositions();
-
-    if (params.containsKey(VIEW_PARAMS_ORIENTATION)) {
-      orientation = params.get(VIEW_PARAMS_ORIENTATION);
-    }
-
     updateToday(tz);
-    numCells = numDays + 1;
 
     if (params.containsKey(VIEW_PARAMS_ANIMATE_TODAY) && hasToday) {
-      synchronized (mAnimatorListener) {
+      synchronized (animatorListener) {
         if (todayAnimator != null) {
           todayAnimator.removeAllListeners();
           todayAnimator.cancel();
         }
         todayAnimator = ObjectAnimator.ofInt(this, "animateTodayAlpha", Math.max(animateTodayAlpha, 80), 255);
         todayAnimator.setDuration(150);
-        mAnimatorListener.setAnimator(todayAnimator);
-        mAnimatorListener.setFadingIn(true);
-        todayAnimator.addListener(mAnimatorListener);
+        animatorListener.setAnimator(todayAnimator);
+        animatorListener.setFadingIn(true);
+        todayAnimator.addListener(animatorListener);
         animateToday = true;
         todayAnimator.start();
       }
@@ -609,7 +584,7 @@ public class MonthView extends View {
     int x;
     int xOffset = 0;
     if (showWeekNum) {
-      xOffset = SPACING_WEEK_NUMBER + padding;
+      xOffset = SPACING_WEEK_NUMBER + DEFAULT_EDGE_SPACING;
       effectiveWidth -= xOffset;
     }
     x = day * effectiveWidth / numDays + xOffset;
@@ -628,7 +603,7 @@ public class MonthView extends View {
     int i = 0;
     if (showWeekNum) {
       // This adds the first line separating the week number
-      int xOffset = SPACING_WEEK_NUMBER + padding;
+      int xOffset = SPACING_WEEK_NUMBER + DEFAULT_EDGE_SPACING;
       count += 4;
       lines[i++] = xOffset;
       lines[i++] = 0;
@@ -725,7 +700,7 @@ public class MonthView extends View {
     int numCount = numDays;
 
     if (showWeekNum) {
-      x = SIDE_PADDING_WEEK_NUMBER + padding;
+      x = SIDE_PADDING_WEEK_NUMBER + DEFAULT_EDGE_SPACING;
       y = weekNumAscentHeight + TOP_PADDING_WEEK_NUMBER;
       canvas.drawText(dayNumbers[0], x, y, weekNumPaint);
       numCount++;
@@ -807,9 +782,7 @@ public class MonthView extends View {
       // More events follow.  Leave a bit of space between events.
       eventRequiredSpace += EVENT_LINE_PADDING;
 
-      // Make sure we have room for the "+ more" line.  (The "+ more" line is expected
-      // to be <= the height of an event line, so we won't show "+1" when we could be
-      // showing the event.)
+      // Make sure we have room for the "+ more" line.  (The "+ more" line is expected to be <= the height of an event line, so we won't show "+1" when we could be showing the event.)
       reservedSpace += extrasHeight;
     }
 
@@ -822,24 +795,9 @@ public class MonthView extends View {
 
 //    boolean isDeclined = event.selfAttendeeStatus == Attendees.ATTENDEE_STATUS_DECLINED;
     int color = event.getColor();
-//    if (isDeclined) {
-//      color = Utils.getDeclinedColorFromColor(color);
-//    }
 
     int textX, textY, textRightEdge;
 
-//    if (allDay) {
-//      // We shift the render offset "inward", because drawRect with a stroke width greater
-//      // than 1 draws outside the specified bounds.  (We don't adjust the left edge, since
-//      // we want to match the existing appearance of the "event square".)
-//      r.left = x;
-//      r.right = rightEdge - STROKE_WIDTH_ADJ;
-//      r.top = y + STROKE_WIDTH_ADJ;
-//      r.bottom = y + eventHeight + BORDER_SPACE * 2 - STROKE_WIDTH_ADJ;
-//      textX = x + BORDER_SPACE;
-//      textY = y + eventAscentHeight + BORDER_SPACE;
-//      textRightEdge = rightEdge - BORDER_SPACE;
-//    } else {
     r.left = x;
     r.right = x + EVENT_SQUARE_WIDTH;
     r.bottom = y + eventAscentHeight;
@@ -847,7 +805,6 @@ public class MonthView extends View {
     textX = x + EVENT_SQUARE_WIDTH + EVENT_RIGHT_PADDING;
     textY = y + eventAscentHeight;
     textRightEdge = rightEdge;
-//    }
 
     Style boxStyle = Style.STROKE;
     boolean solidBackground = false;
@@ -861,35 +818,28 @@ public class MonthView extends View {
 //    eventSquarePaint.setColor(color);
     canvas.drawRect(r, eventSquarePaint);
 
-    float avail = textRightEdge - textX;
-    CharSequence text = TextUtils.ellipsize(event.getName(), eventPaint, avail, TextUtils.TruncateAt.END);
-    Paint textPaint;
+//    float avail = textRightEdge - textX;
+//    CharSequence text = TextUtils.ellipsize(event.getName(), eventPaint, avail, TextUtils.TruncateAt.END);
+//    Paint textPaint;
 //    if (solidBackground) {
 //      // Text color needs to contrast with solid background.
 //      textPaint = solidBackgroundEventPaint;
 //    } else if (isDeclined) {
 //      // Use "declined event" color.
 //      textPaint = declinedEventPaint;
-//    } else if (allDay) {
-//      // Text inside frame is same color as frame.
-//      framedEventPaint.setColor(color);
-//      textPaint = framedEventPaint;
 //    } else {
 //      // Use generic event text color.
 //      textPaint = eventPaint;
 //    }
 //    canvas.drawText(text.toString(), textX, textY, textPaint);
     y += eventHeight;
-//    if (allDay) {
-//      y += BORDER_SPACE * 2;
-//    }
 
-//    if (showTimes && !allDay) {
+//    if (showTimes) {
 //      // show start/end time, e.g. "1pm - 2pm"
 //      textY = y + extrasAscentHeight;
 //      mStringBuilder.setLength(0);
 //      text = DateUtils.formatDateRange(getContext(), mFormatter, event.startMillis, event.endMillis, DateUtils.FORMAT_SHOW_TIME | DateUtils.FORMAT_ABBREV_ALL,
-//                                       Utils.getTimeZone(getContext(), null)).toString();
+//                                       TimeZoneUtils.getTimeZone(getContext(), null)).toString();
 //      text = TextUtils.ellipsize(text, eventExtrasPaint, avail, TextUtils.TruncateAt.END);
 //      canvas.drawText(text.toString(), textX, textY, isDeclined ? eventDeclinedExtrasPaint : eventExtrasPaint);
 //      y += extrasHeight;
@@ -926,23 +876,8 @@ public class MonthView extends View {
       // Draw black last to make sure it's on top
       Utils.EventStrand strand = dna.get(CONFLICT_COLOR);
       if (strand != null && strand.points != null && strand.points.length != 0) {
-//        dnaTimePaint.setColor(strand.color);
+        dnaTimePaint.setColor(strand.color);
         canvas.drawLines(strand.points, dnaTimePaint);
-      }
-      if (mDayXs == null) {
-        return;
-      }
-      int numDays = mDayXs.length;
-      int xOffset = (DNA_ALL_DAY_WIDTH - DNA_WIDTH) / 2;
-      if (strand != null && strand.allDays != null && strand.allDays.length == numDays) {
-        for (int i = 0; i < numDays; i++) {
-          // this adds at most 7 draws. We could sort it by color and
-          // build an array instead but this is easier.
-          if (strand.allDays[i] != 0) {
-            dnaAllDayPaint.setColor(strand.allDays[i]);
-            canvas.drawLine(mDayXs[i] + xOffset, DNA_MARGIN, mDayXs[i] + xOffset, DNA_MARGIN + DNA_ALL_DAY_HEIGHT, dnaAllDayPaint);
-          }
-        }
       }
     }
   }
@@ -967,18 +902,18 @@ public class MonthView extends View {
       if (selectedPosition < 0) {
         selectedPosition += 7;
       }
-      int effectiveWidth = width - padding * 2;
+      int effectiveWidth = width - DEFAULT_EDGE_SPACING * 2;
       effectiveWidth -= SPACING_WEEK_NUMBER;
     }
   }
 
   public int getDayIndexFromLocation(float x) {
-    int dayStart = showWeekNum ? SPACING_WEEK_NUMBER + padding : padding;
-    if (x < dayStart || x > width - padding) {
+    int dayStart = showWeekNum ? SPACING_WEEK_NUMBER + DEFAULT_EDGE_SPACING : DEFAULT_EDGE_SPACING;
+    if (x < dayStart || x > width - DEFAULT_EDGE_SPACING) {
       return -1;
     }
     // Selection is (x - start) / (pixels/day) == (x -s) * day / pixels
-    return ((int) ((x - dayStart) * numDays / (width - dayStart - padding)));
+    return ((int) ((x - dayStart) * numDays / (width - dayStart - DEFAULT_EDGE_SPACING)));
   }
 
   /**

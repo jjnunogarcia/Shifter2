@@ -27,21 +27,13 @@ import es.android.TurnosAndroid.database.DBConstants;
 import es.android.TurnosAndroid.model.CalendarEvent;
 import es.android.TurnosAndroid.model.Event;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class Utils {
   // Defines used by the DNA generation code
   static final         int           DAY_IN_MINUTES         = 60 * 24;
   static final         int           WEEK_IN_MINUTES        = DAY_IN_MINUTES * 7;
-  // The name of the shared preferences file. This name must be maintained for historical
-  // reasons, as it's what PreferenceManager assigned the first time the file was created.
-  static final         String        SHARED_PREFS_NAME      = "calendar_preferences";
-  private static final String        TAG                    = Utils.class.getSimpleName();
-  private static final TimeZoneUtils timeZoneUtils          = new TimeZoneUtils(SHARED_PREFS_NAME);
   // The work day is being counted as 6am to 8pm
   static               int           WORK_DAY_MINUTES       = 14 * 60;
   static               int           WORK_DAY_START_MINUTES = 6 * 60;
@@ -58,49 +50,13 @@ public class Utils {
   }
 
   /**
-   * Gets the time zone that Calendar should be displayed in. This is a helper
-   * method to get the appropriate time zone for Calendar. If this is the
-   * first time this method has been called it will initiate an asynchronous
-   * query to verify that the data in preferences is correct. The callback
-   * supplied will only be called if this query returns a value other than
-   * what is stored in preferences and should cause the calling activity to
-   * refresh anything that depends on calling this method.
-   *
-   * @param context  The calling activity
-   * @param callback The runnable that should execute if a query returns new
-   *                 values
-   * @return The string value representing the time zone Calendar should
-   * display
-   */
-  public static String getTimeZone(Context context, Runnable callback) {
-    return timeZoneUtils.getTimeZone(context, callback);
-  }
-
-  /**
-   * Formats a date or a time range according to the local conventions.
-   *
-   * @param context     the context is required only if the time is shown
-   * @param startMillis the start time in UTC milliseconds
-   * @param endMillis   the end time in UTC milliseconds
-   * @param flags       a bit mask of options See {@link android.text.format.DateUtils#formatDateRange(android.content.Context, java.util.Formatter,
-   *                    long, long, int, String) formatDateRange}
-   * @return a string containing the formatted date/time range.
-   */
-  public static String formatDateRange(Context context, long startMillis, long endMillis, int flags) {
-    return timeZoneUtils.formatDateRange(context, startMillis, endMillis, flags);
-  }
-
-  /**
-   * Returns the week since {@link android.text.format.Time#EPOCH_JULIAN_DAY} (Jan 1, 1970)
-   * adjusted for first day of week.
+   * Returns the week since {@link android.text.format.Time#EPOCH_JULIAN_DAY} (Jan 1, 1970) adjusted for first day of week.
    * <p/>
-   * This takes a julian day and the week start day and calculates which
-   * week since {@link android.text.format.Time#EPOCH_JULIAN_DAY} that day occurs in, starting
+   * This takes a julian day and the week start day and calculates which week since {@link android.text.format.Time#EPOCH_JULIAN_DAY} that day occurs in, starting
    * at 0. *Do not* use this to compute the ISO week number for the year.
    *
    * @param julianDay      The julian day to calculate the week number for
-   * @param firstDayOfWeek Which week day is the first day of the week,
-   *                       see {@link android.text.format.Time#SUNDAY}
+   * @param firstDayOfWeek Which week day is the first day of the week, see {@link android.text.format.Time#SUNDAY}
    * @return Weeks since the epoch
    */
   public static int getWeeksSinceEpochFromJulianDay(int julianDay, int firstDayOfWeek) {
@@ -119,8 +75,7 @@ public class Utils {
    */
   public static int getFirstDayOfWeek(Context context) {
 //        SharedPreferences prefs = GeneralPreferences.getSharedPreferences(context);
-//        String pref = prefs.getString(
-//                GeneralPreferences.KEY_WEEK_START_DAY, GeneralPreferences.WEEK_START_DEFAULT);
+//        String pref = prefs.getString(GeneralPreferences.KEY_WEEK_START_DAY, GeneralPreferences.WEEK_START_DEFAULT);
 //
 //        int startDay;
 //        if (GeneralPreferences.WEEK_START_DEFAULT.equals(pref)) {
@@ -143,8 +98,7 @@ public class Utils {
    */
   public static boolean getShowWeekNumber(Context context) {
 //        final SharedPreferences prefs = GeneralPreferences.getSharedPreferences(context);
-//        return prefs.getBoolean(
-//                GeneralPreferences.KEY_SHOW_WEEK_NUM, GeneralPreferences.DEFAULT_SHOW_WEEK_NUM);
+//        return prefs.getBoolean(GeneralPreferences.KEY_SHOW_WEEK_NUM, GeneralPreferences.DEFAULT_SHOW_WEEK_NUM);
     return false;
   }
 
@@ -222,13 +176,13 @@ public class Utils {
 
     // the min length is the number of minutes that will occupy MIN_SEGMENT_PIXELS in the 'work day' time slot. This computes the
     // minutes/pixel * minpx where the number of pixels are 3/4 the total dna height: 4*(mins/(px * 3/4))
-    int minMinutes = minPixels * 4 * WORK_DAY_MINUTES / (3 * (bottom - top));
+//    int minMinutes = minPixels * 4 * WORK_DAY_MINUTES / (3 * (bottom - top));
 
     // There are slightly fewer than half as many pixels in 1/6 the space, so round to 2.5x for the min minutes in the non-work area
-    int minOtherMinutes = minMinutes * 5 / 2;
-    int lastJulianDay = firstJulianDay + dayXs.length - 1;
+//    int minOtherMinutes = minMinutes * 5 / 2;
+//    int lastJulianDay = firstJulianDay + dayXs.length - 1;
 
-    Event event;
+//    Event event;
     // Go through all the calendarEvents for the week
     for (CalendarEvent currEvent : calendarEvents) {
       // if this event is outside the weeks range skip it
@@ -240,7 +194,7 @@ public class Utils {
 //        continue;
 //      }
       // Copy the event over so we can clip its start and end to our range
-      event = new Event(currEvent.getEvent());
+//      event = new Event(currEvent.getEvent());
 //      if (event.getStartDay() < firstJulianDay) {
 //        event.setStartDay(firstJulianDay);
 //        event.setStartTime(0);
@@ -277,95 +231,94 @@ public class Utils {
 //      }
 
       // This handles adding the first segment
-      if (segments.size() == 0) {
-        addNewSegment(segments, currEvent, strands);
-        continue;
-      }
-      // Now compare our current start time to the end time of the last
-      // segment in the list
-      EventSegment lastSegment = segments.getLast();
-      long startMinute = (event.getStartDay() - firstJulianDay) * DAY_IN_MINUTES + event.getStartTime();
+//      if (segments.size() == 0) {
+      addNewSegment(segments, currEvent, strands);
+//        continue;
+//      }
+      // Now compare our current start time to the end time of the last segment in the list
+//      EventSegment lastSegment = segments.getLast();
+//      long startMinute = (currEvent.getDay() - firstJulianDay) * DAY_IN_MINUTES + event.getStartTime();
 //      int endMinute = Math.max((event.endDay - firstJulianDay) * DAY_IN_MINUTES + event.endTime, startMinute + minMinutes);
 
-      if (startMinute < 0) {
-        startMinute = 0;
-      }
+//      if (startMinute < 0) {
+//        startMinute = 0;
+//      }
 //      if (endMinute >= WEEK_IN_MINUTES) {
 //        endMinute = WEEK_IN_MINUTES - 1;
 //      }
       // If we start before the last segment in the list ends we need to start going through the list as this may conflict with other calendarEvents
-      if (startMinute < lastSegment.endMinute) {
-        int i = segments.size();
-        // find the last segment this event intersects with
-//        while (--i >= 0 && endMinute < segments.get(i).startMinute) {
-//        }
-
-        EventSegment currSegment;
-        // for each segment this event intersects with
-        for (; i >= 0 && startMinute <= (currSegment = segments.get(i)).endMinute; i--) {
-          // if the segment is already a conflict ignore it
-          if (currSegment.color == CONFLICT_COLOR) {
-            continue;
-          }
-          // if the event ends before the segment and wouldn't create a segment that is too small split off the right side
-//          if (endMinute < currSegment.endMinute - minMinutes) {
-//            EventSegment rhs = new EventSegment();
-//            rhs.endMinute = currSegment.endMinute;
-//            rhs.color = currSegment.color;
-//            rhs.startMinute = endMinute + 1;
-//            rhs.day = currSegment.day;
-//            currSegment.endMinute = endMinute;
-//            segments.add(i + 1, rhs);
-//            strands.get(rhs.color).count++;
+//      if (startMinute < lastSegment.endMinute) {
+//        int i = segments.size();
+//        // find the last segment this event intersects with
+////        while (--i >= 0 && endMinute < segments.get(i).startMinute) {
+////        }
+//
+//        EventSegment currSegment;
+//        // for each segment this event intersects with
+//        for (; i >= 0 && startMinute <= (currSegment = segments.get(i)).endMinute; i--) {
+//          // if the segment is already a conflict ignore it
+//          if (currSegment.color == CONFLICT_COLOR) {
+//            continue;
 //          }
-          // if the event starts after the segment and wouldn't create a segment that is too small split off the left side
-          if (startMinute > currSegment.startMinute + minMinutes) {
-            EventSegment lhs = new EventSegment();
-            lhs.startMinute = currSegment.startMinute;
-            lhs.color = currSegment.color;
-//            lhs.endMinute = startMinute - 1;
-            lhs.day = currSegment.day;
-//            currSegment.startMinute = startMinute;
-            // increment i so that we are at the right position when
-            // referencing the segments to the right and left of the
-            // current segment.
-            segments.add(i++, lhs);
-            strands.get(lhs.color).count++;
-          }
-          // if the right side is black merge this with the segment to
-          // the right if they're on the same day and overlap
-          if (i + 1 < segments.size()) {
-            EventSegment rhs = segments.get(i + 1);
-            if (rhs.color == CONFLICT_COLOR && currSegment.day == rhs.day && rhs.startMinute <= currSegment.endMinute + 1) {
-              rhs.startMinute = Math.min(currSegment.startMinute, rhs.startMinute);
-              segments.remove(currSegment);
-              strands.get(currSegment.color).count--;
-              // point at the new current segment
-              currSegment = rhs;
-            }
-          }
-          // if the left side is black merge this with the segment to the left if they're on the same day and overlap
-          if (i - 1 >= 0) {
-            EventSegment lhs = segments.get(i - 1);
-            if (lhs.color == CONFLICT_COLOR && currSegment.day == lhs.day && lhs.endMinute >= currSegment.startMinute - 1) {
-              lhs.endMinute = Math.max(currSegment.endMinute, lhs.endMinute);
-              segments.remove(currSegment);
-              strands.get(currSegment.color).count--;
-              // point at the new current segment
-              currSegment = lhs;
-              // point i at the new current segment in case new code is added
-              i--;
-            }
-          }
-          // if we're still not black, decrement the count for the color being removed, change this to black, and increment the black count
-          if (currSegment.color != CONFLICT_COLOR) {
-            strands.get(currSegment.color).count--;
-            currSegment.color = CONFLICT_COLOR;
-            strands.get(CONFLICT_COLOR).count++;
-          }
-        }
+//          // if the event ends before the segment and wouldn't create a segment that is too small split off the right side
+////          if (endMinute < currSegment.endMinute - minMinutes) {
+////            EventSegment rhs = new EventSegment();
+////            rhs.endMinute = currSegment.endMinute;
+////            rhs.color = currSegment.color;
+////            rhs.startMinute = endMinute + 1;
+////            rhs.day = currSegment.day;
+////            currSegment.endMinute = endMinute;
+////            segments.add(i + 1, rhs);
+////            strands.get(rhs.color).count++;
+////          }
+//          // if the event starts after the segment and wouldn't create a segment that is too small split off the left side
+//          if (startMinute > currSegment.startMinute + minMinutes) {
+//            EventSegment lhs = new EventSegment();
+//            lhs.startMinute = currSegment.startMinute;
+//            lhs.color = currSegment.color;
+////            lhs.endMinute = startMinute - 1;
+//            lhs.day = currSegment.day;
+////            currSegment.startMinute = startMinute;
+//            // increment i so that we are at the right position when
+//            // referencing the segments to the right and left of the
+//            // current segment.
+//            segments.add(i++, lhs);
+//            strands.get(lhs.color).count++;
+//          }
+//          // if the right side is black merge this with the segment to
+//          // the right if they're on the same day and overlap
+//          if (i + 1 < segments.size()) {
+//            EventSegment rhs = segments.get(i + 1);
+//            if (rhs.color == CONFLICT_COLOR && currSegment.day == rhs.day && rhs.startMinute <= currSegment.endMinute + 1) {
+//              rhs.startMinute = Math.min(currSegment.startMinute, rhs.startMinute);
+//              segments.remove(currSegment);
+//              strands.get(currSegment.color).count--;
+//              // point at the new current segment
+//              currSegment = rhs;
+//            }
+//          }
+//          // if the left side is black merge this with the segment to the left if they're on the same day and overlap
+//          if (i - 1 >= 0) {
+//            EventSegment lhs = segments.get(i - 1);
+//            if (lhs.color == CONFLICT_COLOR && currSegment.day == lhs.day && lhs.endMinute >= currSegment.startMinute - 1) {
+//              lhs.endMinute = Math.max(currSegment.endMinute, lhs.endMinute);
+//              segments.remove(currSegment);
+//              strands.get(currSegment.color).count--;
+//              // point at the new current segment
+//              currSegment = lhs;
+//              // point i at the new current segment in case new code is added
+//              i--;
+//            }
+//          }
+//          // if we're still not black, decrement the count for the color being removed, change this to black, and increment the black count
+//          if (currSegment.color != CONFLICT_COLOR) {
+//            strands.get(currSegment.color).count--;
+//            currSegment.color = CONFLICT_COLOR;
+//            strands.get(CONFLICT_COLOR).count++;
+//          }
+//        }
+//      }
 
-      }
       // If this event extends beyond the last segment add a new segment
 //      if (endMinute > lastSegment.endMinute) {
 //        addNewSegment(segments, event, strands, firstJulianDay, lastSegment.endMinute, minMinutes);
@@ -376,25 +329,25 @@ public class Utils {
   }
 
   // This figures out allDay colors as allDay events are found
-  private static void addAllDayToStrands(Event event, HashMap<Integer, EventStrand> strands, int firstJulianDay, int numDays) {
-    EventStrand strand = getOrCreateStrand(strands, CONFLICT_COLOR);
-    // if we haven't initialized the allDay portion create it now
-    if (strand.allDays == null) {
-      strand.allDays = new int[numDays];
-    }
-
-    // For each day this event is on update the color
-    long end = Math.min(event.getEndDay() - firstJulianDay, numDays - 1);
-    for (long i = Math.max(event.getStartDay() - firstJulianDay, 0); i <= end; i++) {
-      if (strand.allDays[((int) i)] != 0) {
-        // if this day already had a color, it is now a conflict
-        strand.allDays[((int) i)] = CONFLICT_COLOR;
-      } else {
-        // else it's just the color of the event
-        strand.allDays[((int) i)] = event.getColor();
-      }
-    }
-  }
+//  private static void addAllDayToStrands(Event event, HashMap<Integer, EventStrand> strands, int firstJulianDay, int numDays) {
+//    EventStrand strand = getOrCreateStrand(strands, CONFLICT_COLOR);
+//    // if we haven't initialized the allDay portion create it now
+//    if (strand.allDays == null) {
+//      strand.allDays = new int[numDays];
+//    }
+//
+//    // For each day this event is on update the color
+//    long end = Math.min(event.getEndDay() - firstJulianDay, numDays - 1);
+//    for (long i = Math.max(event.getStartDay() - firstJulianDay, 0); i <= end; i++) {
+//      if (strand.allDays[((int) i)] != 0) {
+//        // if this day already had a color, it is now a conflict
+//        strand.allDays[((int) i)] = CONFLICT_COLOR;
+//      } else {
+//        // else it's just the color of the event
+//        strand.allDays[((int) i)] = event.getColor();
+//      }
+//    }
+//  }
 
   // This processes all the segments, sorts them by color, and generates a list of points to draw
   private static void weaveDNAStrands(LinkedList<EventSegment> segments, int firstJulianDay, HashMap<Integer, EventStrand> strands, int top, int bottom, int[] dayXs) {
@@ -402,18 +355,20 @@ public class Utils {
     Iterator<EventStrand> strandIterator = strands.values().iterator();
     while (strandIterator.hasNext()) {
       EventStrand strand = strandIterator.next();
-      if (strand.count < 1 && strand.allDays == null) {
-        strandIterator.remove();
-        continue;
-      }
-      strand.points = new float[strand.count * 4];
+//      if (strand.count < 1 && strand.allDays == null) {
+//        strandIterator.remove();
+//        continue;
+//      }
+//      strand.points = new float[strand.count * 4];
+      strand.points = new float[4];
       strand.position = 0;
     }
     // Go through each segment and compute its points
     for (EventSegment segment : segments) {
       // Add the points to the strand of that color
       EventStrand strand = strands.get(segment.color);
-      long dayIndex = segment.day - firstJulianDay;
+//      long dayIndex = segment.day - firstJulianDay;
+      long dayIndex = segment.day;
       long dayStartMinute = segment.startMinute % DAY_IN_MINUTES;
       long dayEndMinute = segment.endMinute % DAY_IN_MINUTES;
       int height = bottom - top;
@@ -476,31 +431,37 @@ public class Utils {
 //      long endOfDay = dayOffset + DAY_IN_MINUTES - 1;
       // clip the start if needed
 //      segment.startMinute = Math.max(dayOffset + event.getStartTime(), minStart);
-      segment.startMinute = event.getStartTime();
+      segment.startMinute = TimeUnit.MINUTES.convert(event.getStartTime(), TimeUnit.MILLISECONDS);
       // and extend the end if it's too small, but not beyond the end of the day
 //      long minEnd = Math.min(segment.startMinute + minMinutes, endOfDay);
 //    segment.endMinute = Math.max(dayOffset + event.endTime, minEnd);
 //      if (segment.endMinute > endOfDay) {
 //        segment.endMinute = endOfDay;
 //      }
-      segment.endMinute = segment.startMinute + event.getDuration();
-
+      segment.endMinute = segment.startMinute + TimeUnit.MINUTES.convert(event.getDuration(), TimeUnit.HOURS);
       segment.color = event.getColor();
-      segment.day = calendarEvent.getDay();
+      segment.day = getDayOfWeek(calendarEvent.getDay());
       segments.add(segment);
       // increment the count for the correct color or add a new strand if we don't have that color yet
-      EventStrand strand = getOrCreateStrand(strands, segment.color);
+//      EventStrand strand = getOrCreateStrand(strands, segment.color);
+      getOrCreateStrand(strands, segment.color);
 //      strand.count++;
     }
+  }
+
+  private static int getDayOfWeek(long dateInMilliseconds) {
+    Calendar c = Calendar.getInstance();
+    c.setTime(new Date(dateInMilliseconds));
+    return c.get(Calendar.DAY_OF_WEEK);
   }
 
   private static boolean eventEndsInOtherDay(CalendarEvent calendarEvent) {
     long initDay = calendarEvent.getDay();
     long endDay = initDay + TimeUnit.MILLISECONDS.convert(24, TimeUnit.HOURS);
     Event event = calendarEvent.getEvent();
-    long duration = TimeUnit.MILLISECONDS.convert(event.getStartTime(), TimeUnit.HOURS);
+    long duration = TimeUnit.MILLISECONDS.convert(event.getDuration(), TimeUnit.HOURS);
 
-    return initDay + duration <= endDay;
+    return initDay + duration >= endDay;
   }
 
   /**
@@ -566,7 +527,7 @@ public class Utils {
   // that it holds conflicting events as well as color settings for allday on each day.
   public static class EventStrand {
     public float[] points;
-    public int[]   allDays; // color for the allday, 0 means no event
+    //    public int[]   allDays; // color for the allday, 0 means no event
     public int     color;
     int position;
     int count;

@@ -31,6 +31,7 @@ public class TimeZoneUtils {
    * This is the key used for writing the time zone that should be used if home time zones are enabled for the Calendar app.
    */
   public static final     String            KEY_HOME_TZ              = "preferences_home_tz";
+  static final            String            SHARED_PREFS_NAME        = "calendar_preferences";
   private static          StringBuilder     stringBuilder            = new StringBuilder(50);
   private static          Formatter         formatter                = new Formatter(stringBuilder, Locale.getDefault());
   private volatile static boolean           firstTimeZoneRequest     = true;
@@ -40,11 +41,8 @@ public class TimeZoneUtils {
   private static          HashSet<Runnable> timeZoneCallbacks        = new HashSet<Runnable>();
   private static AsyncTimeZoneHandler asyncTimeZoneHandler;
 
-  // The name of the shared preferences file. This name must be maintained for historical reasons, as it's what PreferenceManager assigned the first time the file was created.
-  private final String prefsName;
 
-  public TimeZoneUtils(String prefsName) {
-    this.prefsName = prefsName;
+  public TimeZoneUtils() {
   }
 
   /**
@@ -61,7 +59,7 @@ public class TimeZoneUtils {
    *                    {@link android.text.format.DateUtils#formatDateRange(android.content.Context, java.util.Formatter, long, long, int, String) formatDateRange}
    * @return a string containing the formatted date/time range.
    */
-  public String formatDateRange(Context context, long startMillis, long endMillis, int flags) {
+  public static String formatDateRange(Context context, long startMillis, long endMillis, int flags) {
     String date;
     String tz;
     if ((flags & DateUtils.FORMAT_UTC) != 0) {
@@ -87,13 +85,13 @@ public class TimeZoneUtils {
    * @param callback The runnable that should execute if a query returns new values
    * @return The string value representing the time zone Calendar should display
    */
-  public String getTimeZone(Context context, Runnable callback) {
+  public static String getTimeZone(Context context, Runnable callback) {
     synchronized (timeZoneCallbacks) {
       if (firstTimeZoneRequest) {
         timeZoneQueryInProgress = true;
         firstTimeZoneRequest = false;
 
-        SharedPreferences prefs = SharedPrefHelper.getSharedPreferences(context, prefsName);
+        SharedPreferences prefs = SharedPrefHelper.getSharedPreferences(context, SHARED_PREFS_NAME);
         useHomeTimeZone = prefs.getBoolean(KEY_HOME_TZ_ENABLED, false);
         homeTimeZone = prefs.getString(KEY_HOME_TZ, Time.getCurrentTimezone());
 
@@ -116,7 +114,7 @@ public class TimeZoneUtils {
   /**
    * This is a helper class for handling the async queries and updates for the time zone settings in Calendar.
    */
-  private class AsyncTimeZoneHandler extends AsyncQueryHandler {
+  private static class AsyncTimeZoneHandler extends AsyncQueryHandler {
     public AsyncTimeZoneHandler(ContentResolver cr) {
       super(cr);
     }
@@ -153,7 +151,7 @@ public class TimeZoneUtils {
         }
         cursor.close();
         if (writePrefs) {
-          SharedPreferences prefs = SharedPrefHelper.getSharedPreferences((Context) cookie, prefsName);
+          SharedPreferences prefs = SharedPrefHelper.getSharedPreferences((Context) cookie, SHARED_PREFS_NAME);
           // Write the prefs
           SharedPrefHelper.setSharedPreference(prefs, KEY_HOME_TZ_ENABLED, useHomeTimeZone);
           SharedPrefHelper.setSharedPreference(prefs, KEY_HOME_TZ, homeTimeZone);

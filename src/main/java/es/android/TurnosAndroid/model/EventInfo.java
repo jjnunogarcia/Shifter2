@@ -47,7 +47,7 @@ public class EventInfo {
    * Set to {@link #EXTRA_GOTO_TODAY} if this is a user request to go to the current time.
    * <p/>
    * For EventType.UPDATE_TITLE:
-   * Set formatting flags for Utils.formatDateRange
+   * Set formatting flags for TimeZoneUtils.formatDateRange
    */
   public long extraLong;
 

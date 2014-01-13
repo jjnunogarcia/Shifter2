@@ -24,6 +24,7 @@ import android.widget.TextView;
 import es.android.TurnosAndroid.*;
 import es.android.TurnosAndroid.controllers.CalendarController;
 import es.android.TurnosAndroid.database.CalendarProvider;
+import es.android.TurnosAndroid.helpers.TimeZoneUtils;
 import es.android.TurnosAndroid.helpers.Utils;
 import es.android.TurnosAndroid.model.CalendarEvent;
 import es.android.TurnosAndroid.model.Event;
@@ -65,7 +66,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
   private final          Runnable        timeZoneUpdater       = new Runnable() {
     @Override
     public void run() {
-      String tz = Utils.getTimeZone(context, this);
+      String tz = TimeZoneUtils.getTimeZone(context, this);
       selectedDay.timezone = tz;
       selectedDay.normalize(true);
       tempTime.timezone = tz;
@@ -118,7 +119,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
     public void onChanged() {
       Time day = adapter.getSelectedDay();
       if (day.year != selectedDay.year || day.yearDay != selectedDay.yearDay) {
-        goTo(day.toMillis(true), true, true, false);
+        goTo(day.toMillis(true), true, false);
       }
     }
   };
@@ -259,7 +260,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
 //        getActivity().getApplicationContext().getContentResolver().insert(CalendarProvider.CALENDAR_EVENTS_URI, contentValues);
         adapter.setListView(listView);
 
-        goTo(initialTime, false, true, true);
+        goTo(initialTime, false, true);
       }
     });
   }
@@ -350,7 +351,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
     adapter.setSelectedDay(selectedDay);
     timeZoneUpdater.run();
     updateAtMidnight.run();
-    goTo(selectedDay.toMillis(true), false, true, false);
+    goTo(selectedDay.toMillis(true), false, false);
   }
 
   @Override
@@ -398,7 +399,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
 
   @Override
   public void onTodayClicked() {
-    goTo(System.currentTimeMillis(), true, true, false);
+    goTo(System.currentTimeMillis(), true, false);
   }
 
   @Override
@@ -418,7 +419,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
       desiredDay.set(event.selectedTime);
       desiredDay.normalize(true);
       boolean animateToday = (event.extraLong & CalendarController.EXTRA_GOTO_TODAY) != 0;
-      boolean delayAnimation = goTo(event.selectedTime.toMillis(true), animate, true, false);
+      boolean delayAnimation = goTo(event.selectedTime.toMillis(true), animate, false);
 
       if (animateToday) {
         // If we need to flash today start the animation after any movement from listView has ended.
@@ -456,25 +457,17 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
    *
    * @param time        The time to move to
    * @param animate     Whether to scroll to the given time or just redraw at the new location
-   * @param setSelected Whether to set the given time as selected
    * @param forceScroll Whether to recenter even if the time is already visible
    * @return Whether or not the view animated to the new location
    */
-  public boolean goTo(long time, boolean animate, boolean setSelected, boolean forceScroll) {
+  public boolean goTo(long time, boolean animate, boolean forceScroll) {
     if (time == -1) {
       return false;
     }
 
     // Set the selected day
-    if (setSelected) {
-      selectedDay.set(time);
-      selectedDay.normalize(true);
-    }
-
-    // If this view isn't returned yet we won't be able to load the lists current position, so return after setting the selected day.
-//    if (!isResumed()) {
-//      return false;
-//    }
+    selectedDay.set(time);
+    selectedDay.normalize(true);
 
     tempTime.set(time);
     long millis = tempTime.normalize(true);
@@ -506,9 +499,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
       lastPosition--;
     }
 
-    if (setSelected) {
-      adapter.setSelectedDay(selectedDay);
-    }
+    adapter.setSelectedDay(selectedDay);
 
     // Check if the selected day is now outside of our visible range and, if so, scroll to the month that contains it
     if (position < firstPosition || position > lastPosition || forceScroll) {
@@ -527,7 +518,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
         // Perform any after scroll operations that are needed
         onScrollStateChanged(listView, OnScrollListener.SCROLL_STATE_IDLE);
       }
-    } else if (setSelected) {
+    } else {
       // Otherwise just set the selection
       setMonthDisplayed(selectedDay, true);
     }

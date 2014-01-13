@@ -37,6 +37,7 @@ import android.widget.*;
 import es.android.TurnosAndroid.EventGeometry;
 import es.android.TurnosAndroid.R;
 import es.android.TurnosAndroid.controllers.CalendarController;
+import es.android.TurnosAndroid.helpers.TimeZoneUtils;
 import es.android.TurnosAndroid.helpers.Utils;
 import es.android.TurnosAndroid.model.CalendarData;
 import es.android.TurnosAndroid.model.Event;
@@ -212,7 +213,7 @@ public class DayView extends View implements View.OnCreateContextMenuListener, S
   private final Runnable              timeZoneUpdater       = new Runnable() {
     @Override
     public void run() {
-      String tz = Utils.getTimeZone(context, this);
+      String tz = TimeZoneUtils.getTimeZone(context, this);
       baseDate.timezone = tz;
       baseDate.normalize(true);
       currentTime.switchTimezone(tz);
@@ -573,7 +574,7 @@ public class DayView extends View implements View.OnCreateContextMenuListener, S
 
     firstDayOfWeek = Utils.getFirstDayOfWeek(context);
 
-    currentTime = new Time(Utils.getTimeZone(context, timeZoneUpdater));
+    currentTime = new Time(TimeZoneUtils.getTimeZone(context, timeZoneUpdater));
     long currentTime = System.currentTimeMillis();
     this.currentTime.set(currentTime);
     todayJulianDay = Time.getJulianDay(currentTime, this.currentTime.gmtoff);
@@ -666,7 +667,7 @@ public class DayView extends View implements View.OnCreateContextMenuListener, S
     // Catch long clicks for creating a new event
     setOnLongClickListener(this);
 
-    baseDate = new Time(Utils.getTimeZone(context, timeZoneUpdater));
+    baseDate = new Time(TimeZoneUtils.getTimeZone(context, timeZoneUpdater));
     long millis = System.currentTimeMillis();
     baseDate.set(millis);
     if (numDays == 0) {
@@ -1562,7 +1563,7 @@ public class DayView extends View implements View.OnCreateContextMenuListener, S
     selectedEvents.clear();
 
     // The start date is the beginning of the week at 12am
-    Time weekStart = new Time(Utils.getTimeZone(context, timeZoneUpdater));
+    Time weekStart = new Time(TimeZoneUtils.getTimeZone(context, timeZoneUpdater));
     weekStart.set(baseDate);
     weekStart.hour = 0;
     weekStart.minute = 0;
@@ -3120,7 +3121,7 @@ public class DayView extends View implements View.OnCreateContextMenuListener, S
     if (DateFormat.is24HourFormat(context)) {
       flags |= DateUtils.FORMAT_24HOUR;
     }
-//    String timeRange = Utils.formatDateRange(context, event.startMillis, event.endMillis, flags);
+//    String timeRange = TimeZoneUtils.formatDateRange(context, event.startMillis, event.endMillis, flags);
     TextView timeView = (TextView) popupView.findViewById(R.id.time);
 //    timeView.setText(timeRange);
 
@@ -3967,7 +3968,7 @@ public class DayView extends View implements View.OnCreateContextMenuListener, S
     if (DateFormat.is24HourFormat(context)) {
       flags |= DateUtils.FORMAT_24HOUR;
     }
-    longPressTitle = Utils.formatDateRange(context, time, time, flags);
+    longPressTitle = TimeZoneUtils.formatDateRange(context, time, time, flags);
     new AlertDialog.Builder(context).setTitle(longPressTitle)
                                     .setItems(longPressItems, new DialogInterface.OnClickListener() {
                                       @Override
