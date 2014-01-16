@@ -25,13 +25,11 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.provider.CalendarContract.Attendees;
 import android.provider.CalendarContract.Calendars;
 import android.text.format.Time;
 import android.util.Log;
 import es.android.TurnosAndroid.EventHandler;
 import es.android.TurnosAndroid.helpers.TimeZoneUtils;
-import es.android.TurnosAndroid.helpers.Utils;
 import es.android.TurnosAndroid.model.EventInfo;
 import es.android.TurnosAndroid.model.EventType;
 import es.android.TurnosAndroid.views.ViewType;
@@ -73,7 +71,7 @@ public class CalendarController {
   public void sendEventRelatedEvent(long eventType, long eventId, long startMillis, long endMillis, int x, int y, long selectedMillis) {
     // TODO: pass the real allDay status or at least a status that says we don't know the status and have the receiver query the data.
     // The current use of this method for VIEW_EVENT is by the day view to show an EventInfo so currently the missing allDay status has no effect.
-    sendEventRelatedEventWithExtra(eventType, eventId, startMillis, endMillis, x, y, EventInfo.buildViewExtraLong(Attendees.ATTENDEE_STATUS_NONE, false), selectedMillis);
+    sendEventRelatedEventWithExtra(eventType, eventId, startMillis, endMillis, x, y, selectedMillis);
   }
 
   /**
@@ -85,11 +83,9 @@ public class CalendarController {
    * @param endMillis      end time
    * @param x              x coordinate in the activity space
    * @param y              y coordinate in the activity space
-   * @param extraLong      default response value for the "simple event view" and all day indication.
-   *                       Use Attendees.ATTENDEE_STATUS_NONE for no response.
    * @param selectedMillis The time to specify as selected
    */
-  public void sendEventRelatedEventWithExtra(long eventType, long eventId, long startMillis, long endMillis, int x, int y, long extraLong, long selectedMillis) {
+  public void sendEventRelatedEventWithExtra(long eventType, long eventId, long startMillis, long endMillis, int x, int y, long selectedMillis) {
     EventInfo info = new EventInfo();
     info.eventType = eventType;
     if (eventType == EventType.EDIT_EVENT || eventType == EventType.VIEW_EVENT_DETAILS) {
@@ -108,7 +104,6 @@ public class CalendarController {
     info.endTime.set(endMillis);
     info.x = x;
     info.y = y;
-    info.extraLong = extraLong;
 
     sendEvent(info);
   }
@@ -123,17 +118,17 @@ public class CalendarController {
    * @param viewType  {@link es.android.TurnosAndroid.views.ViewType}
    */
   public void sendEvent(long eventType, Time start, Time end, long eventId, ViewType viewType) {
-    sendEvent(eventType, start, end, start, eventId, viewType, EXTRA_GOTO_TIME, null, null);
+    sendEvent(eventType, start, end, start, eventId, viewType, null, null);
   }
 
   /**
    * sendEvent() variant with extraLong, search query, and search component name.
    */
-  public void sendEvent(long eventType, Time start, Time end, long eventId, ViewType viewType, long extraLong, String query, ComponentName componentName) {
-    sendEvent(eventType, start, end, start, eventId, viewType, extraLong, query, componentName);
+  public void sendEvent(long eventType, Time start, Time end, long eventId, ViewType viewType, String query, ComponentName componentName) {
+    sendEvent(eventType, start, end, start, eventId, viewType, query, componentName);
   }
 
-  public void sendEvent(long eventType, Time start, Time end, Time selected, long eventId, ViewType viewType, long extraLong, String query, ComponentName componentName) {
+  public void sendEvent(long eventType, Time start, Time end, Time selected, long eventId, ViewType viewType, String query, ComponentName componentName) {
     EventInfo info = new EventInfo();
     info.eventType = eventType;
     info.startTime = start;
@@ -143,7 +138,6 @@ public class CalendarController {
     info.viewType = viewType;
     info.query = query;
     info.componentName = componentName;
-    info.extraLong = extraLong;
     sendEvent(info);
   }
 

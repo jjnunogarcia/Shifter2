@@ -23,6 +23,7 @@ import android.view.View.OnTouchListener;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
 import es.android.TurnosAndroid.controllers.CalendarController;
+import es.android.TurnosAndroid.fragments.MonthFragment;
 import es.android.TurnosAndroid.helpers.TimeZoneUtils;
 import es.android.TurnosAndroid.helpers.Utils;
 import es.android.TurnosAndroid.model.CalendarEvent;
@@ -65,7 +66,6 @@ public class MonthAdapter extends BaseAdapter implements OnTouchListener {
   private static final int    WEEK_COUNT                = 3497;
   private static final int    DEFAULT_NUM_WEEKS         = 6;
   private static final int    DEFAULT_MONTH_FOCUS       = 0;
-  private static final int    DEFAULT_DAYS_PER_WEEK     = 7;
   private static final long   ANIMATE_TODAY_TIMEOUT     = 1000;
 
   private Context                             context;
@@ -75,7 +75,6 @@ public class MonthAdapter extends BaseAdapter implements OnTouchListener {
   private boolean                             showWeekNumber;
   private GestureDetector                     gestureDetector;
   private int                                 numWeeks;
-  private int                                 daysPerWeek;
   private int                                 focusMonth;
   private ListView                            listView;
   private CalendarController                  calendarController;
@@ -90,8 +89,8 @@ public class MonthAdapter extends BaseAdapter implements OnTouchListener {
   private ArrayList<CalendarEvent>            calendarEvents;
   private boolean                             animateToday;
   private long                                animateTime;
-  private MonthView                           clickedView;
-  private MonthView                           singleTapUpView;
+  private WeekView                            clickedView;
+  private WeekView                            singleTapUpView;
   private float                               clickedXLocation;
   private long                                clickTime;
   // Perform the tap animation in a runnable to allow a delay before showing the tap color. This is done to prevent a click animation when a fling is done.
@@ -130,7 +129,6 @@ public class MonthAdapter extends BaseAdapter implements OnTouchListener {
     selectedDay.setToNow();
     showWeekNumber = false;
     numWeeks = DEFAULT_NUM_WEEKS;
-    daysPerWeek = DEFAULT_DAYS_PER_WEEK;
     focusMonth = DEFAULT_MONTH_FOCUS;
     homeTimeZone = TimeZoneUtils.getTimeZone(context, null);
     selectedDay.switchTimezone(homeTimeZone);
@@ -168,9 +166,6 @@ public class MonthAdapter extends BaseAdapter implements OnTouchListener {
       int julianDay = params.get(WEEK_PARAMS_JULIAN_DAY);
       selectedDay.setJulianDay(julianDay);
       selectedWeek = Utils.getWeeksSinceEpochFromJulianDay(julianDay, firstDayOfWeek);
-    }
-    if (params.containsKey(WEEK_PARAMS_DAYS_PER_WEEK)) {
-      daysPerWeek = params.get(WEEK_PARAMS_DAYS_PER_WEEK);
     }
     notifyDataSetChanged();
   }
@@ -248,30 +243,30 @@ public class MonthAdapter extends BaseAdapter implements OnTouchListener {
 
   @Override
   public View getView(int position, View convertView, ViewGroup parent) {
-    MonthView v;
+    WeekView v;
     HashMap<String, Integer> drawingParams = new HashMap<String, Integer>();
     boolean isAnimatingToday = false;
 
-    if (convertView != null) {
-      v = (MonthView) convertView;
-      // Checking updateToday uses the current params instead of the new params, so this is assuming the view is relatively stable
-      if (animateToday && v.updateToday(selectedDay.timezone)) {
-        long currentTime = System.currentTimeMillis();
-        // If it's been too long since we tried to start the animation don't show it. This can happen if the user stops a scroll before reaching today.
-        if (currentTime - animateTime > ANIMATE_TODAY_TIMEOUT) {
-          animateToday = false;
-          animateTime = 0;
-        } else {
-          isAnimatingToday = true;
-          // There is a bug that causes invalidates to not work some of the time unless we recreate the view.
-          v = new MonthView(context);
-        }
-      } else {
-        drawingParams = (HashMap<String, Integer>) v.getTag();
-      }
-    } else {
-      v = new MonthView(context);
-    }
+//    if (convertView != null) {
+//      v = (WeekView) convertView;
+//      // Checking updateToday uses the current params instead of the new params, so this is assuming the view is relatively stable
+//      if (animateToday && v.updateToday(selectedDay.timezone)) {
+//        long currentTime = System.currentTimeMillis();
+//        // If it's been too long since we tried to start the animation don't show it. This can happen if the user stops a scroll before reaching today.
+//        if (currentTime - animateTime > ANIMATE_TODAY_TIMEOUT) {
+//          animateToday = false;
+//          animateTime = 0;
+//        } else {
+//          isAnimatingToday = true;
+//          // There is a bug that causes invalidates to not work some of the time unless we recreate the view.
+//          v = new WeekView(context);
+//        }
+//      } else {
+//        drawingParams = (HashMap<String, Integer>) v.getTag();
+//      }
+//    } else {
+      v = new WeekView(context);
+//    }
 
     drawingParams.clear();
 
@@ -282,16 +277,15 @@ public class MonthAdapter extends BaseAdapter implements OnTouchListener {
       selectedDay = this.selectedDay.weekDay;
     }
 
-    drawingParams.put(MonthView.VIEW_PARAMS_HEIGHT, (parent.getHeight() + parent.getTop()) / numWeeks);
-    drawingParams.put(MonthView.VIEW_PARAMS_SELECTED_DAY, selectedDay);
-    drawingParams.put(MonthView.VIEW_PARAMS_SHOW_WK_NUM, showWeekNumber ? 1 : 0);
-    drawingParams.put(MonthView.VIEW_PARAMS_WEEK_START, firstDayOfWeek);
-    drawingParams.put(MonthView.VIEW_PARAMS_NUM_DAYS, daysPerWeek);
-    drawingParams.put(MonthView.VIEW_PARAMS_WEEK, position);
-    drawingParams.put(MonthView.VIEW_PARAMS_FOCUS_MONTH, focusMonth);
+    drawingParams.put(WeekView.KEY_WEEK_HEIGHT, (parent.getHeight() + parent.getTop()) / numWeeks);
+    drawingParams.put(WeekView.KEY_SELECTED_DAY, selectedDay);
+    drawingParams.put(WeekView.KEY_SHOW_WEEK_NUM, showWeekNumber ? 1 : 0);
+    drawingParams.put(WeekView.KEY_WEEK_START, firstDayOfWeek);
+    drawingParams.put(WeekView.KEY_WEEK_TO_DISPLAY, position);
+    drawingParams.put(WeekView.KEY_FOCUS_MONTH, focusMonth);
 
     if (isAnimatingToday) {
-      drawingParams.put(MonthView.VIEW_PARAMS_ANIMATE_TODAY, 1);
+      drawingParams.put(WeekView.KEY_ANIMATE_TODAY, 1);
       animateToday = false;
     }
 
@@ -300,19 +294,19 @@ public class MonthAdapter extends BaseAdapter implements OnTouchListener {
     return v;
   }
 
-  private void sendEventsToView(MonthView monthView) {
+  private void sendEventsToView(WeekView weekView) {
     if (eventDayList.size() == 0) {
-      monthView.setEvents(null, null);
+      weekView.setEvents(null, null);
       return;
     }
-    int viewJulianDay = monthView.getFirstJulianDay();
+    int viewJulianDay = weekView.getFirstJulianDay();
     int start = viewJulianDay - firstJulianDay;
-    int end = start + monthView.numDays;
+    int end = start + MonthFragment.DAYS_PER_WEEK;
     if (start < 0 || end > eventDayList.size()) {
-      monthView.setEvents(null, null);
+      weekView.setEvents(null, null);
       return;
     }
-    monthView.setEvents(eventDayList.subList(start, end), calendarEvents);
+    weekView.setEvents(eventDayList.subList(start, end), calendarEvents);
   }
 
   /**
@@ -346,7 +340,7 @@ public class MonthAdapter extends BaseAdapter implements OnTouchListener {
     day.minute = currTime.minute;
     day.allDay = false;
     day.normalize(true);
-    calendarController.sendEvent(EventType.GO_TO, day, day, -1, ViewType.DETAIL, CalendarController.EXTRA_GOTO_DATE | CalendarController.EXTRA_GOTO_BACK_TO_PREVIOUS, null, null);
+    calendarController.sendEvent(EventType.GO_TO, day, day, -1, ViewType.DETAIL, null, null);
   }
 
   @Override
@@ -355,7 +349,7 @@ public class MonthAdapter extends BaseAdapter implements OnTouchListener {
 
     // Event was tapped - switch to the detailed view making sure the click animation is done first.
     if (gestureDetector.onTouchEvent(event)) {
-      singleTapUpView = (MonthView) v;
+      singleTapUpView = (WeekView) v;
       long delay = System.currentTimeMillis() - clickTime;
       // Make sure the animation is visible for at least mOnTapDelay - mOnDownDelay ms
       listView.postDelayed(doSingleTapUp, delay > totalClickDelay ? 0 : totalClickDelay - delay);
@@ -365,7 +359,7 @@ public class MonthAdapter extends BaseAdapter implements OnTouchListener {
       // On Up/scroll/move/cancel: hide the "clicked" color.
       switch (action) {
         case MotionEvent.ACTION_DOWN:
-          clickedView = (MonthView) v;
+          clickedView = (WeekView) v;
           clickedXLocation = event.getX();
           clickTime = System.currentTimeMillis();
           listView.postDelayed(doClick, onDownDelay);
@@ -373,12 +367,12 @@ public class MonthAdapter extends BaseAdapter implements OnTouchListener {
         case MotionEvent.ACTION_UP:
         case MotionEvent.ACTION_SCROLL:
         case MotionEvent.ACTION_CANCEL:
-          clearClickedView((MonthView) v);
+          clearClickedView((WeekView) v);
           break;
         case MotionEvent.ACTION_MOVE:
           // No need to cancel on vertical movement, ACTION_SCROLL will do that.
           if (Math.abs(event.getX() - clickedXLocation) > movedPixelToCancel) {
-            clearClickedView((MonthView) v);
+            clearClickedView((WeekView) v);
           }
           break;
         default:
@@ -390,7 +384,7 @@ public class MonthAdapter extends BaseAdapter implements OnTouchListener {
   }
 
   // Clear the visual cues of the click animation and related running code.
-  private void clearClickedView(MonthView v) {
+  private void clearClickedView(WeekView v) {
     listView.removeCallbacks(doClick);
     v.clearClickedDay();
     clickedView = null;

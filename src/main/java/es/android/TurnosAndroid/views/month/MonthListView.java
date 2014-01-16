@@ -24,7 +24,9 @@ import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.widget.ListView;
+import es.android.TurnosAndroid.R;
 import es.android.TurnosAndroid.fragments.MonthFragment;
 
 import java.util.TimeZone;
@@ -63,6 +65,15 @@ public class MonthListView extends ListView {
 
   private void init(Context context) {
     TimeZone timeZone = TimeZone.getDefault();
+    float friction = 1.0f;
+    setCacheColorHint(0);
+    setDivider(null);
+    setItemsCanFocus(true);
+    setFastScrollEnabled(false);
+    setVerticalScrollBarEnabled(false);
+    setFadingEdgeLength(0);
+    setFriction(ViewConfiguration.getScrollFriction() * friction);
+    setBackgroundColor(getResources().getColor(R.color.month_bgcolor));
     firstViewRect = new Rect();
     velocityTracker = VelocityTracker.obtain();
     tempTime = new Time(timeZone.getDisplayName());
@@ -160,7 +171,7 @@ public class MonthListView extends ListView {
    * @return the julian day of the day in the upper right corner
    */
   private int getUpperRightJulianDay() {
-    MonthView child = (MonthView) getChildAt(0);
+    WeekView child = (WeekView) getChildAt(0);
     if (child == null) {
       return -1;
     }

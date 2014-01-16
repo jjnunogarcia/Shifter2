@@ -27,10 +27,10 @@ import android.view.ViewGroup.LayoutParams;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ViewSwitcher;
-import es.android.TurnosAndroid.*;
-import es.android.TurnosAndroid.controllers.CalendarController;
+import es.android.TurnosAndroid.CustomApplication;
+import es.android.TurnosAndroid.EventHandler;
+import es.android.TurnosAndroid.R;
 import es.android.TurnosAndroid.helpers.TimeZoneUtils;
-import es.android.TurnosAndroid.helpers.Utils;
 import es.android.TurnosAndroid.model.Event;
 import es.android.TurnosAndroid.model.EventInfo;
 import es.android.TurnosAndroid.model.EventType;
@@ -260,7 +260,7 @@ public class DayFragment extends Fragment implements EventHandler, ViewSwitcher.
 // TODO support a range of time
 // TODO support event_id
 // TODO support select message
-      goTo(msg.selectedTime, (msg.extraLong & CalendarController.EXTRA_GOTO_DATE) != 0, (msg.extraLong & CalendarController.EXTRA_GOTO_TODAY) != 0);
+      goTo(msg.selectedTime, true, true);
     } else if (msg.eventType == EventType.EVENTS_CHANGED) {
       eventsChanged();
     }

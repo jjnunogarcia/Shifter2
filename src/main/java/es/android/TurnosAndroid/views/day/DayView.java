@@ -517,7 +517,7 @@ public class DayView extends View implements View.OnCreateContextMenuListener, S
     eventGeometry.setMinEventHeight(MIN_EVENT_HEIGHT);
     eventGeometry.setHourGap(HOUR_GAP);
     eventGeometry.setCellMargin(DAY_GAP);
-    longPressItems = new CharSequence[]{
+    longPressItems = new CharSequence[] {
         resources.getString(R.string.new_event_dialog_option)
     };
     longPressTitle = resources.getString(R.string.new_event_dialog_label);
@@ -658,7 +658,7 @@ public class DayView extends View implements View.OnCreateContextMenuListener, S
     popup.setContentView(popupView);
     Resources.Theme dialogTheme = getResources().newTheme();
     dialogTheme.applyStyle(android.R.style.Theme_Dialog, true);
-    TypedArray ta = dialogTheme.obtainStyledAttributes(new int[]{android.R.attr.windowBackground});
+    TypedArray ta = dialogTheme.obtainStyledAttributes(new int[] {android.R.attr.windowBackground});
     popup.setBackgroundDrawable(ta.getDrawable(0));
     ta.recycle();
 
@@ -847,7 +847,7 @@ public class DayView extends View implements View.OnCreateContextMenuListener, S
       }
     }
 
-    calendarController.sendEvent(EventType.UPDATE_TITLE, start, end, null, -1, ViewType.CURRENT, formatFlags, null, null);
+    calendarController.sendEvent(EventType.UPDATE_TITLE, start, end, null, -1, ViewType.CURRENT, null, null);
   }
 
   /**
@@ -1126,7 +1126,7 @@ public class DayView extends View implements View.OnCreateContextMenuListener, S
           if (selectionAllday) {
             extraLong = CalendarController.EXTRA_CREATE_ALL_DAY;
           }
-          calendarController.sendEventRelatedEventWithExtra(EventType.CREATE_EVENT, -1, startMillis, endMillis, -1, -1, extraLong, -1);
+          calendarController.sendEventRelatedEventWithExtra(EventType.CREATE_EVENT, -1, startMillis, endMillis, -1, -1, -1);
         } else {
           // Switch to the EventInfo view
 //          calendarController.sendEventRelatedEvent(EventType.VIEW_EVENT, selectedEvent.id, selectedEvent.startMillis, selectedEvent.endMillis, 0, 0, getSelectedTimeInMillis());
@@ -1151,7 +1151,7 @@ public class DayView extends View implements View.OnCreateContextMenuListener, S
         if (selectionAllday) {
           extraLong = CalendarController.EXTRA_CREATE_ALL_DAY;
         }
-        calendarController.sendEventRelatedEventWithExtra(EventType.CREATE_EVENT, -1, startMillis, endMillis, -1, -1, extraLong, -1);
+        calendarController.sendEventRelatedEventWithExtra(EventType.CREATE_EVENT, -1, startMillis, endMillis, -1, -1, -1);
       } else {
 //        calendarController.sendEventRelatedEvent(EventType.VIEW_EVENT, selectedEvent.id, selectedEvent.startMillis, selectedEvent.endMillis, 0, 0, getSelectedTimeInMillis());
       }
@@ -3305,7 +3305,7 @@ public class DayView extends View implements View.OnCreateContextMenuListener, S
         selectedTime.setJulianDay(selectionDay);
         selectedTime.hour = selectionHour;
         selectedTime.normalize(true /* ignore isDst */);
-        calendarController.sendEvent(EventType.GO_TO, null, null, selectedTime, -1, ViewType.DAY, CalendarController.EXTRA_GOTO_DATE, null, null);
+        calendarController.sendEvent(EventType.GO_TO, null, null, selectedTime, -1, ViewType.DAY, null, null);
       }
       return;
     }
@@ -3321,7 +3321,7 @@ public class DayView extends View implements View.OnCreateContextMenuListener, S
         extraLong = CalendarController.EXTRA_CREATE_ALL_DAY;
       }
       selectionMode = SELECTION_SELECTED;
-      calendarController.sendEventRelatedEventWithExtra(EventType.CREATE_EVENT, -1, getSelectedTimeInMillis(), 0, (int) ev.getRawX(), (int) ev.getRawY(), extraLong, -1);
+      calendarController.sendEventRelatedEventWithExtra(EventType.CREATE_EVENT, -1, getSelectedTimeInMillis(), 0, (int) ev.getRawX(), (int) ev.getRawY(), -1);
     } else if (selectedEvent != null) {
       // If the tap is on an event, launch the "View event" view
       selectionMode = SELECTION_HIDDEN;
@@ -3350,7 +3350,7 @@ public class DayView extends View implements View.OnCreateContextMenuListener, S
       endTime.hour++;
 
       selectionMode = SELECTION_SELECTED;
-      calendarController.sendEvent(EventType.GO_TO, startTime, endTime, -1, ViewType.CURRENT, CalendarController.EXTRA_GOTO_TIME, null, null);
+      calendarController.sendEvent(EventType.GO_TO, startTime, endTime, -1, ViewType.CURRENT, null, null);
     }
     invalidate();
   }
@@ -3978,7 +3978,7 @@ public class DayView extends View implements View.OnCreateContextMenuListener, S
                                           if (selectionAllday) {
                                             extraLong = CalendarController.EXTRA_CREATE_ALL_DAY;
                                           }
-                                          calendarController.sendEventRelatedEventWithExtra(EventType.CREATE_EVENT, -1, getSelectedTimeInMillis(), 0, -1, -1, extraLong, -1);
+                                          calendarController.sendEventRelatedEventWithExtra(EventType.CREATE_EVENT, -1, getSelectedTimeInMillis(), 0, -1, -1, -1);
                                         }
                                       }
                                     }).show().setCanceledOnTouchOutside(true);
@@ -4086,7 +4086,7 @@ public class DayView extends View implements View.OnCreateContextMenuListener, S
       view.viewStartX = 0;
 
       if (mCounter == counter) {
-        calendarController.sendEvent(EventType.GO_TO, mStart, mEnd, null, -1, ViewType.CURRENT, CalendarController.EXTRA_GOTO_DATE, null, null);
+        calendarController.sendEvent(EventType.GO_TO, mStart, mEnd, null, -1, ViewType.CURRENT, null, null);
       }
     }
 

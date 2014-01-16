@@ -15,6 +15,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import es.android.TurnosAndroid.R;
+import es.android.TurnosAndroid.fragments.MonthFragment;
 import es.android.TurnosAndroid.helpers.Utils;
 import es.android.TurnosAndroid.model.CalendarEvent;
 import es.android.TurnosAndroid.model.Event;
@@ -23,56 +24,47 @@ import java.security.InvalidParameterException;
 import java.util.*;
 
 /**
- * <p>
  * This is a dynamic view for drawing a single week. It can be configured to display the week number, start the week on a given day, or show a reduced
  * number of days. It is intended for use as a single view within a ListView. See {@link MonthAdapter} for usage.
- * </p>
  */
-// TODO rename to WeekView ?
 public class WeekView extends View {
-  public static final String VIEW_PARAMS_ANIMATE_TODAY  = "animate_today";
+  public static final String KEY_ANIMATE_TODAY          = "animate_today";
   public static final int    MONDAY_BEFORE_JULIAN_EPOCH = Time.EPOCH_JULIAN_DAY - 3;
   /**
    * This sets the height of this week in pixels
    */
-  public static final String VIEW_PARAMS_HEIGHT         = "height";
+  public static final String KEY_WEEK_HEIGHT            = "height";
 
   /**
-   * These params can be passed into the view to control how it appears. {@link #VIEW_PARAMS_WEEK} is the only required field, though the default
+   * These params can be passed into the view to control how it appears. {@link #KEY_WEEK_TO_DISPLAY} is the only required field, though the default
    * values are unlikely to fit most layouts correctly.
    */
   /**
    * This specifies the position (or weeks since the epoch) of this week, calculated using {@link es.android.TurnosAndroid.helpers.Utils#getWeeksSinceEpochFromJulianDay}
    */
-  public static final    String        VIEW_PARAMS_WEEK            = "week";
+  public static final    String        KEY_WEEK_TO_DISPLAY         = "week";
   /**
    * This sets one of the days in this view as selected {@link android.text.format.Time#SUNDAY} through {@link android.text.format.Time#SATURDAY}.
    */
-  public static final    String        VIEW_PARAMS_SELECTED_DAY    = "selected_day";
+  public static final    String        KEY_SELECTED_DAY            = "selected_day";
   /**
    * Which day the week should start on. {@link android.text.format.Time#SUNDAY} through {@link android.text.format.Time#SATURDAY}.
    */
-  public static final    String        VIEW_PARAMS_WEEK_START      = "week_start";
-  /**
-   * How many days to display at a time. Days will be displayed starting with {@link #weekStart}.
-   */
-  public static final    String        VIEW_PARAMS_NUM_DAYS        = "num_days";
+  public static final    String        KEY_WEEK_START              = "week_start";
   /**
    * Which month is currently in focus, as defined by {@link android.text.format.Time#month} [0-11].
    */
-  public static final    String        VIEW_PARAMS_FOCUS_MONTH     = "focus_month";
+  public static final    String        KEY_FOCUS_MONTH             = "focus_month";
   /**
    * If this month should display week numbers. false if 0, true otherwise.
    */
-  public static final    String        VIEW_PARAMS_SHOW_WK_NUM     = "show_wk_num";
+  public static final    String        KEY_SHOW_WEEK_NUM           = "show_wk_num";
   protected static final int           DEFAULT_SELECTED_DAY        = -1;
   protected static final int           DEFAULT_WEEK_START          = Time.SUNDAY;
-  protected static final int           DEFAULT_NUM_DAYS            = 7;
   protected static final int           DEFAULT_FOCUS_MONTH         = -1;
   private static final   String        TAG                         = WeekView.class.getSimpleName();
-  private static final   int           mClickedAlpha               = 128;
+  private static final   int           CLICKED_ALPHA               = 128;
   protected static       int           DEFAULT_HEIGHT              = 32;
-  protected static       int           MIN_HEIGHT                  = 10;
   protected static       int           DAY_SEPARATOR_WIDTH         = 1;
   protected static       int           MINI_DAY_NUMBER_TEXT_SIZE   = 14;
   protected static       int           MINI_WK_NUMBER_TEXT_SIZE    = 12;
@@ -110,12 +102,9 @@ public class WeekView extends View {
   private static         int           TODAY_HIGHLIGHT_WIDTH       = 2;
   private static         int           SPACING_WEEK_NUMBER         = 24;
   private static         boolean       initialized                 = false;
-  private static         StringBuilder mStringBuilder              = new StringBuilder(50);
+  private static         StringBuilder stringBuilder               = new StringBuilder(50);
   // TODO recreate formatter when locale changes
-  private static         Formatter     mFormatter                  = new Formatter(mStringBuilder, Locale.getDefault());
-  // How many days to display
-  protected int                                 numDays;
-  private   Rect                                r;
+  private static         Formatter     mFormatter                  = new Formatter(stringBuilder, Locale.getDefault());
   private   Paint                               p;
   private   Paint                               monthNumPaint;
   // Cache the number strings so we don't have to recompute them each time
@@ -138,8 +127,6 @@ public class WeekView extends View {
   private   int                                 height;
   // Whether the week number should be shown
   private   boolean                             showWeekNum;
-  // If this view contains the selected day
-  private   boolean                             hasSelectedDay;
   // Which day is selected [0-6] or -1 if no day is selected
   private   int                                 selectedDay;
   // Which day of the week to start on [0-6]
@@ -194,7 +181,6 @@ public class WeekView extends View {
 
     focusMonthColor = res.getColor(R.color.month_mini_day_number);
     weekNumColor = res.getColor(R.color.month_week_num_color);
-    r = new Rect();
     p = new Paint();
     firstJulianDay = -1;
     firstMonth = -1;
@@ -202,10 +188,8 @@ public class WeekView extends View {
     week = -1;
     height = DEFAULT_HEIGHT;
     showWeekNum = false;
-    hasSelectedDay = false;
     selectedDay = DEFAULT_SELECTED_DAY;
     weekStart = DEFAULT_WEEK_START;
-    numDays = DEFAULT_NUM_DAYS;
     timeZone = Time.getCurrentTimezone();
     today = new Time();
     hasToday = false;
@@ -222,7 +206,6 @@ public class WeekView extends View {
       scale = context.getResources().getDisplayMetrics().density;
       if (scale != 1) {
         DEFAULT_HEIGHT *= scale;
-        MIN_HEIGHT *= scale;
         MINI_DAY_NUMBER_TEXT_SIZE *= scale;
         MINI_TODAY_NUMBER_TEXT_SIZE *= scale;
         MINI_TODAY_OUTLINE_WIDTH *= scale;
@@ -389,9 +372,9 @@ public class WeekView extends View {
 
   private void setEvents(List<ArrayList<CalendarEvent>> sortedEvents) {
     calendarEvents = sortedEvents;
-    if (sortedEvents != null && sortedEvents.size() != numDays) {
+    if (sortedEvents != null && sortedEvents.size() != MonthFragment.DAYS_PER_WEEK) {
       if (Log.isLoggable(TAG, Log.ERROR)) {
-        Log.wtf(TAG, "Events size must be same as days displayed: size=" + sortedEvents.size() + " days=" + numDays);
+        Log.wtf(TAG, "Events size must be same as days displayed: size=" + sortedEvents.size() + " days=" + MonthFragment.DAYS_PER_WEEK);
       }
       calendarEvents = null;
     }
@@ -425,43 +408,37 @@ public class WeekView extends View {
   }
 
   /**
-   * Sets all the parameters for displaying this week. The only required parameter is the week number. Other parameters have a default value and
-   * will only update if a new value is included, except for focus month, which will always default to no focus month if no value is passed in. See
-   * {@link #VIEW_PARAMS_HEIGHT} for more info on parameters.
+   * Sets all the parameters for displaying this week. The only required parameter is the week number. Other parameters have a default value and will only update if a new value is
+   * included, except for focus month, which will always default to no focus month if no value is passed in. See {@link #KEY_WEEK_HEIGHT} for more info on parameters.
    *
-   * @param params A map of the new parameters, see {@link #VIEW_PARAMS_HEIGHT}
+   * @param params A map of the new parameters, see {@link #KEY_WEEK_HEIGHT}
    * @param tz     The time zone this view should reference times in
    */
   public void setWeekParams(HashMap<String, Integer> params, String tz) {
-    if (!params.containsKey(VIEW_PARAMS_WEEK)) {
+    if (!params.containsKey(KEY_WEEK_TO_DISPLAY)) {
       throw new InvalidParameterException("You must specify the week number for this view");
     }
     setTag(params);
     timeZone = tz;
-    // We keep the current value for any params not present
-    if (params.containsKey(VIEW_PARAMS_HEIGHT)) {
-      height = params.get(VIEW_PARAMS_HEIGHT);
-      if (height < MIN_HEIGHT) {
-        height = MIN_HEIGHT;
-      }
+
+    if (params.containsKey(KEY_WEEK_HEIGHT)) {
+      height = params.get(KEY_WEEK_HEIGHT);
     }
-    if (params.containsKey(VIEW_PARAMS_SELECTED_DAY)) {
-      selectedDay = params.get(VIEW_PARAMS_SELECTED_DAY);
+
+    if (params.containsKey(KEY_SELECTED_DAY)) {
+      selectedDay = params.get(KEY_SELECTED_DAY);
     }
-    hasSelectedDay = selectedDay != -1;
-    if (params.containsKey(VIEW_PARAMS_NUM_DAYS)) {
-      numDays = params.get(VIEW_PARAMS_NUM_DAYS);
+
+    if (params.containsKey(KEY_SHOW_WEEK_NUM)) {
+      showWeekNum = params.get(KEY_SHOW_WEEK_NUM) != 0;
     }
-    if (params.containsKey(VIEW_PARAMS_SHOW_WK_NUM)) {
-      showWeekNum = params.get(VIEW_PARAMS_SHOW_WK_NUM) != 0;
-    }
-    int numCells = showWeekNum ? numDays + 1 : numDays;
+    int numCells = showWeekNum ? MonthFragment.DAYS_PER_WEEK + 1 : MonthFragment.DAYS_PER_WEEK;
 
     // Allocate space for caching the day numbers and focus values
     dayNumbers = new String[numCells];
     focusDay = new boolean[numCells];
     oddMonth = new boolean[numCells];
-    week = params.get(VIEW_PARAMS_WEEK);
+    week = params.get(KEY_WEEK_TO_DISPLAY);
     int julianMonday = getJulianMondayFromWeeksSinceEpoch(week);
     Time time = new Time(tz);
     time.setJulianDay(julianMonday);
@@ -473,12 +450,11 @@ public class WeekView extends View {
       i++;
     }
 
-    if (params.containsKey(VIEW_PARAMS_WEEK_START)) {
-      weekStart = params.get(VIEW_PARAMS_WEEK_START);
+    if (params.containsKey(KEY_WEEK_START)) {
+      weekStart = params.get(KEY_WEEK_START);
     }
 
-    // Now adjust our starting day based on the start day of the week
-    // If the week is set to start on a Saturday the first week will be Dec 27th 1969 -Jan 2nd, 1970
+    // Now adjust our starting day based on the start day of the week. If the week is set to start on a Saturday the first week will be Dec 27th 1969 -Jan 2nd, 1970
     if (time.weekDay != weekStart) {
       int diff = time.weekDay - weekStart;
       if (diff < 0) {
@@ -496,31 +472,32 @@ public class WeekView extends View {
     today.setToNow();
     hasToday = false;
 
-    int focusMonth = params.containsKey(VIEW_PARAMS_FOCUS_MONTH) ? params.get(VIEW_PARAMS_FOCUS_MONTH) : DEFAULT_FOCUS_MONTH;
+    int focusMonth = params.containsKey(KEY_FOCUS_MONTH) ? params.get(KEY_FOCUS_MONTH) : DEFAULT_FOCUS_MONTH;
 
     for (; i < numCells; i++) {
-      if (time.monthDay == 1) {
-        firstMonth = time.month;
-      }
       oddMonth[i] = (time.month % 2) == 1;
       focusDay[i] = time.month == focusMonth;
+
       if (time.year == today.year && time.yearDay == today.yearDay) {
         hasToday = true;
       }
+
       dayNumbers[i] = Integer.toString(time.monthDay++);
       time.normalize(true);
     }
+
     // We do one extra add at the end of the loop, if that pushed us to a new month undo it
     if (time.monthDay == 1) {
       time.monthDay--;
       time.normalize(true);
     }
+
     lastMonth = time.month;
 
-    updateSelectionPositions();
+//    updateSelectionPositions();
     updateToday(tz);
 
-    if (params.containsKey(VIEW_PARAMS_ANIMATE_TODAY) && hasToday) {
+    if (params.containsKey(KEY_ANIMATE_TODAY) && hasToday) {
       synchronized (animatorListener) {
         if (todayAnimator != null) {
           todayAnimator.removeAllListeners();
@@ -542,7 +519,7 @@ public class WeekView extends View {
     today.setToNow();
     today.normalize(true);
     int julianToday = Time.getJulianDay(today.toMillis(false), today.gmtoff);
-    if (julianToday >= firstJulianDay && julianToday < firstJulianDay + numDays) {
+    if (julianToday >= firstJulianDay && julianToday < firstJulianDay + MonthFragment.DAYS_PER_WEEK) {
       hasToday = true;
       todayIndex = julianToday - firstJulianDay;
     } else {
@@ -567,7 +544,52 @@ public class WeekView extends View {
     drawClick(canvas);
   }
 
+  /**
+   * This draws the selection highlight if a day is selected in this week.
+   *
+   * @param canvas The canvas to draw on
+   */
+  private void drawBackground(Canvas canvas) {
+    Rect rect = new Rect();
+    int i = 0;
+    int offset = 0;
+    rect.top = DAY_SEPARATOR_INNER_WIDTH;
+    rect.bottom = height;
+
+    if (showWeekNum) {
+      i++;
+      offset++;
+    }
+
+    if (!oddMonth[i]) {
+      while (++i < oddMonth.length && !oddMonth[i]) {
+      }
+      rect.right = computeDayLeftPosition(i - offset);
+      rect.left = 0;
+      p.setColor(monthBGOtherColor);
+      canvas.drawRect(rect, p);
+      // compute left edge for i, set up rect, draw
+    } else if (!oddMonth[(i = oddMonth.length - 1)]) {
+      while (--i >= offset && !oddMonth[i]) {
+      }
+      i++;
+      // compute left edge for i, set up rect, draw
+      rect.right = width;
+      rect.left = computeDayLeftPosition(i - offset);
+      p.setColor(monthBGOtherColor);
+      canvas.drawRect(rect, p);
+    }
+
+    if (hasToday) {
+      p.setColor(monthBGTodayColor);
+      rect.left = computeDayLeftPosition(todayIndex);
+      rect.right = computeDayLeftPosition(todayIndex + 1);
+      canvas.drawRect(rect, p);
+    }
+  }
+
   private void drawToday(Canvas canvas) {
+    Rect r = new Rect();
     r.top = DAY_SEPARATOR_INNER_WIDTH + (TODAY_HIGHLIGHT_WIDTH / 2);
     r.bottom = height - (int) Math.ceil(TODAY_HIGHLIGHT_WIDTH / 2.0f);
     p.setStyle(Style.STROKE);
@@ -588,7 +610,7 @@ public class WeekView extends View {
       xOffset = SPACING_WEEK_NUMBER + DEFAULT_EDGE_SPACING;
       effectiveWidth -= xOffset;
     }
-    x = day * effectiveWidth / numDays + xOffset;
+    x = day * effectiveWidth / MonthFragment.DAYS_PER_WEEK + xOffset;
     return x;
   }
 
@@ -632,52 +654,13 @@ public class WeekView extends View {
     canvas.drawLines(lines, 0, count, p);
   }
 
-  /**
-   * This draws the selection highlight if a day is selected in this week.
-   *
-   * @param canvas The canvas to draw on
-   */
-  private void drawBackground(Canvas canvas) {
-    int i = 0;
-    int offset = 0;
-    r.top = DAY_SEPARATOR_INNER_WIDTH;
-    r.bottom = height;
-    if (showWeekNum) {
-      i++;
-      offset++;
-    }
-    if (!oddMonth[i]) {
-      while (++i < oddMonth.length && !oddMonth[i]) {
-      }
-      r.right = computeDayLeftPosition(i - offset);
-      r.left = 0;
-      p.setColor(monthBGOtherColor);
-      canvas.drawRect(r, p);
-      // compute left edge for i, set up r, draw
-    } else if (!oddMonth[(i = oddMonth.length - 1)]) {
-      while (--i >= offset && !oddMonth[i]) {
-      }
-      i++;
-      // compute left edge for i, set up r, draw
-      r.right = width;
-      r.left = computeDayLeftPosition(i - offset);
-      p.setColor(monthBGOtherColor);
-      canvas.drawRect(r, p);
-    }
-    if (hasToday) {
-      p.setColor(monthBGTodayColor);
-      r.left = computeDayLeftPosition(todayIndex);
-      r.right = computeDayLeftPosition(todayIndex + 1);
-      canvas.drawRect(r, p);
-    }
-  }
-
   // Draw the "clicked" color on the tapped day
   private void drawClick(Canvas canvas) {
     if (clickedDayIndex != -1) {
+      Rect r = new Rect();
       int alpha = p.getAlpha();
       p.setColor(clickedDayColor);
-      p.setAlpha(mClickedAlpha);
+      p.setAlpha(CLICKED_ALPHA);
       r.left = computeDayLeftPosition(clickedDayIndex);
       r.right = computeDayLeftPosition(clickedDayIndex + 1);
       r.top = DAY_SEPARATOR_INNER_WIDTH;
@@ -698,7 +681,7 @@ public class WeekView extends View {
     int offset = -1;
     int todayIndex = this.todayIndex;
     int x;
-    int numCount = numDays;
+    int numCount = MonthFragment.DAYS_PER_WEEK;
 
     if (showWeekNum) {
       x = SIDE_PADDING_WEEK_NUMBER + DEFAULT_EDGE_SPACING;
@@ -799,6 +782,7 @@ public class WeekView extends View {
 
     int textX, textY, textRightEdge;
 
+    Rect r = new Rect();
     r.left = x;
     r.right = x + EVENT_SQUARE_WIDTH;
     r.bottom = y + eventAscentHeight;
@@ -808,13 +792,6 @@ public class WeekView extends View {
     textRightEdge = rightEdge;
 
     Style boxStyle = Style.STROKE;
-    boolean solidBackground = false;
-//    if (event.selfAttendeeStatus != Attendees.ATTENDEE_STATUS_INVITED) {
-//      boxStyle = Style.FILL_AND_STROKE;
-//      if (allDay) {
-//        solidBackground = true;
-//      }
-//    }
     eventSquarePaint.setStyle(boxStyle);
 //    eventSquarePaint.setColor(color);
     canvas.drawRect(r, eventSquarePaint);
@@ -838,7 +815,7 @@ public class WeekView extends View {
 //    if (showTimes) {
 //      // show start/end time, e.g. "1pm - 2pm"
 //      textY = y + extrasAscentHeight;
-//      mStringBuilder.setLength(0);
+//      stringBuilder.setLength(0);
 //      text = DateUtils.formatDateRange(getContext(), mFormatter, event.startMillis, event.endMillis, DateUtils.FORMAT_SHOW_TIME | DateUtils.FORMAT_ABBREV_ALL,
 //                                       TimeZoneUtils.getTimeZone(getContext(), null)).toString();
 //      text = TextUtils.ellipsize(text, eventExtrasPaint, avail, TextUtils.TruncateAt.END);
@@ -891,14 +868,14 @@ public class WeekView extends View {
   @Override
   protected void onSizeChanged(int w, int h, int oldw, int oldh) {
     width = w;
-    updateSelectionPositions();
+//    updateSelectionPositions();
   }
 
   /**
    * This calculates the positions for the selected day lines.
    */
   private void updateSelectionPositions() {
-    if (hasSelectedDay) {
+    if (selectedDay != -1) {
       int selectedPosition = selectedDay - weekStart;
       if (selectedPosition < 0) {
         selectedPosition += 7;
@@ -914,7 +891,7 @@ public class WeekView extends View {
       return -1;
     }
     // Selection is (x - start) / (pixels/day) == (x -s) * day / pixels
-    return ((int) ((x - dayStart) * numDays / (width - dayStart - DEFAULT_EDGE_SPACING)));
+    return ((int) ((x - dayStart) * MonthFragment.DAYS_PER_WEEK / (width - dayStart - DEFAULT_EDGE_SPACING)));
   }
 
   /**
@@ -956,12 +933,12 @@ public class WeekView extends View {
     invalidate();
   }
 
-  public int getFirstJulianDay() {
-    return firstJulianDay;
-  }
-
   private int getJulianMondayFromWeeksSinceEpoch(int week) {
     return MONDAY_BEFORE_JULIAN_EPOCH + week * 7;
+  }
+
+  public int getFirstJulianDay() {
+    return firstJulianDay;
   }
 
   public int getFirstMonth() {

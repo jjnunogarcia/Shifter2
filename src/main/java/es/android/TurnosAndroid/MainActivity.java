@@ -18,6 +18,7 @@ import es.android.TurnosAndroid.fragments.*;
 import es.android.TurnosAndroid.model.EventInfo;
 import es.android.TurnosAndroid.model.EventType;
 
+// TODO Check logcat: why does it need permissions for calendar?
 public class MainActivity extends FragmentActivity implements EventHandler {
   private DrawerLayout          drawerLayout;
   private ListView              drawerList;
@@ -156,7 +157,7 @@ public class MainActivity extends FragmentActivity implements EventHandler {
   public void addMonthFragment() {
     FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
     Bundle bundle = new Bundle();
-    bundle.putLong(MonthFragment.INITIAL_TIME, System.currentTimeMillis());
+    bundle.putLong(MonthFragment.KEY_INITIAL_TIME, System.currentTimeMillis());
     MonthFragment monthFragment = new MonthFragment();
     monthFragment.setArguments(bundle);
     ft.replace(R.id.calendar_frame, monthFragment, MonthFragment.TAG).commit();
