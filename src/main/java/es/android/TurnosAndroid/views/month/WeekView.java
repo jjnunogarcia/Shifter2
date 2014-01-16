@@ -28,7 +28,8 @@ import java.util.*;
  * number of days. It is intended for use as a single view within a ListView. See {@link MonthAdapter} for usage.
  * </p>
  */
-public class MonthView extends View {
+// TODO rename to WeekView ?
+public class WeekView extends View {
   public static final String VIEW_PARAMS_ANIMATE_TODAY  = "animate_today";
   public static final int    MONDAY_BEFORE_JULIAN_EPOCH = Time.EPOCH_JULIAN_DAY - 3;
   /**
@@ -68,7 +69,7 @@ public class MonthView extends View {
   protected static final int           DEFAULT_WEEK_START          = Time.SUNDAY;
   protected static final int           DEFAULT_NUM_DAYS            = 7;
   protected static final int           DEFAULT_FOCUS_MONTH         = -1;
-  private static final   String        TAG                         = MonthView.class.getSimpleName();
+  private static final   String        TAG                         = WeekView.class.getSimpleName();
   private static final   int           mClickedAlpha               = 128;
   protected static       int           DEFAULT_HEIGHT              = 32;
   protected static       int           MIN_HEIGHT                  = 10;
@@ -187,7 +188,7 @@ public class MonthView extends View {
   private   int[]                               mDayXs;
   private   TodayAnimatorListener               animatorListener;
 
-  public MonthView(Context context) {
+  public WeekView(Context context) {
     super(context);
     Resources res = context.getResources();
 
@@ -988,7 +989,7 @@ public class MonthView extends View {
             todayAnimator.removeAllListeners();
             todayAnimator.cancel();
           }
-          todayAnimator = ObjectAnimator.ofInt(MonthView.this, "animateTodayAlpha", 255, 0);
+          todayAnimator = ObjectAnimator.ofInt(WeekView.this, "animateTodayAlpha", 255, 0);
           animator = todayAnimator;
           fadingIn = false;
           todayAnimator.addListener(this);
