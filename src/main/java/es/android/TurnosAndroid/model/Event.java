@@ -158,58 +158,58 @@ public class Event {
     return calendarEvent;
   }
 
-  /**
-   * Computes a position for each event.  Each event is displayed as a non-overlapping rectangle.  For normal events, these rectangles
-   * are displayed in separate columns in the week view and day view. For all-day events, these rectangles are displayed in separate rows along
-   * the top.  In both cases, each event is assigned two numbers: N, and Max, that specify that this event is the Nth event of Max number of
-   * events that are displayed in a group. The width and position of each rectangle depend on the maximum number of rectangles that occur at the same time.
-   *
-   * @param eventsList the list of events, sorted into increasing time order
-   */
-  public static void computePositions(ArrayList<Event> eventsList) {
-    if (eventsList != null) {
-      // Compute the column positions separately for the all-day events
-      doComputePositions(eventsList);
-      doComputePositions(eventsList);
-    }
-  }
-
-  private static void doComputePositions(ArrayList<Event> eventsList) {
-    final ArrayList<Event> activeList = new ArrayList<Event>();
-    final ArrayList<Event> groupList = new ArrayList<Event>();
-
-    long colMask = 0;
-    int maxCols = 0;
-
-    for (Event event : eventsList) {
-      // If the active list is empty, then reset the max columns, clear the column bit mask, and empty the groupList.
-      if (activeList.isEmpty()) {
-        for (Event ev : groupList) {
-          ev.setMaxColumns(maxCols);
-        }
-        maxCols = 0;
-        colMask = 0;
-        groupList.clear();
-      }
-
-      // Find the first empty column.  Empty columns are represented by zero bits in the column mask "colMask".
-      int col = findFirstZeroBit(colMask);
-      if (col == 64) {
-        col = 63;
-      }
-      colMask |= (1L << col);
-      event.setColumn(col);
-      activeList.add(event);
-      groupList.add(event);
-      int len = activeList.size();
-      if (maxCols < len) {
-        maxCols = len;
-      }
-    }
-    for (Event ev : groupList) {
-      ev.setMaxColumns(maxCols);
-    }
-  }
+//  /**
+//   * Computes a position for each event.  Each event is displayed as a non-overlapping rectangle.  For normal events, these rectangles
+//   * are displayed in separate columns in the week view and day view. For all-day events, these rectangles are displayed in separate rows along
+//   * the top.  In both cases, each event is assigned two numbers: N, and Max, that specify that this event is the Nth event of Max number of
+//   * events that are displayed in a group. The width and position of each rectangle depend on the maximum number of rectangles that occur at the same time.
+//   *
+//   * @param eventsList the list of events, sorted into increasing time order
+//   */
+//  public static void computePositions(ArrayList<Event> eventsList) {
+//    if (eventsList != null) {
+//      // Compute the column positions separately for the all-day events
+//      doComputePositions(eventsList);
+//      doComputePositions(eventsList);
+//    }
+//  }
+//
+//  private static void doComputePositions(ArrayList<Event> eventsList) {
+//    final ArrayList<Event> activeList = new ArrayList<Event>();
+//    final ArrayList<Event> groupList = new ArrayList<Event>();
+//
+//    long colMask = 0;
+//    int maxCols = 0;
+//
+//    for (Event event : eventsList) {
+//      // If the active list is empty, then reset the max columns, clear the column bit mask, and empty the groupList.
+//      if (activeList.isEmpty()) {
+//        for (Event ev : groupList) {
+//          ev.setMaxColumns(maxCols);
+//        }
+//        maxCols = 0;
+//        colMask = 0;
+//        groupList.clear();
+//      }
+//
+//      // Find the first empty column.  Empty columns are represented by zero bits in the column mask "colMask".
+//      int col = findFirstZeroBit(colMask);
+//      if (col == 64) {
+//        col = 63;
+//      }
+//      colMask |= (1L << col);
+//      event.setColumn(col);
+//      activeList.add(event);
+//      groupList.add(event);
+//      int len = activeList.size();
+//      if (maxCols < len) {
+//        maxCols = len;
+//      }
+//    }
+//    for (Event ev : groupList) {
+//      ev.setMaxColumns(maxCols);
+//    }
+//  }
 
   public static int findFirstZeroBit(long val) {
     for (int i = 0; i < 64; ++i) {

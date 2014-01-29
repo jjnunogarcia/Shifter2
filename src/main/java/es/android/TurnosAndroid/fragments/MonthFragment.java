@@ -1,6 +1,7 @@
 package es.android.TurnosAndroid.fragments;
 
 import android.content.ContentUris;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.res.Resources;
 import android.database.Cursor;
@@ -24,6 +25,7 @@ import android.widget.TextView;
 import es.android.TurnosAndroid.*;
 import es.android.TurnosAndroid.controllers.CalendarController;
 import es.android.TurnosAndroid.database.CalendarProvider;
+import es.android.TurnosAndroid.database.DBConstants;
 import es.android.TurnosAndroid.helpers.TimeZoneUtils;
 import es.android.TurnosAndroid.helpers.Utils;
 import es.android.TurnosAndroid.model.CalendarEvent;
@@ -242,7 +244,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
         cursorLoader = (CalendarEventsLoader) getLoaderManager().initLoader(0, null, MonthFragment.this);
 //        ContentValues contentValues = new ContentValues();
 //        GregorianCalendar initialDay = new GregorianCalendar();
-//        initialDay.set(2013, Calendar.JANUARY, 31);
+//        initialDay.set(2013, Calendar.DECEMBER, 15);
 //        contentValues.put(DBConstants.DATE, initialDay.getTimeInMillis());
 //        contentValues.put(DBConstants.EVENT_ID, 1);
 //        getActivity().getApplicationContext().getContentResolver().insert(CalendarProvider.CALENDAR_EVENTS_URI, contentValues);

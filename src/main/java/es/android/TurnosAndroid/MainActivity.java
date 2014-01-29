@@ -165,14 +165,9 @@ public class MainActivity extends FragmentActivity implements EventHandler {
   }
 
   public void addDayFragment(EventInfo event) {
-    FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-    Bundle bundle = new Bundle();
-    bundle.putLong(DayFragment.TIME_MILLIS, event.startTime.toMillis(true));
-    bundle.putInt(DayFragment.NUM_OF_DAYS, 1);
-    DayFragment dayFragment = new DayFragment();
-    dayFragment.setArguments(bundle);
-    ft.replace(R.id.calendar_frame, dayFragment, DayFragment.TAG).commit();
-    actionBarManager.setDayFragmentActionBar();
+//    DialogFragment dialogFragment = new DialogFragment();
+//    FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+//    dialogFragment.show(ft, "DummyTag");
   }
 
   public void addMyEventsFragment() {

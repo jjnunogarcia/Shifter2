@@ -404,7 +404,25 @@ public class WeekView extends View {
 
     int top = DAY_SEPARATOR_INNER_WIDTH + DNA_MARGIN + DNA_ALL_DAY_HEIGHT + 1;
     int bottom = height - DNA_MARGIN;
-    dna = Utils.createDNAStrands(firstJulianDay, unsortedEvents, top, bottom, DNA_MIN_SEGMENT_HEIGHT, mDayXs, getContext());
+
+    if (hasThisWeekEventsInside(unsortedEvents)) {
+      dna = Utils.createDNAStrands(firstJulianDay, unsortedEvents, top, bottom, DNA_MIN_SEGMENT_HEIGHT, mDayXs, getContext());
+    }
+  }
+
+  private boolean hasThisWeekEventsInside(ArrayList<CalendarEvent> calendarEvents) {
+    for (CalendarEvent event : calendarEvents) {
+      Time time = new Time();
+      time.set(event.getDay());
+      time.normalize(false);
+      int eventJulianDay = Time.getJulianDay(time.toMillis(false), time.gmtoff);
+
+      if (eventJulianDay >= firstJulianDay && eventJulianDay < firstJulianDay + MonthFragment.DAYS_PER_WEEK) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   /**

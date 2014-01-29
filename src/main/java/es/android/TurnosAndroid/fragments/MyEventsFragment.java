@@ -63,7 +63,6 @@ public class MyEventsFragment extends ListFragment implements LoaderCallbacks<Cu
 
   @Override
   public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-    // TODO maybe getMyEvents shouldn't be en Event class
     adapter.setMyEvents(Utils.getMyEvents(data));
   }
 
