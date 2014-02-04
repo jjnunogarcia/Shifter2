@@ -155,6 +155,7 @@ public class MainActivity extends FragmentActivity implements EventHandler {
   }
 
   public void addMonthFragment() {
+    // TODO if the app is sent to the background and reopened through launcher, this fragment is opened many times.
     FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
     Bundle bundle = new Bundle();
     bundle.putLong(MonthFragment.KEY_INITIAL_TIME, System.currentTimeMillis());

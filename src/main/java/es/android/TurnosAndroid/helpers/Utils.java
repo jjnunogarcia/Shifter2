@@ -39,14 +39,14 @@ public class Utils {
    * <li>All segments drawn will maintain at least minPixels height, except for conflicts in the first or last 1/8th, which may be smaller</li>
    * </ul>
    *
-   * @param firstJulianDay The julian day of the first day of calendarEvents
+   *
    * @param calendarEvents A list of calendarEvents sorted by start time
    * @param top            The lowest y value the dna should be drawn at
    * @param bottom         The highest y value the dna should be drawn at
    * @param dayXs          An array of x values to draw the dna at, one for each day
    * @return
    */
-  public static ArrayList<EventStrand> createDNAStrands(int firstJulianDay, ArrayList<CalendarEvent> calendarEvents, int top, int bottom, int[] dayXs, Context context, int mondayJulianDay) {
+  public static ArrayList<EventStrand> createDnaStrands(ArrayList<CalendarEvent> calendarEvents, int top, int bottom, int[] dayXs, Context context, int mondayJulianDay) {
     if (calendarEvents == null || calendarEvents.isEmpty() || dayXs == null || dayXs.length < 1 || bottom - top < 8) {
       return null;
     }
@@ -58,12 +58,12 @@ public class Utils {
       addNewSegment(segments, calendarEvent, mondayJulianDay);
     }
 
-    weaveDnaStrands(segments, firstJulianDay, strands, top, bottom, dayXs);
+    weaveDnaStrands(segments, strands, top, bottom, dayXs);
     return strands;
   }
 
   /**
-   * Add a new segment based on the event provided. This will handle splitting segments across day boundaries and ensures a minimum size for segments.
+   * Adds a new segment based on the event provided. This will handle splitting segments across day boundaries and ensures a minimum size for segments.
    */
   private static void addNewSegment(ArrayList<EventSegment> segments, CalendarEvent calendarEvent, int mondayJulianDay) {
     // If this is a multiday event, split it up by day
@@ -106,7 +106,7 @@ public class Utils {
 
   // This processes all the segments, sorts them by color, and generates a list of points to draw
   // TODO replace "top" by a variable that indicates the month number height, so the lines are below
-  private static void weaveDnaStrands(ArrayList<EventSegment> segments, int firstJulianDay, ArrayList<EventStrand> strands, int top, int bottom, int[] dayXs) {
+  private static void weaveDnaStrands(ArrayList<EventSegment> segments, ArrayList<EventStrand> strands, int top, int bottom, int[] dayXs) {
     for (EventSegment segment : segments) {
       int x = dayXs[segment.dayOfWeek];
       int eventWidth = dayXs[1] - dayXs[0]; // TODO better put a event width
@@ -166,8 +166,7 @@ public class Utils {
     return calendarEvent;
   }
 
-  // A single strand represents one color of events. Events are divided up by color to make them convenient to draw. The black strand is special in
-  // that it holds conflicting events as well as color settings for allday on each day.
+  // A single strand represents one color of events. Events are divided up by color to make them convenient to draw.
   public static class EventStrand {
     public float[] points;
     public int     color;

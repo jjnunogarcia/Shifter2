@@ -389,27 +389,8 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
   @Override
   public void handleEvent(EventInfo event) {
     if (event.eventType == EventType.GO_TO) {
-      boolean animate = true;
-      if (DAYS_PER_WEEK * NUM_WEEKS * 2 < Math.abs(Time.getJulianDay(event.selectedTime.toMillis(true), event.selectedTime.gmtoff)
-                                                   - Time.getJulianDay(firstVisibleDay.toMillis(true), firstVisibleDay.gmtoff)
-                                                   - DAYS_PER_WEEK * NUM_WEEKS / 2)) {
-        animate = false;
-      }
       desiredDay.set(event.selectedTime);
       desiredDay.normalize(true);
-      boolean animateToday = true;
-      boolean delayAnimation = goTo(event.selectedTime.toMillis(true), animate, false);
-
-      if (animateToday) {
-        // If we need to flash today start the animation after any movement from listView has ended.
-        handler.postDelayed(new Runnable() {
-          @Override
-          public void run() {
-            adapter.animateToday();
-            adapter.notifyDataSetChanged();
-          }
-        }, delayAnimation ? GOTO_SCROLL_DURATION : 0);
-      }
     } else if (event.eventType == EventType.EVENTS_CHANGED) {
       eventsChanged();
     }

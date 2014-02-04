@@ -1,8 +1,5 @@
 package es.android.TurnosAndroid.views.month;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.*;
@@ -28,59 +25,49 @@ import java.util.HashMap;
  * number of days. It is intended for use as a single view within a ListView. See {@link MonthAdapter} for usage.
  */
 public class WeekView extends View {
-  public static final    String  KEY_ANIMATE_TODAY           = "animate_today";
-  public static final    String  KEY_WEEK_HEIGHT             = "week_height";
-  public static final    String  KEY_WEEK_TO_DISPLAY         = "week";
+  public static final  String  KEY_WEEK_HEIGHT           = "week_height";
+  public static final  String  KEY_WEEK_TO_DISPLAY       = "week_number";
   /**
    * This sets one of the days in this view as selected {@link android.text.format.Time#SUNDAY} through {@link android.text.format.Time#SATURDAY}.
    */
-  public static final    String  KEY_SELECTED_DAY            = "selected_day";
+  public static final  String  KEY_SELECTED_DAY          = "selected_day";
   /**
    * Which day the week should start on. {@link android.text.format.Time#SUNDAY} through {@link android.text.format.Time#SATURDAY}.
    */
-  public static final    String  KEY_WEEK_START              = "week_start";
+  public static final  String  KEY_WEEK_START            = "week_start";
   /**
    * Which month is currently in focus, as defined by {@link android.text.format.Time#month} [0-11].
    */
-  public static final    String  KEY_FOCUS_MONTH             = "focus_month";
-  protected static final int     DEFAULT_SELECTED_DAY        = -1;
-  protected static final int     DEFAULT_WEEK_START          = Time.SUNDAY;
-  protected static final int     DEFAULT_FOCUS_MONTH         = -1;
-  private static final   String  TAG                         = WeekView.class.getSimpleName();
-  private static final   int     CLICKED_ALPHA               = 128;
-  protected static       int     DEFAULT_HEIGHT              = 32;
-  protected static       int     DAY_SEPARATOR_WIDTH         = 1;
-  protected static       int     MINI_DAY_NUMBER_TEXT_SIZE   = 14;
-  protected static       int     MINI_WK_NUMBER_TEXT_SIZE    = 12;
-  protected static       int     MINI_TODAY_NUMBER_TEXT_SIZE = 18;
-  protected static       int     MINI_TODAY_OUTLINE_WIDTH    = 2;
-  protected static       int     WEEK_NUM_MARGIN_BOTTOM      = 4;
+  public static final  String  KEY_FOCUS_MONTH           = "focus_month";
+  private static final int     DEFAULT_SELECTED_DAY      = -1;
+  private static final int     DEFAULT_WEEK_START        = Time.SUNDAY;
+  private static final int     DEFAULT_FOCUS_MONTH       = -1;
+  private static final int     CLICKED_ALPHA             = 128;
+  private static       int     DEFAULT_HEIGHT            = 32;
+  private static       int     DAY_SEPARATOR_WIDTH       = 1;
+  private static       int     MINI_DAY_NUMBER_TEXT_SIZE = 14;
   // used for scaling to the device density
-  protected static       float   scale                       = 0;
-  private static         int     TEXT_SIZE_MONTH_NUMBER      = 32;
-  private static         int     TEXT_SIZE_EVENT             = 12;
-  private static         int     TEXT_SIZE_EVENT_TITLE       = 14;
-  private static         int     TEXT_SIZE_WEEK_NUM          = 12;
-  private static         int     DNA_MARGIN                  = 4;
-  private static         int     DNA_ALL_DAY_HEIGHT          = 4;
-  private static         int     DNA_MIN_SEGMENT_HEIGHT      = 4;
-  private static         int     DNA_WIDTH                   = 15;
-  private static         int     DNA_SIDE_PADDING            = 6;
-  private static         int     EVENT_TEXT_COLOR            = Color.WHITE;
-  private static         int     DEFAULT_EDGE_SPACING        = 0;
-  private static         int     SIDE_PADDING_MONTH_NUMBER   = 4;
-  private static         int     TOP_PADDING_MONTH_NUMBER    = 4;
-  private static         int     TOP_PADDING_WEEK_NUMBER     = 4;
-  private static         int     SIDE_PADDING_WEEK_NUMBER    = 20;
-  private static         int     DAY_SEPARATOR_INNER_WIDTH   = 1;
-  private static         int     MIN_WEEK_WIDTH              = 50;
-  private static         int     EVENT_SQUARE_BORDER         = 2;
-  private static         int     EVENT_BOTTOM_PADDING        = 3;
-  private static         int     TODAY_HIGHLIGHT_WIDTH       = 2;
-  private static         int     SPACING_WEEK_NUMBER         = 24;
-  private static         boolean initialized                 = false;
+  private static       float   scale                     = 0;
+  private static       int     TEXT_SIZE_MONTH_NUMBER    = 32;
+  private static       int     TEXT_SIZE_EVENT           = 12;
+  private static       int     TEXT_SIZE_EVENT_TITLE     = 14;
+  private static       int     DNA_MARGIN                = 4;
+  private static       int     DNA_ALL_DAY_HEIGHT        = 4;
+  private static       int     DNA_MIN_SEGMENT_HEIGHT    = 4;
+  private static       int     DNA_WIDTH                 = 15;
+  private static       int     DNA_SIDE_PADDING          = 6;
+  private static       int     EVENT_TEXT_COLOR          = Color.WHITE;
+  private static       int     DEFAULT_EDGE_SPACING      = 0;
+  private static       int     SIDE_PADDING_MONTH_NUMBER = 4;
+  private static       int     TOP_PADDING_MONTH_NUMBER  = 4;
+  private static       int     DAY_SEPARATOR_INNER_WIDTH = 1;
+  private static       int     MIN_WEEK_WIDTH            = 50;
+  private static       int     EVENT_SQUARE_BORDER       = 2;
+  private static       int     EVENT_BOTTOM_PADDING      = 3;
+  private static       int     TODAY_HIGHLIGHT_WIDTH     = 2;
+  private static       boolean initialized               = false;
 
-  private Paint                        p;
+  private Paint                        paint;
   private Paint                        monthNumPaint;
   // Cache the number strings so we don't have to recompute them each time
   private String[]                     dayNumbers;
@@ -116,7 +103,6 @@ public class WeekView extends View {
   private TextPaint                    solidBackgroundEventPaint;
   private TextPaint                    eventExtrasPaint;
   private Paint                        dnaTimePaint;
-  private Paint                        eventSquarePaint;
   private int                          monthNumAscentHeight;
   private int                          eventHeight;
   private int                          eventAscentHeight;
@@ -133,11 +119,8 @@ public class WeekView extends View {
   private int                          clickedDayColor;
   private int                          daySeparatorInnerColor;
   private int                          todayAnimateColor;
-  private boolean                      animateToday;
   private int                          clickedDayIndex;
   private int                          animateTodayAlpha;
-  private ObjectAnimator               todayAnimator;
-  private TodayAnimatorListener        animatorListener;
   private int                          mondayJulianDay;
 
   public WeekView(Context context) {
@@ -145,7 +128,7 @@ public class WeekView extends View {
     Resources res = context.getResources();
 
     focusMonthColor = res.getColor(R.color.month_mini_day_number);
-    p = new Paint();
+    paint = new Paint();
     firstJulianDay = -1;
     firstMonth = -1;
     lastMonth = -1;
@@ -161,19 +144,13 @@ public class WeekView extends View {
     dna = null;
     clickedDayIndex = -1;
     animateTodayAlpha = 0;
-    todayAnimator = null;
-    animatorListener = new TodayAnimatorListener();
 
     if (scale == 0) {
       scale = context.getResources().getDisplayMetrics().density;
       if (scale != 1) {
         DEFAULT_HEIGHT *= scale;
         MINI_DAY_NUMBER_TEXT_SIZE *= scale;
-        MINI_TODAY_NUMBER_TEXT_SIZE *= scale;
-        MINI_TODAY_OUTLINE_WIDTH *= scale;
-        WEEK_NUM_MARGIN_BOTTOM *= scale;
         DAY_SEPARATOR_WIDTH *= scale;
-        MINI_WK_NUMBER_TEXT_SIZE *= scale;
       }
     }
 
@@ -181,10 +158,10 @@ public class WeekView extends View {
   }
 
   private void initView() {
-    p.setFakeBoldText(false);
-    p.setAntiAlias(true);
-    p.setTextSize(MINI_DAY_NUMBER_TEXT_SIZE);
-    p.setStyle(Style.FILL);
+    paint.setFakeBoldText(false);
+    paint.setAntiAlias(true);
+    paint.setTextSize(MINI_DAY_NUMBER_TEXT_SIZE);
+    paint.setStyle(Style.FILL);
 
     monthNumPaint = new Paint();
     monthNumPaint.setFakeBoldText(true);
@@ -201,14 +178,10 @@ public class WeekView extends View {
       EVENT_TEXT_COLOR = resources.getColor(R.color.calendar_event_text_color);
       if (scale != 1) {
         TOP_PADDING_MONTH_NUMBER *= scale;
-        TOP_PADDING_WEEK_NUMBER *= scale;
         SIDE_PADDING_MONTH_NUMBER *= scale;
-        SIDE_PADDING_WEEK_NUMBER *= scale;
-        SPACING_WEEK_NUMBER *= scale;
         TEXT_SIZE_MONTH_NUMBER *= scale;
         TEXT_SIZE_EVENT *= scale;
         TEXT_SIZE_EVENT_TITLE *= scale;
-        TEXT_SIZE_WEEK_NUM *= scale;
         DAY_SEPARATOR_INNER_WIDTH *= scale;
         EVENT_SQUARE_BORDER *= scale;
         EVENT_BOTTOM_PADDING *= scale;
@@ -267,10 +240,6 @@ public class WeekView extends View {
     dnaTimePaint.setStrokeWidth(DNA_WIDTH);
     dnaTimePaint.setAntiAlias(false);
 
-    eventSquarePaint = new Paint();
-    eventSquarePaint.setStrokeWidth(EVENT_SQUARE_BORDER);
-    eventSquarePaint.setAntiAlias(false);
-
     setLayoutParams(new AbsListView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
     setClickable(true);
   }
@@ -317,7 +286,7 @@ public class WeekView extends View {
     int bottom = height - DNA_MARGIN;
 
     if (hasThisWeekEventsInside()) {
-      dna = Utils.createDNAStrands(firstJulianDay, weekEvents, top, bottom, dayXs, getContext(), mondayJulianDay);
+      dna = Utils.createDnaStrands(weekEvents, top, bottom, dayXs, getContext(), mondayJulianDay);
     }
   }
 
@@ -335,15 +304,15 @@ public class WeekView extends View {
    * Sets all the parameters for displaying this week. The only required parameter is the week number. Other parameters have a default value and will only update if a new value is
    * included, except for focus month, which will always default to no focus month if no value is passed in. See {@link #KEY_WEEK_HEIGHT} for more info on parameters.
    *
-   * @param params A map of the new parameters, see {@link #KEY_WEEK_HEIGHT}
-   * @param tz     The time zone this view should reference times in
+   * @param params   A map of the new parameters, see {@link #KEY_WEEK_HEIGHT}
+   * @param timeZone The time zone this view should reference times in
    */
-  public void setWeekParams(HashMap<String, Integer> params, String tz) {
+  public void setWeekParams(HashMap<String, Integer> params, String timeZone) {
     if (!params.containsKey(KEY_WEEK_TO_DISPLAY)) {
       throw new InvalidParameterException("You must specify the week number for this view");
     }
     setTag(params);
-    timeZone = tz;
+    this.timeZone = timeZone;
 
     if (params.containsKey(KEY_WEEK_HEIGHT)) {
       height = params.get(KEY_WEEK_HEIGHT);
@@ -359,7 +328,7 @@ public class WeekView extends View {
     oddMonth = new boolean[MonthFragment.DAYS_PER_WEEK];
     week = params.get(KEY_WEEK_TO_DISPLAY);
     mondayJulianDay = Time.getJulianMondayFromWeeksSinceEpoch(week);
-    Time time = new Time(tz);
+    Time time = new Time(this.timeZone);
     time.setJulianDay(mondayJulianDay);
 
     if (params.containsKey(KEY_WEEK_START)) {
@@ -380,7 +349,7 @@ public class WeekView extends View {
     firstMonth = time.month;
 
     // Figure out what day today is
-    Time today = new Time(tz);
+    Time today = new Time(this.timeZone);
     today.setToNow();
     hasToday = false;
 
@@ -406,28 +375,11 @@ public class WeekView extends View {
 
     lastMonth = time.month;
 
-//    updateSelectionPositions();
-    updateToday(tz);
-
-    if (params.containsKey(KEY_ANIMATE_TODAY) && hasToday) {
-      synchronized (animatorListener) {
-        if (todayAnimator != null) {
-          todayAnimator.removeAllListeners();
-          todayAnimator.cancel();
-        }
-        todayAnimator = ObjectAnimator.ofInt(this, "animateTodayAlpha", Math.max(animateTodayAlpha, 80), 255);
-        todayAnimator.setDuration(150);
-        animatorListener.setAnimator(todayAnimator);
-        animatorListener.setFadingIn(true);
-        todayAnimator.addListener(animatorListener);
-        animateToday = true;
-        todayAnimator.start();
-      }
-    }
+    setTodayValue();
   }
 
-  public boolean updateToday(String tz) {
-    today.timezone = tz;
+  public boolean setTodayValue() {
+    today.timezone = timeZone;
     today.setToNow();
     today.normalize(true);
     int julianToday = Time.getJulianDay(today.toMillis(false), today.gmtoff);
@@ -446,7 +398,7 @@ public class WeekView extends View {
     drawBackground(canvas);
     drawMonthDayNumbers(canvas);
     drawDaySeparators(canvas);
-    if (hasToday && animateToday) {
+    if (hasToday) {
       drawToday(canvas);
     }
     if (dna == null) {
@@ -473,8 +425,8 @@ public class WeekView extends View {
       }
       rect.right = computeDayLeftPosition(i - offset);
       rect.left = 0;
-      p.setColor(monthBGOtherColor);
-      canvas.drawRect(rect, p);
+      paint.setColor(monthBGOtherColor);
+      canvas.drawRect(rect, paint);
       // compute left edge for i, set up rect, draw
     } else if (!oddMonth[(i = oddMonth.length - 1)]) {
       while (--i >= offset && !oddMonth[i]) {
@@ -483,15 +435,15 @@ public class WeekView extends View {
       // compute left edge for i, set up rect, draw
       rect.right = width;
       rect.left = computeDayLeftPosition(i - offset);
-      p.setColor(monthBGOtherColor);
-      canvas.drawRect(rect, p);
+      paint.setColor(monthBGOtherColor);
+      canvas.drawRect(rect, paint);
     }
 
     if (hasToday) {
-      p.setColor(monthBGTodayColor);
+      paint.setColor(monthBGTodayColor);
       rect.left = computeDayLeftPosition(todayIndex);
       rect.right = computeDayLeftPosition(todayIndex + 1);
-      canvas.drawRect(rect, p);
+      canvas.drawRect(rect, paint);
     }
   }
 
@@ -499,13 +451,13 @@ public class WeekView extends View {
     Rect r = new Rect();
     r.top = DAY_SEPARATOR_INNER_WIDTH + (TODAY_HIGHLIGHT_WIDTH / 2);
     r.bottom = height - (int) Math.ceil(TODAY_HIGHLIGHT_WIDTH / 2.0f);
-    p.setStyle(Style.STROKE);
-    p.setStrokeWidth(TODAY_HIGHLIGHT_WIDTH);
+    paint.setStyle(Style.STROKE);
+    paint.setStrokeWidth(TODAY_HIGHLIGHT_WIDTH);
     r.left = computeDayLeftPosition(todayIndex) + (TODAY_HIGHLIGHT_WIDTH / 2);
     r.right = computeDayLeftPosition(todayIndex + 1) - (int) Math.ceil(TODAY_HIGHLIGHT_WIDTH / 2.0f);
-    p.setColor(todayAnimateColor | (animateTodayAlpha << 24));
-    canvas.drawRect(r, p);
-    p.setStyle(Style.FILL);
+    paint.setColor(todayAnimateColor | (animateTodayAlpha << 24));
+    canvas.drawRect(r, paint);
+    paint.setStyle(Style.FILL);
   }
 
   private int computeDayLeftPosition(int day) {
@@ -537,24 +489,24 @@ public class WeekView extends View {
       lines[i++] = x;
       lines[i++] = y1;
     }
-    p.setColor(daySeparatorInnerColor);
-    p.setStrokeWidth(DAY_SEPARATOR_INNER_WIDTH);
-    canvas.drawLines(lines, 0, count, p);
+    paint.setColor(daySeparatorInnerColor);
+    paint.setStrokeWidth(DAY_SEPARATOR_INNER_WIDTH);
+    canvas.drawLines(lines, 0, count, paint);
   }
 
   // Draw the "clicked" color on the tapped day
   private void drawClick(Canvas canvas) {
     if (clickedDayIndex != -1) {
       Rect r = new Rect();
-      int alpha = p.getAlpha();
-      p.setColor(clickedDayColor);
-      p.setAlpha(CLICKED_ALPHA);
+      int alpha = paint.getAlpha();
+      paint.setColor(clickedDayColor);
+      paint.setAlpha(CLICKED_ALPHA);
       r.left = computeDayLeftPosition(clickedDayIndex);
       r.right = computeDayLeftPosition(clickedDayIndex + 1);
       r.top = DAY_SEPARATOR_INNER_WIDTH;
       r.bottom = height;
-      canvas.drawRect(r, p);
-      p.setAlpha(alpha);
+      canvas.drawRect(r, paint);
+      paint.setAlpha(alpha);
     }
   }
 
@@ -622,21 +574,6 @@ public class WeekView extends View {
   @Override
   protected void onSizeChanged(int w, int h, int oldw, int oldh) {
     width = w;
-//    updateSelectionPositions();
-  }
-
-  /**
-   * This calculates the positions for the selected day lines.
-   */
-  private void updateSelectionPositions() {
-    if (selectedDay != -1) {
-      int selectedPosition = selectedDay - weekStart;
-      if (selectedPosition < 0) {
-        selectedPosition += 7;
-      }
-      int effectiveWidth = width - DEFAULT_EDGE_SPACING * 2;
-      effectiveWidth -= SPACING_WEEK_NUMBER;
-    }
   }
 
   public int getDayIndexFromLocation(float x) {
@@ -696,49 +633,5 @@ public class WeekView extends View {
 
   public int getLastMonth() {
     return lastMonth;
-  }
-
-  private class TodayAnimatorListener extends AnimatorListenerAdapter {
-    private volatile Animator animator = null;
-    private volatile boolean  fadingIn = false;
-
-    @Override
-    public void onAnimationEnd(Animator animation) {
-      synchronized (this) {
-        if (animator != animation) {
-          animation.removeAllListeners();
-          animation.cancel();
-          return;
-        }
-        if (fadingIn) {
-          if (todayAnimator != null) {
-            todayAnimator.removeAllListeners();
-            todayAnimator.cancel();
-          }
-          todayAnimator = ObjectAnimator.ofInt(WeekView.this, "animateTodayAlpha", 255, 0);
-          animator = todayAnimator;
-          fadingIn = false;
-          todayAnimator.addListener(this);
-          todayAnimator.setDuration(600);
-          todayAnimator.start();
-        } else {
-          animateToday = false;
-          animateTodayAlpha = 0;
-          animator.removeAllListeners();
-          animator = null;
-          todayAnimator = null;
-          invalidate();
-        }
-      }
-    }
-
-    public void setAnimator(Animator animation) {
-      animator = animation;
-    }
-
-    public void setFadingIn(boolean fadingIn) {
-      this.fadingIn = fadingIn;
-    }
-
   }
 }
