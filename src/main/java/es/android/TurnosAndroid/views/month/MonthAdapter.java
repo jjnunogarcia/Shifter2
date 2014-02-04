@@ -23,9 +23,7 @@ import android.view.View.OnTouchListener;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
 import es.android.TurnosAndroid.controllers.CalendarController;
-import es.android.TurnosAndroid.fragments.MonthFragment;
 import es.android.TurnosAndroid.helpers.TimeZoneUtils;
-import es.android.TurnosAndroid.helpers.Utils;
 import es.android.TurnosAndroid.model.CalendarEvent;
 import es.android.TurnosAndroid.model.EventType;
 import es.android.TurnosAndroid.views.ViewType;
@@ -51,10 +49,6 @@ public class MonthAdapter extends BaseAdapter implements OnTouchListener {
    */
   public static final  String WEEK_PARAMS_FOCUS_MONTH   = "focus_month";
   /**
-   * Whether the week number should be shown. Non-zero to show them.
-   */
-  public static final  String WEEK_PARAMS_SHOW_WEEK     = "week_numbers";
-  /**
    * Which day the week should start on. {@link android.text.format.Time#SUNDAY} through {@link android.text.format.Time#SATURDAY}.
    */
   public static final  String WEEK_PARAMS_WEEK_START    = "week_start";
@@ -68,31 +62,29 @@ public class MonthAdapter extends BaseAdapter implements OnTouchListener {
   private static final int    DEFAULT_MONTH_FOCUS       = 0;
   private static final long   ANIMATE_TODAY_TIMEOUT     = 1000;
 
-  private Context                             context;
-  private Time                                selectedDay;
-  private int                                 selectedWeek;
-  private int                                 firstDayOfWeek;
-  private boolean                             showWeekNumber;
-  private GestureDetector                     gestureDetector;
-  private int                                 numWeeks;
-  private int                                 focusMonth;
-  private ListView                            listView;
-  private CalendarController                  calendarController;
-  private String                              homeTimeZone;
-  private Time                                tempTime;
-  private Time                                today;
-  private int                                 firstJulianDay;
-  private int                                 totalClickDelay;
-  private int                                 onDownDelay;
-  private float                               movedPixelToCancel;
-  private ArrayList<ArrayList<CalendarEvent>> eventDayList;
-  private ArrayList<CalendarEvent>            calendarEvents;
-  private boolean                             animateToday;
-  private long                                animateTime;
-  private WeekView                            clickedView;
-  private WeekView                            singleTapUpView;
-  private float                               clickedXLocation;
-  private long                                clickTime;
+  private Context                  context;
+  private Time                     selectedDay;
+  private int                      selectedWeek;
+  private int                      firstDayOfWeek;
+  private GestureDetector          gestureDetector;
+  private int                      numWeeks;
+  private int                      focusMonth;
+  private ListView                 listView;
+  private CalendarController       calendarController;
+  private String                   homeTimeZone;
+  private Time                     tempTime;
+  private Time                     today;
+  private int                      firstJulianDay;
+  private int                      totalClickDelay;
+  private int                      onDownDelay;
+  private float                    movedPixelToCancel;
+  private ArrayList<CalendarEvent> calendarEvents;
+  private boolean                  animateToday;
+  private long                     animateTime;
+  private WeekView                 clickedView;
+  private WeekView                 singleTapUpView;
+  private float                    clickedXLocation;
+  private long                     clickTime;
   // Perform the tap animation in a runnable to allow a delay before showing the tap color. This is done to prevent a click animation when a fling is done.
   private final Runnable doClick       = new Runnable() {
     @Override
@@ -127,7 +119,6 @@ public class MonthAdapter extends BaseAdapter implements OnTouchListener {
     gestureDetector = new GestureDetector(context, new CalendarGestureListener());
     selectedDay = new Time();
     selectedDay.setToNow();
-    showWeekNumber = false;
     numWeeks = DEFAULT_NUM_WEEKS;
     focusMonth = DEFAULT_MONTH_FOCUS;
     homeTimeZone = TimeZoneUtils.getTimeZone(context, null);
@@ -136,7 +127,6 @@ public class MonthAdapter extends BaseAdapter implements OnTouchListener {
     today.setToNow();
     tempTime = new Time(homeTimeZone);
     updateParams(params);
-    eventDayList = new ArrayList<ArrayList<CalendarEvent>>();
     animateToday = false;
     animateTime = 0;
     int onTapDelay = 100;
@@ -156,16 +146,13 @@ public class MonthAdapter extends BaseAdapter implements OnTouchListener {
     if (params.containsKey(WEEK_PARAMS_FOCUS_MONTH)) {
       numWeeks = params.get(WEEK_PARAMS_NUM_WEEKS);
     }
-    if (params.containsKey(WEEK_PARAMS_SHOW_WEEK)) {
-      showWeekNumber = params.get(WEEK_PARAMS_SHOW_WEEK) != 0;
-    }
     if (params.containsKey(WEEK_PARAMS_WEEK_START)) {
       firstDayOfWeek = params.get(WEEK_PARAMS_WEEK_START);
     }
     if (params.containsKey(WEEK_PARAMS_JULIAN_DAY)) {
       int julianDay = params.get(WEEK_PARAMS_JULIAN_DAY);
       selectedDay.setJulianDay(julianDay);
-      selectedWeek = Utils.getWeeksSinceEpochFromJulianDay(julianDay, firstDayOfWeek);
+      selectedWeek = Time.getWeeksSinceEpochFromJulianDay(julianDay, firstDayOfWeek);
     }
     notifyDataSetChanged();
   }
@@ -191,7 +178,7 @@ public class MonthAdapter extends BaseAdapter implements OnTouchListener {
   public void setSelectedDay(Time selectedTime) {
     selectedDay.set(selectedTime);
     long millis = selectedDay.normalize(true);
-    selectedWeek = Utils.getWeeksSinceEpochFromJulianDay(Time.getJulianDay(millis, selectedDay.gmtoff), firstDayOfWeek);
+    selectedWeek = Time.getWeeksSinceEpochFromJulianDay(Time.getJulianDay(millis, selectedDay.gmtoff), firstDayOfWeek);
     notifyDataSetChanged();
   }
 
@@ -213,31 +200,6 @@ public class MonthAdapter extends BaseAdapter implements OnTouchListener {
   public void setEvents(int firstJulianDay, int numDays, ArrayList<CalendarEvent> calendarEvents) {
     this.calendarEvents = calendarEvents;
     this.firstJulianDay = firstJulianDay;
-    // Create a new list, this is necessary since the weeks are referencing pieces of the old list
-    eventDayList = new ArrayList<ArrayList<CalendarEvent>>();
-    for (int i = 0; i < numDays; i++) {
-      eventDayList.add(new ArrayList<CalendarEvent>());
-    }
-
-    // Compute the new set of days with calendarEvents
-//    for (Event event : calendarEvents) {
-//      int startDay = event.startDay - this.firstJulianDay;
-//      int endDay = event.endDay - this.firstJulianDay + 1;
-//      if (startDay < numDays || endDay >= 0) {
-//        if (startDay < 0) {
-//          startDay = 0;
-//        }
-//        if (startDay <= numDays && endDay >= 0) {
-//          if (endDay > numDays) {
-//            endDay = numDays;
-//          }
-//          for (int j = startDay; j < endDay; j++) {
-//            eventDayList.get(j).add(event);
-//          }
-//        }
-//      }
-//    }
-
     refresh();
   }
 
@@ -265,7 +227,7 @@ public class MonthAdapter extends BaseAdapter implements OnTouchListener {
 //        drawingParams = (HashMap<String, Integer>) v.getTag();
 //      }
 //    } else {
-      v = new WeekView(context);
+    v = new WeekView(context);
 //    }
 
     drawingParams.clear();
@@ -279,7 +241,6 @@ public class MonthAdapter extends BaseAdapter implements OnTouchListener {
 
     drawingParams.put(WeekView.KEY_WEEK_HEIGHT, (parent.getHeight() + parent.getTop()) / numWeeks);
     drawingParams.put(WeekView.KEY_SELECTED_DAY, selectedDay);
-    drawingParams.put(WeekView.KEY_SHOW_WEEK_NUM, showWeekNumber ? 1 : 0);
     drawingParams.put(WeekView.KEY_WEEK_START, firstDayOfWeek);
     drawingParams.put(WeekView.KEY_WEEK_TO_DISPLAY, position);
     drawingParams.put(WeekView.KEY_FOCUS_MONTH, focusMonth);
@@ -290,23 +251,8 @@ public class MonthAdapter extends BaseAdapter implements OnTouchListener {
     }
 
     v.setWeekParams(drawingParams, this.selectedDay.timezone);
-    sendEventsToView(v);
+    v.setEvents(calendarEvents);
     return v;
-  }
-
-  private void sendEventsToView(WeekView weekView) {
-    if (eventDayList.size() == 0) {
-      weekView.setEvents(null, null);
-      return;
-    }
-    int viewJulianDay = weekView.getFirstJulianDay();
-    int start = viewJulianDay - firstJulianDay;
-    int end = start + MonthFragment.DAYS_PER_WEEK;
-    if (start < 0 || end > eventDayList.size()) {
-      weekView.setEvents(null, null);
-      return;
-    }
-    weekView.setEvents(eventDayList.subList(start, end), calendarEvents);
   }
 
   /**
@@ -320,8 +266,7 @@ public class MonthAdapter extends BaseAdapter implements OnTouchListener {
   }
 
   private void refresh() {
-    firstDayOfWeek = Utils.getFirstDayOfWeek(context);
-    showWeekNumber = Utils.getShowWeekNumber(context);
+    firstDayOfWeek = Time.MONDAY;
     homeTimeZone = TimeZoneUtils.getTimeZone(context, null);
     updateTimeZones();
     notifyDataSetChanged();

@@ -7,12 +7,9 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.provider.CalendarContract;
 import android.text.TextUtils;
-import android.text.format.DateUtils;
 import android.text.format.Time;
 
-import java.util.Formatter;
 import java.util.HashSet;
-import java.util.Locale;
 
 /**
  * This class contains methods specific to reading and writing time zone values.
@@ -21,7 +18,6 @@ import java.util.Locale;
  * @author jjnunogarcia@gmail.com
  */
 public class TimeZoneUtils {
-  private static final    String            TAG                      = TimeZoneUtils.class.getSimpleName();
   public static final     String[]          CALENDAR_CACHE_POJECTION = {"key", "value"};
   /**
    * This is the key used for writing whether or not a home time zone should be used in the Calendar app to the Calendar Preferences.
@@ -32,8 +28,6 @@ public class TimeZoneUtils {
    */
   public static final     String            KEY_HOME_TZ              = "preferences_home_tz";
   static final            String            SHARED_PREFS_NAME        = "calendar_preferences";
-  private static          StringBuilder     stringBuilder            = new StringBuilder(50);
-  private static          Formatter         formatter                = new Formatter(stringBuilder, Locale.getDefault());
   private volatile static boolean           firstTimeZoneRequest     = true;
   private volatile static boolean           timeZoneQueryInProgress  = false;
   private volatile static boolean           useHomeTimeZone          = false;
@@ -43,35 +37,6 @@ public class TimeZoneUtils {
 
 
   public TimeZoneUtils() {
-  }
-
-  /**
-   * Formats a date or a time range according to the local conventions.
-   * <p/>
-   * This formats a date/time range using Calendar's time zone and the local conventions for the region of the device.
-   * <p/>
-   * If the {@link android.text.format.DateUtils#FORMAT_UTC} flag is used it will pass in the UTC time zone instead.
-   *
-   * @param context     the context is required only if the time is shown
-   * @param startMillis the start time in UTC milliseconds
-   * @param endMillis   the end time in UTC milliseconds
-   * @param flags       a bit mask of options See
-   *                    {@link android.text.format.DateUtils#formatDateRange(android.content.Context, java.util.Formatter, long, long, int, String) formatDateRange}
-   * @return a string containing the formatted date/time range.
-   */
-  public static String formatDateRange(Context context, long startMillis, long endMillis, int flags) {
-    String date;
-    String tz;
-    if ((flags & DateUtils.FORMAT_UTC) != 0) {
-      tz = Time.TIMEZONE_UTC;
-    } else {
-      tz = getTimeZone(context, null);
-    }
-    synchronized (stringBuilder) {
-      stringBuilder.setLength(0);
-      date = DateUtils.formatDateRange(context, formatter, startMillis, endMillis, flags, tz).toString();
-    }
-    return date;
   }
 
   /**

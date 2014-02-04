@@ -29,7 +29,6 @@ import es.android.TurnosAndroid.database.DBConstants;
 import es.android.TurnosAndroid.helpers.TimeZoneUtils;
 import es.android.TurnosAndroid.helpers.Utils;
 import es.android.TurnosAndroid.model.CalendarEvent;
-import es.android.TurnosAndroid.model.Event;
 import es.android.TurnosAndroid.model.EventInfo;
 import es.android.TurnosAndroid.model.EventType;
 import es.android.TurnosAndroid.requests.CalendarEventsLoader;
@@ -147,7 +146,6 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
   private int                  saturdayColor;
   private int                  sundayColor;
   private int                  dayNameColor;
-  private boolean              showWeekNumber;
   private ScrollStateRunnable  scrollStateChangedRunnable;
   private long                 initialTime;
   private CalendarController   calendarController;
@@ -166,7 +164,6 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
     saturdayColor = 0;
     sundayColor = 0;
     dayNameColor = 0;
-    showWeekNumber = false;
     shouldLoad = true;
     userScrolled = false;
     scrollStateChangedRunnable = new ScrollStateRunnable();
@@ -242,11 +239,13 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
         setMonthDisplayed(tempTime, true);
 
         cursorLoader = (CalendarEventsLoader) getLoaderManager().initLoader(0, null, MonthFragment.this);
-//        ContentValues contentValues = new ContentValues();
-//        GregorianCalendar initialDay = new GregorianCalendar();
-//        initialDay.set(2013, Calendar.DECEMBER, 15);
-//        contentValues.put(DBConstants.DATE, initialDay.getTimeInMillis());
-//        contentValues.put(DBConstants.EVENT_ID, 1);
+        ContentValues contentValues = new ContentValues();
+        Time time = new Time();
+        time.set(4, Calendar.FEBRUARY, 2014);
+        time.normalize(false);
+        int exampleJulianDay = Time.getJulianDay(time.toMillis(true), time.gmtoff);
+        contentValues.put(DBConstants.DAY, exampleJulianDay);
+        contentValues.put(DBConstants.EVENT_ID, 1);
 //        getActivity().getApplicationContext().getContentResolver().insert(CalendarProvider.CALENDAR_EVENTS_URI, contentValues);
         adapter.setListView(listView);
 
@@ -284,12 +283,10 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
   }
 
   private void setUpAdapter() {
-    firstDayOfWeek = Utils.getFirstDayOfWeek(context);
-    showWeekNumber = Utils.getShowWeekNumber(context);
+    firstDayOfWeek = Time.MONDAY;
 
     HashMap<String, Integer> weekParams = new HashMap<String, Integer>();
     weekParams.put(MonthAdapter.WEEK_PARAMS_NUM_WEEKS, NUM_WEEKS);
-    weekParams.put(MonthAdapter.WEEK_PARAMS_SHOW_WEEK, showWeekNumber ? 1 : 0);
     weekParams.put(MonthAdapter.WEEK_PARAMS_WEEK_START, firstDayOfWeek);
     weekParams.put(MonthAdapter.WEEK_PARAMS_JULIAN_DAY, Time.getJulianDay(selectedDay.toMillis(true), selectedDay.gmtoff));
     weekParams.put(MonthAdapter.WEEK_PARAMS_DAYS_PER_WEEK, DAYS_PER_WEEK);
@@ -305,11 +302,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
   }
 
   private void updateHeader() {
-    if (showWeekNumber) {
-      header.setVisibility(View.VISIBLE);
-    } else {
-      header.setVisibility(View.GONE);
-    }
+    header.setVisibility(View.GONE);
     int offset = firstDayOfWeek - 1;
 
     for (int i = 1; i <= DAYS_PER_WEEK; i++) {
@@ -330,8 +323,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
   }
 
   private void doResumeUpdates() {
-    firstDayOfWeek = Utils.getFirstDayOfWeek(context);
-    showWeekNumber = Utils.getShowWeekNumber(context);
+    firstDayOfWeek = Time.MONDAY;
     updateHeader();
     adapter.setSelectedDay(selectedDay);
     timeZoneUpdater.run();
@@ -344,11 +336,15 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
 //    firstLoadedJulianDay = Time.getJulianDay(selectedDay.toMillis(true), selectedDay.gmtoff) - (NUM_WEEKS * 7 / 2);
 //    eventUri = updateUri();
 
-    GregorianCalendar initialDay = new GregorianCalendar();
-    GregorianCalendar finalDay = new GregorianCalendar();
-    initialDay.set(2013, Calendar.JANUARY, 1);
-    finalDay.set(2013, Calendar.DECEMBER, 31);
-    CalendarEventsLoader calendarEventsLoader = new CalendarEventsLoader(getActivity().getApplicationContext(), initialDay.getTimeInMillis(), finalDay.getTimeInMillis());
+    Time initialDay = new Time();
+    Time finalDay = new Time();
+    initialDay.set(1, Calendar.DECEMBER, 2013);
+    initialDay.normalize(false);
+    finalDay.set(28, Calendar.FEBRUARY, 2014);
+    finalDay.normalize(false);
+    int initialJulianDay = Time.getJulianDay(initialDay.toMillis(false), initialDay.gmtoff);
+    int finalJulianDay = Time.getJulianDay(finalDay.toMillis(false), finalDay.gmtoff);
+    CalendarEventsLoader calendarEventsLoader = new CalendarEventsLoader(getActivity().getApplicationContext(), initialJulianDay, finalJulianDay);
     calendarEventsLoader.setUpdateThrottle(LOADER_THROTTLE_DELAY);
     return calendarEventsLoader;
   }
@@ -364,7 +360,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
 //      // We've started a new query since this loader ran so ignore the result
 //      return;
 //    }
-    ArrayList<CalendarEvent> calendarEvents = Event.getCalendarEvents((Cursor) data);
+    ArrayList<CalendarEvent> calendarEvents = Utils.getCalendarEvents((Cursor) data);
 //    ArrayList<Event> events = Event.buildEventsFromCursor(data, context, firstLoadedJulianDay, lastLoadedJulianDay);
     adapter.setEvents(firstLoadedJulianDay, lastLoadedJulianDay - firstLoadedJulianDay + 1, calendarEvents);
   }
@@ -456,7 +452,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
     long millis = tempTime.normalize(true);
     // Get the week we're going to
     // TODO push Util function into Calendar public api.
-    int position = Utils.getWeeksSinceEpochFromJulianDay(Time.getJulianDay(millis, tempTime.gmtoff), firstDayOfWeek);
+    int position = Time.getWeeksSinceEpochFromJulianDay(Time.getJulianDay(millis, tempTime.gmtoff), firstDayOfWeek);
 
     View child;
     int i = 0;
@@ -490,7 +486,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
       firstDayOfMonth.monthDay = 1;
       millis = firstDayOfMonth.normalize(true);
       setMonthDisplayed(firstDayOfMonth, true);
-      position = Utils.getWeeksSinceEpochFromJulianDay(Time.getJulianDay(millis, firstDayOfMonth.gmtoff), firstDayOfWeek);
+      position = Time.getWeeksSinceEpochFromJulianDay(Time.getJulianDay(millis, firstDayOfMonth.gmtoff), firstDayOfWeek);
 
       previousScrollState = OnScrollListener.SCROLL_STATE_FLING;
       if (animate) {

@@ -28,18 +28,6 @@
             android:text="@string/press_color_to_apply"
             android:textAppearance="?android:attr/textAppearanceSmall" />
 
-        <EditText
-            android:id="@+id/hex_val"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:hint="HEX"
-            android:imeOptions="actionDone"
-            android:maxLength="7"
-            android:singleLine="true"
-            android:inputType="textCapCharacters"
-            android:visibility="gone" />
-
     </LinearLayout>
 
     <LinearLayout

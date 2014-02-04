@@ -26,6 +26,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     Log.w(TAG, "Upgrading database from version " + oldVersion + " to " + newVersion + ", which will destroy all old data");
     db.execSQL("DROP TABLE IF EXISTS " + DBConstants.EVENTS_TABLE);
     db.execSQL("DROP TABLE IF EXISTS " + DBConstants.CALENDAR_EVENTS_TABLE);
+    db.execSQL("DROP TABLE IF EXISTS " + DBConstants.PATTERNS_TABLE);
     onCreate(db);
   }
 
@@ -41,7 +42,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                DBConstants.COLOR + " INTEGER);");
     db.execSQL("CREATE TABLE " + DBConstants.CALENDAR_EVENTS_TABLE + "(" +
                DBConstants.ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-               DBConstants.DATE + " LONG, " +
+               DBConstants.DAY + " INTEGER, " +
                DBConstants.EVENT_ID + " INTEGER);");
     db.execSQL("CREATE TABLE " + DBConstants.PATTERNS_TABLE + "(" +
                DBConstants.ID + " INTEGER PRIMARY KEY AUTOINCREMENT);");

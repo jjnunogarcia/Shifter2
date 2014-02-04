@@ -58,7 +58,7 @@ public class MyEventsFragment extends ListFragment implements LoaderCallbacks<Cu
 
   @Override
   public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-    return new CursorLoader(getActivity().getApplicationContext(), CalendarProvider.EVENTS_URI, DBConstants.EVENTS_PROJECTION, null, null, Event.SORT_EVENTS_BY);
+    return new CursorLoader(getActivity().getApplicationContext(), CalendarProvider.EVENTS_URI, DBConstants.EVENTS_PROJECTION, null, null, DBConstants.SORT_EVENTS_BY_NAME_ASC);
   }
 
   @Override

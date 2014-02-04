@@ -39,7 +39,7 @@ public class CalendarProvider extends ContentProvider {
 
     CALENDAR_EVENTS_PROJECTION_MAP = new HashMap<String, String>();
     CALENDAR_EVENTS_PROJECTION_MAP.put(DBConstants.ID, DBConstants.ID);
-    CALENDAR_EVENTS_PROJECTION_MAP.put(DBConstants.DATE, DBConstants.DATE);
+    CALENDAR_EVENTS_PROJECTION_MAP.put(DBConstants.DAY, DBConstants.DAY);
     CALENDAR_EVENTS_PROJECTION_MAP.put(DBConstants.EVENT_ID, DBConstants.EVENT_ID);
   }
 
