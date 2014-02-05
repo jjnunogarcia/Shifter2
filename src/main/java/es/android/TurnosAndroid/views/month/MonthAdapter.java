@@ -48,7 +48,6 @@ public class MonthAdapter extends BaseAdapter implements OnTouchListener {
    * Which month should be in focus currently.
    */
   public static final  String WEEK_PARAMS_FOCUS_MONTH   = "focus_month";
-  public static final  String WEEK_PARAMS_WEEK_START    = "week_start";
   /**
    * The Julian day to highlight as selected.
    */
@@ -138,9 +137,6 @@ public class MonthAdapter extends BaseAdapter implements OnTouchListener {
     if (params.containsKey(WEEK_PARAMS_FOCUS_MONTH)) {
       numWeeks = params.get(WEEK_PARAMS_NUM_WEEKS);
     }
-    if (params.containsKey(WEEK_PARAMS_WEEK_START)) {
-      firstDayOfWeek = params.get(WEEK_PARAMS_WEEK_START);
-    }
     if (params.containsKey(WEEK_PARAMS_JULIAN_DAY)) {
       int julianDay = params.get(WEEK_PARAMS_JULIAN_DAY);
       selectedDay.setJulianDay(julianDay);
@@ -192,33 +188,19 @@ public class MonthAdapter extends BaseAdapter implements OnTouchListener {
 
   @Override
   public View getView(int position, View convertView, ViewGroup parent) {
-    WeekView v;
+    WeekView view;
     HashMap<String, Integer> drawingParams = new HashMap<String, Integer>();
 
 //    if (convertView != null) {
-//      v = (WeekView) convertView;
-//      // Checking setTodayValue uses the current params instead of the new params, so this is assuming the view is relatively stable
-//      if (animateToday && v.setTodayValue(selectedDay.timezone)) {
-//        long currentTime = System.currentTimeMillis();
-//        // If it's been too long since we tried to start the animation don't show it. This can happen if the user stops a scroll before reaching today.
-//        if (currentTime - animateTime > ANIMATE_TODAY_TIMEOUT) {
-//          animateToday = false;
-//          animateTime = 0;
-//        } else {
-//          isAnimatingToday = true;
-//          // There is a bug that causes invalidates to not work some of the time unless we recreate the view.
-//          v = new WeekView(context);
-//        }
-//      } else {
-//        drawingParams = (HashMap<String, Integer>) v.getTag();
-//      }
+//      view = (WeekView) convertView;
+//      drawingParams = (HashMap<String, Integer>) view.getTag();
 //    } else {
-    v = new WeekView(context);
+    view = new WeekView(context);
 //    }
 
     drawingParams.clear();
 
-    v.setOnTouchListener(this);
+    view.setOnTouchListener(this);
 
     int selectedDay = -1;
     if (selectedWeek == position) {
@@ -227,13 +209,12 @@ public class MonthAdapter extends BaseAdapter implements OnTouchListener {
 
     drawingParams.put(WeekView.KEY_WEEK_HEIGHT, (parent.getHeight() + parent.getTop()) / numWeeks);
     drawingParams.put(WeekView.KEY_SELECTED_DAY, selectedDay);
-    drawingParams.put(WeekView.KEY_WEEK_START, firstDayOfWeek);
     drawingParams.put(WeekView.KEY_WEEK_TO_DISPLAY, position);
     drawingParams.put(WeekView.KEY_FOCUS_MONTH, focusMonth);
 
-    v.setWeekParams(drawingParams, this.selectedDay.timezone);
-    v.setEvents(calendarEvents);
-    return v;
+    view.setWeekParams(drawingParams, this.selectedDay.timezone);
+    view.setEvents(calendarEvents);
+    return view;
   }
 
   /**

@@ -232,7 +232,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
         if (child == null) {
           return;
         }
-        int julianDay = child.getFirstJulianDay();
+        int julianDay = child.getMondayJulianDay();
         firstVisibleDay.setJulianDay(julianDay);
         // set the title to the month of the second week
         tempTime.setJulianDay(julianDay + DAYS_PER_WEEK);
@@ -287,7 +287,6 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
 
     HashMap<String, Integer> weekParams = new HashMap<String, Integer>();
     weekParams.put(MonthAdapter.WEEK_PARAMS_NUM_WEEKS, NUM_WEEKS);
-    weekParams.put(MonthAdapter.WEEK_PARAMS_WEEK_START, firstDayOfWeek);
     weekParams.put(MonthAdapter.WEEK_PARAMS_JULIAN_DAY, Time.getJulianDay(selectedDay.toMillis(true), selectedDay.gmtoff));
     weekParams.put(MonthAdapter.WEEK_PARAMS_DAYS_PER_WEEK, DAYS_PER_WEEK);
 
@@ -497,7 +496,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
 
     // Figure out where we are
     long currScroll = view.getFirstVisiblePosition() * child.getHeight() - child.getBottom();
-    firstVisibleDay.setJulianDay(child.getFirstJulianDay());
+    firstVisibleDay.setJulianDay(child.getMondayJulianDay());
 
     // If we have moved since our last call update the direction
     if (currScroll < previousScrollPosition) {
@@ -556,9 +555,9 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
     // Find out which month we're moving into
     int month;
     if (isScrollingUp) {
-      month = child.getFirstMonth();
+      month = child.getFirstVisibleMonth();
     } else {
-      month = child.getLastMonth();
+      month = child.getLastVisibleMonth();
     }
 
     // And how it relates to our current highlighted month
@@ -573,7 +572,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
 
     // Only switch months if we're scrolling away from the currently selected month
     if (monthDiff != 0) {
-      int julianDay = child.getFirstJulianDay();
+      int julianDay = child.getMondayJulianDay();
       if (isScrollingUp) {
         // Takes the start of the week
       } else {
@@ -607,7 +606,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
   private Uri updateUri() {
     WeekView child = (WeekView) listView.getChildAt(0);
     if (child != null) {
-      firstLoadedJulianDay = child.getFirstJulianDay();
+      firstLoadedJulianDay = child.getMondayJulianDay();
     }
     // -1 to ensure we get all day events from any time zone
     tempTime.setJulianDay(firstLoadedJulianDay - 1);

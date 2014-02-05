@@ -27,34 +27,24 @@ import java.util.HashMap;
 public class WeekView extends View {
   public static final  String  KEY_WEEK_HEIGHT           = "week_height";
   public static final  String  KEY_WEEK_TO_DISPLAY       = "week_number";
-  /**
-   * This sets one of the days in this view as selected {@link android.text.format.Time#SUNDAY} through {@link android.text.format.Time#SATURDAY}.
-   */
   public static final  String  KEY_SELECTED_DAY          = "selected_day";
-  /**
-   * Which day the week should start on. {@link android.text.format.Time#SUNDAY} through {@link android.text.format.Time#SATURDAY}.
-   */
-  public static final  String  KEY_WEEK_START            = "week_start";
   /**
    * Which month is currently in focus, as defined by {@link android.text.format.Time#month} [0-11].
    */
   public static final  String  KEY_FOCUS_MONTH           = "focus_month";
   private static final int     DEFAULT_SELECTED_DAY      = -1;
-  private static final int     DEFAULT_WEEK_START        = Time.SUNDAY;
   private static final int     DEFAULT_FOCUS_MONTH       = -1;
   private static final int     CLICKED_ALPHA             = 128;
   private static       int     DEFAULT_HEIGHT            = 32;
   private static       int     DAY_SEPARATOR_WIDTH       = 1;
   private static       int     MINI_DAY_NUMBER_TEXT_SIZE = 14;
-  // used for scaling to the device density
-  private static       float   scale                     = 0;
   private static       int     TEXT_SIZE_MONTH_NUMBER    = 32;
   private static       int     TEXT_SIZE_EVENT           = 12;
   private static       int     TEXT_SIZE_EVENT_TITLE     = 14;
   private static       int     DNA_MARGIN                = 4;
   private static       int     DNA_ALL_DAY_HEIGHT        = 4;
   private static       int     DNA_MIN_SEGMENT_HEIGHT    = 4;
-  private static       int     DNA_WIDTH                 = 15;
+  private static       int     EVENT_WIDTH               = 15;
   private static       int     DNA_SIDE_PADDING          = 6;
   private static       int     EVENT_TEXT_COLOR          = Color.WHITE;
   private static       int     DEFAULT_EDGE_SPACING      = 0;
@@ -66,62 +56,55 @@ public class WeekView extends View {
   private static       int     EVENT_BOTTOM_PADDING      = 3;
   private static       int     TODAY_HIGHLIGHT_WIDTH     = 2;
   private static       boolean initialized               = false;
+  private static       float   scale                     = 0;
 
-  private Paint                        paint;
-  private Paint                        monthNumPaint;
+  private Paint                                   paint;
+  private Paint                                   monthNumPaint;
   // Cache the number strings so we don't have to recompute them each time
-  private String[]                     dayNumbers;
+  private String[]                                dayNumbers;
   // Quick lookup for checking which days are in the focus month
-  private boolean[]                    focusDay;
+  private boolean[]                               focusDay;
   // Quick lookup for checking which days are in an odd month (to set a different background)
-  private boolean[]                    oddMonth;
-  // The Julian day of the first day displayed by this item
-  private int                          firstJulianDay;
+  private boolean[]                               oddMonth;
   // The month of the first day in this week
-  private int                          firstMonth;
+  private int                                     firstMonth;
   // The month of the last day in this week
-  private int                          lastMonth;
+  private int                                     lastMonth;
   // The position of this week, equivalent to weeks since the week of Jan 1st, 1970
-  private int                          week;
-  // Quick reference to the width of this view, matches parent
-  private int                          width;
-  // The height this view should draw at in pixels, set by height param
-  private int                          height;
-  // Which day is selected [0-6] or -1 if no day is selected
-  private int                          selectedDay;
-  // Which day of the week to start on [0-6]
-  private int                          weekStart;
+  private int                                     week;
+  private int                                     weekWidth;
+  private int                                     weekHeight;
   // The timezone to display times/dates in (used for determining when Today is)
-  private String                       timeZone;
-  private int                          focusMonthColor;
-  private Time                         today;
-  private boolean                      hasToday;
-  private int                          todayIndex;
-  private ArrayList<CalendarEvent>     weekEvents;
-  private ArrayList<Utils.EventStrand> dna;
-  private TextPaint                    eventPaint;
-  private TextPaint                    solidBackgroundEventPaint;
-  private TextPaint                    eventExtrasPaint;
-  private Paint                        dnaTimePaint;
-  private int                          monthNumAscentHeight;
-  private int                          eventHeight;
-  private int                          eventAscentHeight;
-  private int                          extrasHeight;
-  private int                          extrasAscentHeight;
-  private int                          extrasDescent;
-  private int                          monthBGOtherColor;
-  private int                          monthBGTodayColor;
-  private int                          monthNumColor;
-  private int                          monthNumOtherColor;
-  private int                          monthNumTodayColor;
-  private int                          monthEventColor;
-  private int                          monthEventExtraColor;
-  private int                          clickedDayColor;
-  private int                          daySeparatorInnerColor;
-  private int                          todayAnimateColor;
-  private int                          clickedDayIndex;
-  private int                          animateTodayAlpha;
-  private int                          mondayJulianDay;
+  private String                                  timeZone;
+  private int                                     focusMonthColor;
+  private Time                                    today;
+  private boolean                                 hasToday;
+  private int                                     todayIndex;
+  private ArrayList<CalendarEvent>                weekEvents;
+  private ArrayList<ArrayList<Utils.EventStrand>> dna;
+  private TextPaint                               eventPaint;
+  private TextPaint                               solidBackgroundEventPaint;
+  private TextPaint                               eventExtrasPaint;
+  private Paint                                   eventsPaint;
+  private int                                     monthNumAscentHeight;
+  private int                                     eventHeight;
+  private int                                     eventAscentHeight;
+  private int                                     extrasHeight;
+  private int                                     extrasAscentHeight;
+  private int                                     extrasDescent;
+  private int                                     monthBGOtherColor;
+  private int                                     monthBGTodayColor;
+  private int                                     monthNumColor;
+  private int                                     monthNumOtherColor;
+  private int                                     monthNumTodayColor;
+  private int                                     monthEventColor;
+  private int                                     monthEventExtraColor;
+  private int                                     clickedDayColor;
+  private int                                     daySeparatorInnerColor;
+  private int                                     todayAnimateColor;
+  private int                                     clickedDayIndex;
+  private int                                     animateTodayAlpha;
+  private int                                     mondayJulianDay;
 
   public WeekView(Context context) {
     super(context);
@@ -129,19 +112,19 @@ public class WeekView extends View {
 
     focusMonthColor = res.getColor(R.color.month_mini_day_number);
     paint = new Paint();
-    firstJulianDay = -1;
     firstMonth = -1;
     lastMonth = -1;
     week = -1;
-    height = DEFAULT_HEIGHT;
-    selectedDay = DEFAULT_SELECTED_DAY;
-    weekStart = DEFAULT_WEEK_START;
+    weekHeight = DEFAULT_HEIGHT;
     timeZone = Time.getCurrentTimezone();
     today = new Time();
     hasToday = false;
     todayIndex = -1;
     weekEvents = new ArrayList<CalendarEvent>();
-    dna = null;
+    dna = new ArrayList<ArrayList<Utils.EventStrand>>(MonthFragment.DAYS_PER_WEEK);
+    for (int i = 0; i < MonthFragment.DAYS_PER_WEEK; i++) {
+      dna.add(new ArrayList<Utils.EventStrand>());
+    }
     clickedDayIndex = -1;
     animateTodayAlpha = 0;
 
@@ -186,7 +169,7 @@ public class WeekView extends View {
         EVENT_SQUARE_BORDER *= scale;
         EVENT_BOTTOM_PADDING *= scale;
         DNA_MARGIN *= scale;
-        DNA_WIDTH *= scale;
+        EVENT_WIDTH *= scale;
         DNA_ALL_DAY_HEIGHT *= scale;
         DNA_MIN_SEGMENT_HEIGHT *= scale;
         DNA_SIDE_PADDING *= scale;
@@ -235,10 +218,10 @@ public class WeekView extends View {
     extrasAscentHeight = (int) (-eventExtrasPaint.ascent() + 0.5f);
     extrasDescent = (int) (eventExtrasPaint.descent() + 0.5f);
 
-    dnaTimePaint = new Paint();
-    dnaTimePaint.setStyle(Style.FILL_AND_STROKE);
-    dnaTimePaint.setStrokeWidth(DNA_WIDTH);
-    dnaTimePaint.setAntiAlias(false);
+    eventsPaint = new Paint();
+    eventsPaint.setStyle(Style.FILL_AND_STROKE);
+    eventsPaint.setStrokeWidth(EVENT_WIDTH);
+    eventsPaint.setAntiAlias(false);
 
     setLayoutParams(new AbsListView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
     setClickable(true);
@@ -267,7 +250,7 @@ public class WeekView extends View {
    * Sets up the dna bits for the view. This will return early if the view isn't in a state that will create a valid set of dna yet (such as the views width not being set correctly yet).
    */
   private void createDna() {
-    if (weekEvents == null || width <= MIN_WEEK_WIDTH || getContext() == null) {
+    if (weekEvents == null || weekWidth <= MIN_WEEK_WIDTH || getContext() == null) {
       // Stash the list of events for use when this view is ready, or just clear it if a null set has been passed to this view
 //      this.weekEvents = weekEvents;
       dna = null;
@@ -278,15 +261,14 @@ public class WeekView extends View {
     int[] dayXs = new int[MonthFragment.DAYS_PER_WEEK];
 
     for (int day = 0; day < MonthFragment.DAYS_PER_WEEK; day++) {
-//      dayXs[day] = computeDayLeftPosition(day) + DNA_WIDTH / 2 + DNA_SIDE_PADDING;
+//      dayXs[day] = computeDayLeftPosition(day) + EVENT_WIDTH / 2 + DNA_SIDE_PADDING;
       dayXs[day] = computeDayLeftPosition(day);
     }
 
-    int top = DAY_SEPARATOR_INNER_WIDTH + DNA_MARGIN + 1;
-    int bottom = height - DNA_MARGIN;
+    int eventThickness = EVENT_WIDTH; // TODO plus margin?
 
     if (hasThisWeekEventsInside()) {
-      dna = Utils.createDnaStrands(weekEvents, top, bottom, dayXs, getContext(), mondayJulianDay);
+      dna = Utils.createDnaStrands(weekEvents, eventThickness, dayXs, mondayJulianDay);
     }
   }
 
@@ -312,57 +294,28 @@ public class WeekView extends View {
       throw new InvalidParameterException("You must specify the week number for this view");
     }
     setTag(params);
+    week = params.get(KEY_WEEK_TO_DISPLAY);
     this.timeZone = timeZone;
 
     if (params.containsKey(KEY_WEEK_HEIGHT)) {
-      height = params.get(KEY_WEEK_HEIGHT);
-    }
-
-    if (params.containsKey(KEY_SELECTED_DAY)) {
-      selectedDay = params.get(KEY_SELECTED_DAY);
+      weekHeight = params.get(KEY_WEEK_HEIGHT);
     }
 
     // Allocate space for caching the day numbers and focus values
     dayNumbers = new String[MonthFragment.DAYS_PER_WEEK];
     focusDay = new boolean[MonthFragment.DAYS_PER_WEEK];
     oddMonth = new boolean[MonthFragment.DAYS_PER_WEEK];
-    week = params.get(KEY_WEEK_TO_DISPLAY);
     mondayJulianDay = Time.getJulianMondayFromWeeksSinceEpoch(week);
     Time time = new Time(this.timeZone);
     time.setJulianDay(mondayJulianDay);
 
-    if (params.containsKey(KEY_WEEK_START)) {
-      weekStart = params.get(KEY_WEEK_START);
-    }
-
-    // Now adjust our starting day based on the start day of the week. If the week is set to start on a Saturday the first week will be Dec 27th 1969 -Jan 2nd, 1970
-    if (time.weekDay != weekStart) {
-      int diff = time.weekDay - weekStart;
-      if (diff < 0) {
-        diff += 7;
-      }
-      time.monthDay -= diff;
-      time.normalize(true);
-    }
-
-    firstJulianDay = Time.getJulianDay(time.toMillis(true), time.gmtoff);
     firstMonth = time.month;
-
-    // Figure out what day today is
-    Time today = new Time(this.timeZone);
-    today.setToNow();
-    hasToday = false;
 
     int focusMonth = params.containsKey(KEY_FOCUS_MONTH) ? params.get(KEY_FOCUS_MONTH) : DEFAULT_FOCUS_MONTH;
 
     for (int i = 0; i < MonthFragment.DAYS_PER_WEEK; i++) {
       oddMonth[i] = (time.month % 2) == 1;
       focusDay[i] = time.month == focusMonth;
-
-      if (time.year == today.year && time.yearDay == today.yearDay) {
-        hasToday = true;
-      }
-
       dayNumbers[i] = Integer.toString(time.monthDay++);
       time.normalize(true);
     }
@@ -383,9 +336,9 @@ public class WeekView extends View {
     today.setToNow();
     today.normalize(true);
     int julianToday = Time.getJulianDay(today.toMillis(false), today.gmtoff);
-    if (julianToday >= firstJulianDay && julianToday < firstJulianDay + MonthFragment.DAYS_PER_WEEK) {
+    if (julianToday >= mondayJulianDay && julianToday < mondayJulianDay + MonthFragment.DAYS_PER_WEEK) {
       hasToday = true;
-      todayIndex = julianToday - firstJulianDay;
+      todayIndex = julianToday - mondayJulianDay;
     } else {
       hasToday = false;
       todayIndex = -1;
@@ -404,8 +357,8 @@ public class WeekView extends View {
     if (dna == null) {
       createDna();
     }
-    drawEvent(canvas);
-    drawClick(canvas);
+    drawEvents(canvas);
+    drawClickedDay(canvas);
   }
 
   /**
@@ -418,7 +371,7 @@ public class WeekView extends View {
     int i = 0;
     int offset = 0;
     rect.top = DAY_SEPARATOR_INNER_WIDTH;
-    rect.bottom = height;
+    rect.bottom = weekHeight;
 
     if (!oddMonth[i]) {
       while (++i < oddMonth.length && !oddMonth[i]) {
@@ -433,7 +386,7 @@ public class WeekView extends View {
       }
       i++;
       // compute left edge for i, set up rect, draw
-      rect.right = width;
+      rect.right = weekWidth;
       rect.left = computeDayLeftPosition(i - offset);
       paint.setColor(monthBGOtherColor);
       canvas.drawRect(rect, paint);
@@ -447,74 +400,6 @@ public class WeekView extends View {
     }
   }
 
-  private void drawToday(Canvas canvas) {
-    Rect r = new Rect();
-    r.top = DAY_SEPARATOR_INNER_WIDTH + (TODAY_HIGHLIGHT_WIDTH / 2);
-    r.bottom = height - (int) Math.ceil(TODAY_HIGHLIGHT_WIDTH / 2.0f);
-    paint.setStyle(Style.STROKE);
-    paint.setStrokeWidth(TODAY_HIGHLIGHT_WIDTH);
-    r.left = computeDayLeftPosition(todayIndex) + (TODAY_HIGHLIGHT_WIDTH / 2);
-    r.right = computeDayLeftPosition(todayIndex + 1) - (int) Math.ceil(TODAY_HIGHLIGHT_WIDTH / 2.0f);
-    paint.setColor(todayAnimateColor | (animateTodayAlpha << 24));
-    canvas.drawRect(r, paint);
-    paint.setStyle(Style.FILL);
-  }
-
-  private int computeDayLeftPosition(int day) {
-    return day * width / MonthFragment.DAYS_PER_WEEK;
-  }
-
-  /**
-   * Draws a horizontal line for separating the weeks.
-   *
-   * @param canvas The canvas to draw on
-   */
-  private void drawDaySeparators(Canvas canvas) {
-    float lines[] = new float[8 * 4];
-    int count = 6 * 4;
-    int wkNumOffset = 0;
-    int i = 0;
-    count += 4;
-    lines[i++] = 0;
-    lines[i++] = 0;
-    lines[i++] = width;
-    lines[i++] = 0;
-    int y0 = 0;
-    int y1 = height;
-
-    while (i < count) {
-      int x = computeDayLeftPosition(i / 4 - wkNumOffset);
-      lines[i++] = x;
-      lines[i++] = y0;
-      lines[i++] = x;
-      lines[i++] = y1;
-    }
-    paint.setColor(daySeparatorInnerColor);
-    paint.setStrokeWidth(DAY_SEPARATOR_INNER_WIDTH);
-    canvas.drawLines(lines, 0, count, paint);
-  }
-
-  // Draw the "clicked" color on the tapped day
-  private void drawClick(Canvas canvas) {
-    if (clickedDayIndex != -1) {
-      Rect r = new Rect();
-      int alpha = paint.getAlpha();
-      paint.setColor(clickedDayColor);
-      paint.setAlpha(CLICKED_ALPHA);
-      r.left = computeDayLeftPosition(clickedDayIndex);
-      r.right = computeDayLeftPosition(clickedDayIndex + 1);
-      r.top = DAY_SEPARATOR_INNER_WIDTH;
-      r.bottom = height;
-      canvas.drawRect(r, paint);
-      paint.setAlpha(alpha);
-    }
-  }
-
-  /**
-   * Draws the month day numbers for this week.
-   *
-   * @param canvas The canvas to draw on
-   */
   private void drawMonthDayNumbers(Canvas canvas) {
     int y;
     int i = 0;
@@ -547,18 +432,84 @@ public class WeekView extends View {
     }
   }
 
-  private void drawEvent(Canvas canvas) {
+  /**
+   * Draws a horizontal line for separating the weeks.
+   *
+   * @param canvas The canvas to draw on
+   */
+  private void drawDaySeparators(Canvas canvas) {
+    float lines[] = new float[8 * 4];
+    int count = 6 * 4;
+    int wkNumOffset = 0;
+    int i = 0;
+    count += 4;
+    lines[i++] = 0;
+    lines[i++] = 0;
+    lines[i++] = weekWidth;
+    lines[i++] = 0;
+    int y0 = 0;
+    int y1 = weekHeight;
+
+    while (i < count) {
+      int x = computeDayLeftPosition(i / 4 - wkNumOffset);
+      lines[i++] = x;
+      lines[i++] = y0;
+      lines[i++] = x;
+      lines[i++] = y1;
+    }
+    paint.setColor(daySeparatorInnerColor);
+    paint.setStrokeWidth(DAY_SEPARATOR_INNER_WIDTH);
+    canvas.drawLines(lines, 0, count, paint);
+  }
+
+  private void drawToday(Canvas canvas) {
+    Rect r = new Rect();
+    r.top = DAY_SEPARATOR_INNER_WIDTH + (TODAY_HIGHLIGHT_WIDTH / 2);
+    r.bottom = weekHeight - (int) Math.ceil(TODAY_HIGHLIGHT_WIDTH / 2.0f);
+    paint.setStyle(Style.STROKE);
+    paint.setStrokeWidth(TODAY_HIGHLIGHT_WIDTH);
+    r.left = computeDayLeftPosition(todayIndex) + (TODAY_HIGHLIGHT_WIDTH / 2);
+    r.right = computeDayLeftPosition(todayIndex + 1) - (int) Math.ceil(TODAY_HIGHLIGHT_WIDTH / 2.0f);
+    paint.setColor(todayAnimateColor | (animateTodayAlpha << 24));
+    canvas.drawRect(r, paint);
+    paint.setStyle(Style.FILL);
+  }
+
+  private void drawEvents(Canvas canvas) {
     if (dna != null) {
-      for (Utils.EventStrand strand : dna) {
-        dnaTimePaint.setColor(strand.color);
-        // TODO replace with Path class?
-        canvas.drawLines(strand.points, dnaTimePaint);
+      for (int i = 0; i < MonthFragment.DAYS_PER_WEEK; i++) {
+        ArrayList<Utils.EventStrand> eventStrands = dna.get(i);
+        for (int j = 0, size = eventStrands.size(); j < size; j++) {
+          Utils.EventStrand strand = eventStrands.get(j);
+          eventsPaint.setColor(strand.color);
+          // TODO replace with Path class?
+          canvas.drawLines(strand.points, eventsPaint);
+          if (j == 3) {
+            // TODO draw "more events..."
+            break;
+          }
+        }
       }
     }
   }
 
+  private void drawClickedDay(Canvas canvas) {
+    if (clickedDayIndex != -1) {
+      Rect r = new Rect();
+      int alpha = paint.getAlpha();
+      paint.setColor(clickedDayColor);
+      paint.setAlpha(CLICKED_ALPHA);
+      r.left = computeDayLeftPosition(clickedDayIndex);
+      r.right = computeDayLeftPosition(clickedDayIndex + 1);
+      r.top = 0;
+      r.bottom = weekHeight;
+      canvas.drawRect(r, paint);
+      paint.setAlpha(alpha);
+    }
+  }
+
   private void drawMoreEvents(Canvas canvas, int remainingEvents, int x) {
-    int y = height - (extrasDescent + EVENT_BOTTOM_PADDING);
+    int y = weekHeight - (extrasDescent + EVENT_BOTTOM_PADDING);
     String text = getContext().getResources().getQuantityString(R.plurals.month_more_events, remainingEvents);
     eventExtrasPaint.setAntiAlias(true);
     eventExtrasPaint.setFakeBoldText(true);
@@ -566,22 +517,26 @@ public class WeekView extends View {
     eventExtrasPaint.setFakeBoldText(false);
   }
 
+  private int computeDayLeftPosition(int day) {
+    return day * weekWidth / MonthFragment.DAYS_PER_WEEK;
+  }
+
   @Override
   protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-    setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), height);
+    setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), weekHeight);
   }
 
   @Override
   protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-    width = w;
+    weekWidth = w;
   }
 
   public int getDayIndexFromLocation(float x) {
-    if (x < DEFAULT_EDGE_SPACING || x > width - DEFAULT_EDGE_SPACING) {
+    if (x < 0 || x > weekWidth) {
       return -1;
     }
-    // Selection is (x - start) / (pixels/day) == (x -s) * day / pixels
-    return ((int) ((x - DEFAULT_EDGE_SPACING) * MonthFragment.DAYS_PER_WEEK / (width - DEFAULT_EDGE_SPACING - DEFAULT_EDGE_SPACING)));
+
+    return (int) (x / (weekWidth / MonthFragment.DAYS_PER_WEEK));
   }
 
   /**
@@ -595,7 +550,7 @@ public class WeekView extends View {
     if (dayPosition == -1) {
       return null;
     }
-    int day = firstJulianDay + dayPosition;
+    int day = mondayJulianDay + dayPosition;
 
     Time time = new Time(timeZone);
     if (week == 0) {
@@ -623,15 +578,15 @@ public class WeekView extends View {
     invalidate();
   }
 
-  public int getFirstJulianDay() {
-    return firstJulianDay;
+  public int getMondayJulianDay() {
+    return mondayJulianDay;
   }
 
-  public int getFirstMonth() {
+  public int getFirstVisibleMonth() {
     return firstMonth;
   }
 
-  public int getLastMonth() {
+  public int getLastVisibleMonth() {
     return lastMonth;
   }
 }

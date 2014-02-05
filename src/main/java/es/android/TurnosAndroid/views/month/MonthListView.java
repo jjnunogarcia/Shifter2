@@ -175,6 +175,6 @@ public class MonthListView extends ListView {
     if (child == null) {
       return -1;
     }
-    return child.getFirstJulianDay() + MonthFragment.DAYS_PER_WEEK - 1;
+    return child.getMondayJulianDay() + MonthFragment.DAYS_PER_WEEK - 1;
   }
 }

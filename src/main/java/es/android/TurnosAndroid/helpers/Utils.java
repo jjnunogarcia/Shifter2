@@ -19,13 +19,14 @@ package es.android.TurnosAndroid.helpers;
 import android.content.Context;
 import android.database.Cursor;
 import es.android.TurnosAndroid.database.DBConstants;
+import es.android.TurnosAndroid.fragments.MonthFragment;
 import es.android.TurnosAndroid.model.CalendarEvent;
 import es.android.TurnosAndroid.model.Event;
 
 import java.util.ArrayList;
 
 public class Utils {
-  static final int DAY_IN_MINUTES = 60 * 24;
+  private static final int DAY_IN_MINUTES = 60 * 24;
 
   /**
    * Converts a list of calendarEvents to a list of segments to draw. Assumes list is ordered by start time of the calendarEvents. The function processes calendarEvents for a
@@ -38,28 +39,25 @@ public class Utils {
    * <li>Events between WORK_DAY_START_MINUTES and WORK_DAY_END_MINUTES use the remaining 3/4ths of the space</li>
    * <li>All segments drawn will maintain at least minPixels height, except for conflicts in the first or last 1/8th, which may be smaller</li>
    * </ul>
-   *
-   *
-   * @param calendarEvents A list of calendarEvents sorted by start time
-   * @param top            The lowest y value the dna should be drawn at
-   * @param bottom         The highest y value the dna should be drawn at
-   * @param dayXs          An array of x values to draw the dna at, one for each day
-   * @return
    */
-  public static ArrayList<EventStrand> createDnaStrands(ArrayList<CalendarEvent> calendarEvents, int top, int bottom, int[] dayXs, Context context, int mondayJulianDay) {
-    if (calendarEvents == null || calendarEvents.isEmpty() || dayXs == null || dayXs.length < 1 || bottom - top < 8) {
+  public static ArrayList<ArrayList<EventStrand>> createDnaStrands(ArrayList<CalendarEvent> calendarEvents, int eventThickness, int[] dayXs, int mondayJulianDay) {
+    if (calendarEvents == null || calendarEvents.isEmpty() || dayXs == null || dayXs.length < 1) {
       return null;
     }
 
     ArrayList<EventSegment> segments = new ArrayList<EventSegment>();
     ArrayList<EventStrand> strands = new ArrayList<EventStrand>();
+    ArrayList<ArrayList<EventStrand>> organizedStrands = new ArrayList<ArrayList<EventStrand>>(MonthFragment.DAYS_PER_WEEK);
+    for (int i = 0; i < MonthFragment.DAYS_PER_WEEK; i++) {
+      organizedStrands.add(new ArrayList<EventStrand>());
+    }
 
     for (CalendarEvent calendarEvent : calendarEvents) {
       addNewSegment(segments, calendarEvent, mondayJulianDay);
     }
 
-    weaveDnaStrands(segments, strands, top, bottom, dayXs);
-    return strands;
+    weaveDnaStrands(segments, strands, eventThickness, dayXs, organizedStrands);
+    return organizedStrands;
   }
 
   /**
@@ -67,6 +65,7 @@ public class Utils {
    */
   private static void addNewSegment(ArrayList<EventSegment> segments, CalendarEvent calendarEvent, int mondayJulianDay) {
     // If this is a multiday event, split it up by day
+    // TODO this split should be done when the calendar events are just retrieved.
     Event event = calendarEvent.getEvent();
 
     if (eventEndsInOtherDay(calendarEvent)) {
@@ -105,17 +104,19 @@ public class Utils {
   }
 
   // This processes all the segments, sorts them by color, and generates a list of points to draw
-  // TODO replace "top" by a variable that indicates the month number height, so the lines are below
-  private static void weaveDnaStrands(ArrayList<EventSegment> segments, ArrayList<EventStrand> strands, int top, int bottom, int[] dayXs) {
+  // TODO replace "55" by a variable that indicates the month number height, so the lines are below
+  private static void weaveDnaStrands(ArrayList<EventSegment> segments, ArrayList<EventStrand> strands, int eventThickness, int[] dayXs, ArrayList<ArrayList<EventStrand>> organizedStrands) {
     for (EventSegment segment : segments) {
       int x = dayXs[segment.dayOfWeek];
       int eventWidth = dayXs[1] - dayXs[0]; // TODO better put a event width
       EventStrand strand = new EventStrand();
+      int alreadyInsertedStrandsInDay = organizedStrands.get(segment.dayOfWeek).size();
       strand.points[strand.position++] = x;
-      strand.points[strand.position++] = 55;
+      strand.points[strand.position++] = 55 + (eventThickness * alreadyInsertedStrandsInDay); // TODO set "y" like the height multiplied by the number of strands that there are already in this arraylist
       strand.points[strand.position++] = x + eventWidth;
-      strand.points[strand.position++] = 55;
+      strand.points[strand.position++] = 55 + (eventThickness * alreadyInsertedStrandsInDay);
       strand.color = segment.color;
+      organizedStrands.get(segment.dayOfWeek).add(strand);
       strands.add(strand);
     }
   }
