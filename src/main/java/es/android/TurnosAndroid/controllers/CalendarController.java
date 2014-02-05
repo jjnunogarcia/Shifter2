@@ -29,7 +29,6 @@ import android.provider.CalendarContract.Calendars;
 import android.text.format.Time;
 import android.util.Log;
 import es.android.TurnosAndroid.EventHandler;
-import es.android.TurnosAndroid.helpers.TimeZoneUtils;
 import es.android.TurnosAndroid.model.EventInfo;
 import es.android.TurnosAndroid.model.EventType;
 import es.android.TurnosAndroid.views.ViewType;
@@ -53,7 +52,7 @@ public class CalendarController {
   private final Runnable updateTimezone = new Runnable() {
     @Override
     public void run() {
-      time.switchTimezone(TimeZoneUtils.getTimeZone(context, this));
+      time.switchTimezone(Time.getCurrentTimezone());
     }
   };
 
@@ -92,15 +91,15 @@ public class CalendarController {
       info.viewType = ViewType.CURRENT;
     }
     info.id = eventId;
-    info.startTime = new Time(TimeZoneUtils.getTimeZone(context, updateTimezone));
+    info.startTime = new Time(Time.getCurrentTimezone());
     info.startTime.set(startMillis);
     if (selectedMillis != -1) {
-      info.selectedTime = new Time(TimeZoneUtils.getTimeZone(context, updateTimezone));
+      info.selectedTime = new Time(Time.getCurrentTimezone());
       info.selectedTime.set(selectedMillis);
     } else {
       info.selectedTime = info.startTime;
     }
-    info.endTime = new Time(TimeZoneUtils.getTimeZone(context, updateTimezone));
+    info.endTime = new Time(Time.getCurrentTimezone());
     info.endTime.set(endMillis);
     info.x = x;
     info.y = y;

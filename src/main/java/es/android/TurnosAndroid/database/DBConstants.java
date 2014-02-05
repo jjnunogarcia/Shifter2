@@ -12,18 +12,20 @@ public class DBConstants {
   public static final String   NAME                    = "name";
   public static final String   SORT_EVENTS_BY_NAME_ASC = NAME + " ASC";
   public static final String   DESCRIPTION             = "description";
-  public static final String   START                   = "start";
+  public static final String   START_TIME              = "start_time";
   public static final String   DURATION                = "duration";
   public static final String   LOCATION                = "location";
   public static final String   COLOR                   = "color";
+  public static final String   CREATION_TIME           = "creation_time";
   public static final String[] EVENTS_PROJECTION       = new String[]{
       ID,
       NAME,
       DESCRIPTION,
-      START,
+      START_TIME,
       DURATION,
       LOCATION,
-      COLOR
+      COLOR,
+      CREATION_TIME
   };
   public static final String   CALENDAR_EVENTS_TABLE   = "calendarevents";
   public static final String   DAY                     = "date";
@@ -34,10 +36,11 @@ public class DBConstants {
       EVENT_ID,
       NAME,
       DESCRIPTION,
-      START,
+      START_TIME,
       DURATION,
       LOCATION,
-      COLOR
+      COLOR,
+      CREATION_TIME
   };
   public static final String   PATTERNS_TABLE          = "patterns";
   public static final String[] PATTERNS_PROJECTION     = new String[]{

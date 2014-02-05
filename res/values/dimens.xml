@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="my_events_row_padding">6dp</dimen>
+    <dimen name="day_label_text_size">11sp</dimen>
+    <dimen name="round_shape_width">60dp</dimen>
+    <dimen name="round_shape_height">60dp</dimen>
+    <dimen name="round_shape_width_small">40dp</dimen>
+    <dimen name="round_shape_height_small">40dp</dimen>
+</resources>

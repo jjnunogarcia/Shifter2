@@ -10,11 +10,10 @@ import android.view.MenuItem;
  * @author jjnunogarcia@gmail.com
  */
 public class ActionBarManager {
-  private final ActionBar                     actionBar;
-  private       MonthActionBarInterface       monthActionBarInterface;
-  private       MyEventsActionBarInterface    myEventsActionBarInterface;
-  private       CreateEventActionBarInterface createEventActionBarInterface;
-  private       Menu                          menu;
+  private final ActionBar                  actionBar;
+  private       MonthActionBarInterface    monthActionBarInterface;
+  private       MyEventsActionBarInterface myEventsActionBarInterface;
+  private       Menu                       menu;
 
   public ActionBarManager(ActionBar actionBar) {
     this.actionBar = actionBar;
@@ -34,17 +33,7 @@ public class ActionBarManager {
         break;
       case R.id.create_event_button:
         if (myEventsActionBarInterface != null) {
-          myEventsActionBarInterface.onNewEventClicked();
-        }
-        break;
-      case R.id.save_event_button:
-        if (createEventActionBarInterface != null) {
-          createEventActionBarInterface.onSaveEventClicked();
-        }
-        break;
-      case R.id.delete_event_button:
-        if (createEventActionBarInterface != null) {
-          createEventActionBarInterface.onDeleteEventClicked();
+          myEventsActionBarInterface.onAddEventClicked();
         }
         break;
       default:
@@ -57,15 +46,6 @@ public class ActionBarManager {
   public void setMonthFragmentActionBar() {
     menu.setGroupVisible(R.id.month_action_bar, true);
     menu.setGroupVisible(R.id.my_events_action_bar, false);
-    menu.setGroupVisible(R.id.create_event_action_bar, false);
-    menu.setGroupVisible(R.id.my_patterns_action_bar, false);
-    menu.setGroupVisible(R.id.statistics_action_bar, false);
-  }
-
-  public void setDayFragmentActionBar() {
-    menu.setGroupVisible(R.id.month_action_bar, false);
-    menu.setGroupVisible(R.id.my_events_action_bar, false);
-    menu.setGroupVisible(R.id.create_event_action_bar, false);
     menu.setGroupVisible(R.id.my_patterns_action_bar, false);
     menu.setGroupVisible(R.id.statistics_action_bar, false);
   }
@@ -73,15 +53,6 @@ public class ActionBarManager {
   public void setMyEventsFragmentActionBar() {
     menu.setGroupVisible(R.id.month_action_bar, false);
     menu.setGroupVisible(R.id.my_events_action_bar, true);
-    menu.setGroupVisible(R.id.create_event_action_bar, false);
-    menu.setGroupVisible(R.id.my_patterns_action_bar, false);
-    menu.setGroupVisible(R.id.statistics_action_bar, false);
-  }
-
-  public void setCreateEventFragmentActionBar() {
-    menu.setGroupVisible(R.id.month_action_bar, false);
-    menu.setGroupVisible(R.id.my_events_action_bar, false);
-    menu.setGroupVisible(R.id.create_event_action_bar, true);
     menu.setGroupVisible(R.id.my_patterns_action_bar, false);
     menu.setGroupVisible(R.id.statistics_action_bar, false);
   }
@@ -89,7 +60,6 @@ public class ActionBarManager {
   public void setMyPatternsFragmentActionBar() {
     menu.setGroupVisible(R.id.month_action_bar, false);
     menu.setGroupVisible(R.id.my_events_action_bar, false);
-    menu.setGroupVisible(R.id.create_event_action_bar, false);
     menu.setGroupVisible(R.id.my_patterns_action_bar, true);
     menu.setGroupVisible(R.id.statistics_action_bar, false);
   }
@@ -97,7 +67,6 @@ public class ActionBarManager {
   public void setStatisticsFragmentActionBar() {
     menu.setGroupVisible(R.id.month_action_bar, false);
     menu.setGroupVisible(R.id.my_events_action_bar, false);
-    menu.setGroupVisible(R.id.create_event_action_bar, false);
     menu.setGroupVisible(R.id.my_patterns_action_bar, false);
     menu.setGroupVisible(R.id.statistics_action_bar, true);
   }
@@ -108,9 +77,5 @@ public class ActionBarManager {
 
   public void setMyEventsActionBarInterface(MyEventsActionBarInterface myEventsActionBarInterface) {
     this.myEventsActionBarInterface = myEventsActionBarInterface;
-  }
-
-  public void setCreateEventActionBarInterface(CreateEventActionBarInterface createEventActionBarInterface) {
-    this.createEventActionBarInterface = createEventActionBarInterface;
   }
 }

@@ -5,5 +5,5 @@ package es.android.TurnosAndroid;
  * Date: 28/12/13
  */
 public interface MyEventsActionBarInterface {
-  public void onNewEventClicked();
+  public void onAddEventClicked();
 }

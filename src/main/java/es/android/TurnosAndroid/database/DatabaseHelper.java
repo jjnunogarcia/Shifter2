@@ -36,15 +36,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                DBConstants.ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                DBConstants.NAME + " TEXT, " +
                DBConstants.DESCRIPTION + " TEXT, " +
-               DBConstants.START + " INTEGER, " +
+               DBConstants.START_TIME + " INTEGER, " +
                DBConstants.DURATION + " INTEGER, " +
                DBConstants.LOCATION + " TEXT, " +
-               DBConstants.COLOR + " INTEGER);");
+               DBConstants.COLOR + " INTEGER, " +
+               DBConstants.CREATION_TIME + " INTEGER);");
     db.execSQL("CREATE TABLE " + DBConstants.CALENDAR_EVENTS_TABLE + "(" +
                DBConstants.ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                DBConstants.DAY + " INTEGER, " +
-               DBConstants.EVENT_ID + " INTEGER);");
+               DBConstants.EVENT_ID + " INTEGER, " +
+               DBConstants.CREATION_TIME + " INTEGER);");
     db.execSQL("CREATE TABLE " + DBConstants.PATTERNS_TABLE + "(" +
-               DBConstants.ID + " INTEGER PRIMARY KEY AUTOINCREMENT);");
+               DBConstants.ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+               DBConstants.CREATION_TIME + " INTEGER);");
   }
 }

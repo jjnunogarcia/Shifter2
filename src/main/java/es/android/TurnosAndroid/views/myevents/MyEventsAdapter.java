@@ -1,11 +1,11 @@
 package es.android.TurnosAndroid.views.myevents;
 
 import android.content.Context;
+import android.graphics.drawable.GradientDrawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import es.android.TurnosAndroid.R;
 import es.android.TurnosAndroid.model.Event;
@@ -30,13 +30,23 @@ public class MyEventsAdapter extends BaseAdapter {
     notifyDataSetChanged();
   }
 
+  public void addEvent(Event event) {
+    this.events.add(event);
+    notifyDataSetChanged();
+  }
+
+  public void removeEvent(Event event) {
+    events.remove(event);
+    notifyDataSetChanged();
+  }
+
   @Override
   public int getCount() {
     return events.size();
   }
 
   @Override
-  public Object getItem(int position) {
+  public Event getItem(int position) {
     return events.get(position);
   }
 
@@ -58,7 +68,7 @@ public class MyEventsAdapter extends BaseAdapter {
       viewHolder.startTime = (TextView) view.findViewById(R.id.my_events_row_start_time);
       viewHolder.duration = (TextView) view.findViewById(R.id.my_events_row_duration);
       viewHolder.location = (TextView) view.findViewById(R.id.my_events_row_location);
-      viewHolder.color = (RelativeLayout) view.findViewById(R.id.my_events_row_color);
+      viewHolder.color = view.findViewById(R.id.my_events_row_color);
       view.setTag(viewHolder);
     } else {
       viewHolder = (ViewHolder) view.getTag();
@@ -70,17 +80,18 @@ public class MyEventsAdapter extends BaseAdapter {
     viewHolder.startTime.setText(String.valueOf(event.getStartTime()));
     viewHolder.duration.setText(String.valueOf(event.getDuration()));
     viewHolder.location.setText(event.getLocation());
-    viewHolder.color.setBackgroundColor(event.getColor());
+    GradientDrawable drawable = (GradientDrawable) viewHolder.color.getBackground();
+    drawable.setColor(event.getColor());
 
     return view;
   }
 
   private static class ViewHolder {
-    TextView       name;
-    TextView       description;
-    TextView       startTime;
-    TextView       duration;
-    TextView       location;
-    RelativeLayout color;
+    TextView name;
+    TextView description;
+    TextView startTime;
+    TextView duration;
+    TextView location;
+    View     color;
   }
 }

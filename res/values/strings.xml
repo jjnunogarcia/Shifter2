@@ -9,15 +9,13 @@
     <string name="drawer_title">Elige una opción</string>
     <string name="today_button">Hoy</string>
     <string name="create_event_button">Nuevo turno</string>
-    <string name="save_event_button">Guardar</string>
-    <string name="delete_event_button">Eliminar</string>
     <string name="create_pattern_button">Nuevo patrón</string>
-    <string name="create_event_name">Nombre</string>
-    <string name="create_event_description">Descripción</string>
-    <string name="create_event_start_time">Comienzo</string>
-    <string name="create_event_duration">Duración</string>
-    <string name="create_event_location">Dónde</string>
-    <string name="create_event_color">Color</string>
+    <string name="set_event_name">Nombre</string>
+    <string name="set_event_description">Descripción</string>
+    <string name="set_event_start_time">Comienzo</string>
+    <string name="set_event_duration">Duración</string>
+    <string name="set_event_location">Dónde</string>
+    <string name="set_event_color">Color</string>
     <array name="drawer_elements">
         <item>Calendario</item>
         <item>Mis eventos</item>
@@ -28,4 +26,9 @@
     <!-- Color Picker -->
     <string name="dialog_color_picker">Color Picker</string>
     <string name="press_color_to_apply">Press on Color to apply</string>
+    <string name="save">Guardar</string>
+    <string name="cancel">Cancelar</string>
+    <string name="edit_event_dialog_title">Editar este turno</string>
+    <string name="new_event_dialog_title">Crear un nuevo turno</string>
+    <string name="save_event_error_message">Por favor, introduzca un nombre para el turno</string>
 </resources>

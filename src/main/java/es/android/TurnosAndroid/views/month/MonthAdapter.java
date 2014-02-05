@@ -23,7 +23,6 @@ import android.view.View.OnTouchListener;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
 import es.android.TurnosAndroid.controllers.CalendarController;
-import es.android.TurnosAndroid.helpers.TimeZoneUtils;
 import es.android.TurnosAndroid.model.CalendarEvent;
 import es.android.TurnosAndroid.model.EventType;
 import es.android.TurnosAndroid.views.ViewType;
@@ -114,7 +113,7 @@ public class MonthAdapter extends BaseAdapter implements OnTouchListener {
     selectedDay.setToNow();
     numWeeks = DEFAULT_NUM_WEEKS;
     focusMonth = DEFAULT_MONTH_FOCUS;
-    homeTimeZone = TimeZoneUtils.getTimeZone(context, null);
+    homeTimeZone = Time.getCurrentTimezone();
     selectedDay.switchTimezone(homeTimeZone);
     today = new Time(homeTimeZone);
     today.setToNow();
@@ -191,12 +190,12 @@ public class MonthAdapter extends BaseAdapter implements OnTouchListener {
     WeekView view;
     HashMap<String, Integer> drawingParams = new HashMap<String, Integer>();
 
-//    if (convertView != null) {
-//      view = (WeekView) convertView;
-//      drawingParams = (HashMap<String, Integer>) view.getTag();
-//    } else {
-    view = new WeekView(context);
-//    }
+    if (convertView != null) {
+      view = (WeekView) convertView;
+      view.clearDrawnEvents();
+    } else {
+      view = new WeekView(context);
+    }
 
     drawingParams.clear();
 
@@ -213,7 +212,7 @@ public class MonthAdapter extends BaseAdapter implements OnTouchListener {
     drawingParams.put(WeekView.KEY_FOCUS_MONTH, focusMonth);
 
     view.setWeekParams(drawingParams, this.selectedDay.timezone);
-    view.setEvents(calendarEvents);
+    view.setEvents(calendarEvents);  // TODO filter events by week here instead of inside the view
     return view;
   }
 
@@ -229,7 +228,7 @@ public class MonthAdapter extends BaseAdapter implements OnTouchListener {
 
   private void refresh() {
     firstDayOfWeek = Time.MONDAY;
-    homeTimeZone = TimeZoneUtils.getTimeZone(context, null);
+    homeTimeZone = Time.getCurrentTimezone();
     updateTimeZones();
     notifyDataSetChanged();
   }

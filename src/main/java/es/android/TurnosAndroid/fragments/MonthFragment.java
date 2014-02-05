@@ -26,7 +26,6 @@ import es.android.TurnosAndroid.*;
 import es.android.TurnosAndroid.controllers.CalendarController;
 import es.android.TurnosAndroid.database.CalendarProvider;
 import es.android.TurnosAndroid.database.DBConstants;
-import es.android.TurnosAndroid.helpers.TimeZoneUtils;
 import es.android.TurnosAndroid.helpers.Utils;
 import es.android.TurnosAndroid.model.CalendarEvent;
 import es.android.TurnosAndroid.model.EventInfo;
@@ -61,7 +60,7 @@ public class MonthFragment extends ListFragment implements EventHandler, LoaderM
   private final        Runnable        timeZoneUpdater                     = new Runnable() {
     @Override
     public void run() {
-      String tz = TimeZoneUtils.getTimeZone(context, this);
+      String tz = Time.getCurrentTimezone();
       selectedDay.timezone = tz;
       selectedDay.normalize(true);
       tempTime.timezone = tz;

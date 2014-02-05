@@ -119,4 +119,9 @@
     <color name="appwidget_when">#ffffffff</color>
     <color name="appwidget_where">#ffffffff</color>
     <color name="appwidget_no_events">#ffffffff</color>
+
+
+    <color name="turnos_general">#ff009933</color>
+    <color name="my_events_row_background">#ffbceccc</color>
+    <color name="turnos_black">#ff161111</color>
 </resources>

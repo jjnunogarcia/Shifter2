@@ -14,12 +14,19 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import es.android.TurnosAndroid.controllers.CalendarController;
-import es.android.TurnosAndroid.fragments.*;
+import es.android.TurnosAndroid.fragments.MonthFragment;
+import es.android.TurnosAndroid.fragments.MyEventsFragment;
+import es.android.TurnosAndroid.fragments.MyPatternsFragment;
+import es.android.TurnosAndroid.fragments.StatisticsFragment;
+import es.android.TurnosAndroid.fragments.dialogs.SetEventDialogFragment;
+import es.android.TurnosAndroid.helpers.Utils;
+import es.android.TurnosAndroid.interfaces.EventInteractionInterface;
+import es.android.TurnosAndroid.model.Event;
 import es.android.TurnosAndroid.model.EventInfo;
 import es.android.TurnosAndroid.model.EventType;
 
 // TODO Check logcat: why does it need permissions for calendar?
-public class MainActivity extends FragmentActivity implements EventHandler {
+public class MainActivity extends FragmentActivity implements EventHandler, EventInteractionInterface {
   private DrawerLayout          drawerLayout;
   private ListView              drawerList;
   private String[]              drawerElements;
@@ -104,7 +111,6 @@ public class MainActivity extends FragmentActivity implements EventHandler {
   @Override
   public void handleEvent(EventInfo event) {
     if (event.eventType == EventType.GO_TO) {
-      addDayFragment(event);
     }
 
 //    if (event.eventType == EventType.VIEW_EVENT) {
@@ -165,12 +171,6 @@ public class MainActivity extends FragmentActivity implements EventHandler {
     actionBarManager.setMonthFragmentActionBar();
   }
 
-  public void addDayFragment(EventInfo event) {
-//    DialogFragment dialogFragment = new DialogFragment();
-//    FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-//    dialogFragment.show(ft, "DummyTag");
-  }
-
   public void addMyEventsFragment() {
     FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
     MyEventsFragment myEventsFragment = new MyEventsFragment();
@@ -178,11 +178,21 @@ public class MainActivity extends FragmentActivity implements EventHandler {
     actionBarManager.setMyEventsFragmentActionBar();
   }
 
-  public void addCreateEventFragment() {
-    FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-    CreateEventFragment createEventFragment = new CreateEventFragment();
-    ft.replace(R.id.calendar_frame, createEventFragment, CreateEventFragment.TAG).addToBackStack(CreateEventFragment.TAG).commit();
-    actionBarManager.setCreateEventFragmentActionBar();
+  /**
+   * Displays the dialog that allows to add a new event in the event list or to update the data of one already existin event.
+   *
+   * @param event The event to open
+   * @return The dialog created
+   */
+  public SetEventDialogFragment addSetEventDialog(Event event) {
+    FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
+    SetEventDialogFragment setEventDialog = new SetEventDialogFragment();
+    Bundle arguments = new Bundle();
+    arguments.putParcelable(Utils.KEY_EVENT_TO_MANAGE, event);
+    setEventDialog.setArguments(arguments);
+    setEventDialog.show(fragmentTransaction, SetEventDialogFragment.TAG);
+
+    return setEventDialog;
   }
 
   public void addMyPatternsFragment() {
@@ -202,6 +212,35 @@ public class MainActivity extends FragmentActivity implements EventHandler {
   public ActionBarManager getActionBarManager() {
     return actionBarManager;
   }
+
+  //---------------------------- EventInteractionInterface ----------------------------//
+  @Override
+  public void onSaveEventClicked(Event event) {
+    MyEventsFragment myEventsFragment = (MyEventsFragment) getSupportFragmentManager().findFragmentByTag(MyEventsFragment.TAG);
+
+    if (myEventsFragment != null) {
+      myEventsFragment.addEvent(event);
+    }
+  }
+
+  @Override
+  public void onUpdateEventClicked(Event event) {
+    MyEventsFragment myEventsFragment = (MyEventsFragment) getSupportFragmentManager().findFragmentByTag(MyEventsFragment.TAG);
+
+    if (myEventsFragment != null) {
+      myEventsFragment.refresh();
+    }
+  }
+
+  @Override
+  public void onDeleteEventClicked(Event event) {
+    MyEventsFragment myEventsFragment = (MyEventsFragment) getSupportFragmentManager().findFragmentByTag(MyEventsFragment.TAG);
+
+    if (myEventsFragment != null) {
+      myEventsFragment.removeEvent(event);
+    }
+  }
+  //-----------------------------------------------------------------------------------//
 
   private class DrawerItemClickListener implements ListView.OnItemClickListener {
     @Override

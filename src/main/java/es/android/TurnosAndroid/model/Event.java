@@ -16,29 +16,31 @@
 
 package es.android.TurnosAndroid.model;
 
-import android.database.Cursor;
 import android.graphics.Color;
-import es.android.TurnosAndroid.database.DBConstants;
-import es.android.TurnosAndroid.helpers.Utils;
+import android.os.Parcel;
+import android.os.Parcelable;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.GregorianCalendar;
+public class Event implements Parcelable {
+  public static final Parcelable.Creator<Event> CREATOR = new Parcelable.Creator<Event>() {
+    @Override
+    public Event createFromParcel(Parcel in) {
+      return new Event(in);
+    }
 
-// TODO: should Event be Parcelable so it can be passed via Intents?
-public class Event {
-  // The coordinates of the event rectangle drawn on the screen.
-  public  float  left;
-  public  float  right;
-  public  float  top;
-  public  float  bottom;
+    @Override
+    public Event[] newArray(int size) {
+      return new Event[size];
+    }
+  };
+
   private int    id;
   private String name;
   private String description;
-  private int    startTime;      // Start and end time are in minutes since midnight
+  private int    startTime;
   private int    duration;
   private String location;
   private int    color;
+  private long   creationTime;
 
   public Event() {
     id = 0;
@@ -48,6 +50,7 @@ public class Event {
     duration = 0;
     location = null;
     color = Color.WHITE;
+    creationTime = System.currentTimeMillis();
   }
 
   public Event(Event event) {
@@ -58,6 +61,18 @@ public class Event {
     duration = event.getDuration();
     location = event.getLocation();
     color = event.getColor();
+    creationTime = event.getCreationTime();
+  }
+
+  private Event(Parcel in) {
+    id = in.readInt();
+    name = in.readString();
+    description = in.readString();
+    startTime = in.readInt();
+    duration = in.readInt();
+    location = in.readString();
+    color = in.readInt();
+    creationTime = in.readLong();
   }
 
   public int getId() {
@@ -114,5 +129,49 @@ public class Event {
 
   public void setColor(int color) {
     this.color = color;
+  }
+
+  public long getCreationTime() {
+    return creationTime;
+  }
+
+  public void setCreationTime(long creationTime) {
+    this.creationTime = creationTime;
+  }
+
+  @Override
+  public int describeContents() {
+    return 0;
+  }
+
+  @Override
+  public void writeToParcel(Parcel dest, int flags) {
+    dest.writeInt(id);
+    dest.writeString(name);
+    dest.writeString(description);
+    dest.writeInt(startTime);
+    dest.writeInt(duration);
+    dest.writeString(location);
+    dest.writeInt(color);
+    dest.writeLong(creationTime);
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (!(o instanceof Event)) {
+      return false;
+    }
+
+    Event event = (Event) o;
+
+    return id == event.id;
+  }
+
+  @Override
+  public int hashCode() {
+    return id;
   }
 }

@@ -21,6 +21,7 @@ public class CalendarProvider extends ContentProvider {
   private static final UriMatcher              uriMatcher;
   private static final HashMap<String, String> MY_EVENTS_PROJECTION_MAP;
   private static final HashMap<String, String> CALENDAR_EVENTS_PROJECTION_MAP;
+  private static final HashMap<String, String> PATTERNS_PROJECTION_MAP;
 
   static {
     uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
@@ -32,15 +33,21 @@ public class CalendarProvider extends ContentProvider {
     MY_EVENTS_PROJECTION_MAP.put(DBConstants.ID, DBConstants.ID);
     MY_EVENTS_PROJECTION_MAP.put(DBConstants.NAME, DBConstants.NAME);
     MY_EVENTS_PROJECTION_MAP.put(DBConstants.DESCRIPTION, DBConstants.DESCRIPTION);
-    MY_EVENTS_PROJECTION_MAP.put(DBConstants.START, DBConstants.START);
+    MY_EVENTS_PROJECTION_MAP.put(DBConstants.START_TIME, DBConstants.START_TIME);
     MY_EVENTS_PROJECTION_MAP.put(DBConstants.DURATION, DBConstants.DURATION);
     MY_EVENTS_PROJECTION_MAP.put(DBConstants.LOCATION, DBConstants.LOCATION);
     MY_EVENTS_PROJECTION_MAP.put(DBConstants.COLOR, DBConstants.COLOR);
+    MY_EVENTS_PROJECTION_MAP.put(DBConstants.CREATION_TIME, DBConstants.CREATION_TIME);
 
     CALENDAR_EVENTS_PROJECTION_MAP = new HashMap<String, String>();
     CALENDAR_EVENTS_PROJECTION_MAP.put(DBConstants.ID, DBConstants.ID);
     CALENDAR_EVENTS_PROJECTION_MAP.put(DBConstants.DAY, DBConstants.DAY);
     CALENDAR_EVENTS_PROJECTION_MAP.put(DBConstants.EVENT_ID, DBConstants.EVENT_ID);
+    CALENDAR_EVENTS_PROJECTION_MAP.put(DBConstants.CREATION_TIME, DBConstants.CREATION_TIME);
+
+    PATTERNS_PROJECTION_MAP = new HashMap<String, String>();
+    PATTERNS_PROJECTION_MAP.put(DBConstants.ID, DBConstants.ID);
+    PATTERNS_PROJECTION_MAP.put(DBConstants.CREATION_TIME, DBConstants.CREATION_TIME);
   }
 
   private DatabaseHelper DBHelper;

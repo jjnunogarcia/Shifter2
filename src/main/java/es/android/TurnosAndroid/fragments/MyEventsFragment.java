@@ -9,6 +9,8 @@ import android.support.v4.content.Loader;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import es.android.TurnosAndroid.MainActivity;
 import es.android.TurnosAndroid.MyEventsActionBarInterface;
 import es.android.TurnosAndroid.R;
@@ -25,7 +27,7 @@ import java.util.ArrayList;
  *
  * @author jjnunogarcia@gmail.com
  */
-public class MyEventsFragment extends ListFragment implements LoaderCallbacks<Cursor>, MyEventsActionBarInterface {
+public class MyEventsFragment extends ListFragment implements LoaderCallbacks<Cursor>, MyEventsActionBarInterface, OnItemClickListener {
   public static final String TAG       = MyEventsFragment.class.getSimpleName();
   public static final int    LOADER_ID = 1;
   private MyEventsAdapter adapter;
@@ -44,6 +46,7 @@ public class MyEventsFragment extends ListFragment implements LoaderCallbacks<Cu
     super.onActivityCreated(savedInstanceState);
     adapter = new MyEventsAdapter(getActivity().getApplicationContext(), new ArrayList<Event>());
     setListAdapter(adapter);
+    getListView().setOnItemClickListener(this);
     getActivity().getSupportLoaderManager().initLoader(LOADER_ID, null, this);
     ((MainActivity) getActivity()).getActionBarManager().setMyEventsActionBarInterface(this);
   }
@@ -56,6 +59,7 @@ public class MyEventsFragment extends ListFragment implements LoaderCallbacks<Cu
     }
   }
 
+  //------------------------- LoaderCallbacks -------------------------//
   @Override
   public Loader<Cursor> onCreateLoader(int id, Bundle args) {
     return new CursorLoader(getActivity().getApplicationContext(), CalendarProvider.EVENTS_URI, DBConstants.EVENTS_PROJECTION, null, null, DBConstants.SORT_EVENTS_BY_NAME_ASC);
@@ -68,9 +72,33 @@ public class MyEventsFragment extends ListFragment implements LoaderCallbacks<Cu
 
   @Override
   public void onLoaderReset(Loader<Cursor> loader) {}
+  //-------------------------------------------------------------------//
 
+  //------------------------- OnItemClickListener -------------------------//
   @Override
-  public void onNewEventClicked() {
-    ((MainActivity) getActivity()).addCreateEventFragment();
+  public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+    Event event = adapter.getItem(position);
+    ((MainActivity) getActivity()).addSetEventDialog(event);
+    adapter.notifyDataSetChanged();
+  }
+  //-----------------------------------------------------------------------//
+
+  //------------------------- MyEventsActionBarInterface -------------------------//
+  @Override
+  public void onAddEventClicked() {
+    ((MainActivity) getActivity()).addSetEventDialog(null);
+  }
+  //------------------------------------------------------------------------------//
+
+  public void addEvent(Event event) {
+    adapter.addEvent(event);
+  }
+
+  public void removeEvent(Event event) {
+    adapter.removeEvent(event);
+  }
+
+  public void refresh() {
+    adapter.notifyDataSetChanged();
   }
 }
