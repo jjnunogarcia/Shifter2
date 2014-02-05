@@ -2,13 +2,13 @@ package es.android.TurnosAndroid.fragments;
 
 import android.database.Cursor;
 import android.os.Bundle;
-import android.support.v4.app.ListFragment;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import com.actionbarsherlock.app.SherlockListFragment;
 import es.android.TurnosAndroid.R;
 import es.android.TurnosAndroid.database.CalendarProvider;
 import es.android.TurnosAndroid.database.DBConstants;
@@ -22,7 +22,7 @@ import java.util.ArrayList;
  *
  * @author jjnunogarcia@gmail.com
  */
-public class MyPatternsFragment extends ListFragment implements LoaderCallbacks<Cursor> {
+public class MyPatternsFragment extends SherlockListFragment implements LoaderCallbacks<Cursor> {
   public static final String TAG       = MyPatternsFragment.class.getSimpleName();
   public static final int    LOADER_ID = 2;
   private MyPatternsAdapter adapter;

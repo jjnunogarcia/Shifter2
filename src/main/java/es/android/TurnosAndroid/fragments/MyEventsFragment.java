@@ -2,7 +2,6 @@ package es.android.TurnosAndroid.fragments;
 
 import android.database.Cursor;
 import android.os.Bundle;
-import android.support.v4.app.ListFragment;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
@@ -11,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
+import com.actionbarsherlock.app.SherlockListFragment;
 import es.android.TurnosAndroid.MainActivity;
 import es.android.TurnosAndroid.MyEventsActionBarInterface;
 import es.android.TurnosAndroid.R;
@@ -27,7 +27,7 @@ import java.util.ArrayList;
  *
  * @author jjnunogarcia@gmail.com
  */
-public class MyEventsFragment extends ListFragment implements LoaderCallbacks<Cursor>, MyEventsActionBarInterface, OnItemClickListener {
+public class MyEventsFragment extends SherlockListFragment implements LoaderCallbacks<Cursor>, MyEventsActionBarInterface, OnItemClickListener {
   public static final String TAG       = MyEventsFragment.class.getSimpleName();
   public static final int    LOADER_ID = 1;
   private MyEventsAdapter adapter;

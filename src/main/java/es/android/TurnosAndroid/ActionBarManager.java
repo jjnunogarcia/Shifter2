@@ -1,8 +1,8 @@
 package es.android.TurnosAndroid;
 
 import android.app.ActionBar;
-import android.view.Menu;
-import android.view.MenuItem;
+import com.actionbarsherlock.view.Menu;
+import com.actionbarsherlock.view.MenuItem;
 
 /**
  * Date: 19.12.13

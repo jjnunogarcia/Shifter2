@@ -8,7 +8,6 @@ import android.content.DialogInterface;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentTransaction;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,6 +15,7 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
+import com.actionbarsherlock.app.SherlockDialogFragment;
 import es.android.TurnosAndroid.R;
 import es.android.TurnosAndroid.colorpicker.ColorPickerDialog;
 import es.android.TurnosAndroid.database.CalendarProvider;
@@ -24,7 +24,7 @@ import es.android.TurnosAndroid.helpers.Utils;
 import es.android.TurnosAndroid.interfaces.EventInteractionInterface;
 import es.android.TurnosAndroid.model.Event;
 
-public class SetEventDialogFragment extends DialogFragment implements ColorPickerDialog.OnColorChangedListener {
+public class SetEventDialogFragment extends SherlockDialogFragment implements ColorPickerDialog.OnColorChangedListener {
   public static final String TAG = SetEventDialogFragment.class.getSimpleName();
 
   private EditText                  name;

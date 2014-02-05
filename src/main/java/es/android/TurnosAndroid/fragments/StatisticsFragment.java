@@ -1,17 +1,17 @@
 package es.android.TurnosAndroid.fragments;
 
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import com.actionbarsherlock.app.SherlockFragment;
 import es.android.TurnosAndroid.R;
 
 /**
  * User: Jesús
  * Date: 2/01/14
  */
-public class StatisticsFragment extends Fragment {
+public class StatisticsFragment extends SherlockFragment {
   public static final String TAG = StatisticsFragment.class.getSimpleName();
 
   public StatisticsFragment() {

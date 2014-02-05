@@ -2,17 +2,17 @@ package es.android.TurnosAndroid;
 
 import android.content.res.Configuration;
 import android.os.Bundle;
-import android.support.v4.app.ActionBarDrawerToggle;
-import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import com.actionbarsherlock.app.SherlockFragmentActivity;
+import com.actionbarsherlock.view.Menu;
+import com.actionbarsherlock.view.MenuItem;
+import sherlock.navigationdrawer.compat.SherlockActionBarDrawerToggle;
 import es.android.TurnosAndroid.controllers.CalendarController;
 import es.android.TurnosAndroid.fragments.MonthFragment;
 import es.android.TurnosAndroid.fragments.MyEventsFragment;
@@ -26,14 +26,14 @@ import es.android.TurnosAndroid.model.EventInfo;
 import es.android.TurnosAndroid.model.EventType;
 
 // TODO Check logcat: why does it need permissions for calendar?
-public class MainActivity extends FragmentActivity implements EventHandler, EventInteractionInterface {
-  private DrawerLayout          drawerLayout;
-  private ListView              drawerList;
-  private String[]              drawerElements;
-  private CharSequence          windowTitle;
-  private ActionBarDrawerToggle drawerToggle;
-  private CharSequence          drawerTitle;
-  private ActionBarManager      actionBarManager;
+public class MainActivity extends SherlockFragmentActivity implements EventHandler, EventInteractionInterface {
+  private DrawerLayout                  drawerLayout;
+  private ListView                      drawerList;
+  private String[]                      drawerElements;
+  private CharSequence                  windowTitle;
+  private SherlockActionBarDrawerToggle drawerToggle;
+  private CharSequence                  drawerTitle;
+  private ActionBarManager              actionBarManager;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -60,7 +60,7 @@ public class MainActivity extends FragmentActivity implements EventHandler, Even
 
   private void initDrawer() {
     drawerLayout.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START);
-    drawerToggle = new ActionBarDrawerToggle(this, drawerLayout, R.drawable.ic_drawer, R.string.drawer_open, R.string.drawer_close) {
+    drawerToggle = new SherlockActionBarDrawerToggle(this, drawerLayout, R.drawable.ic_drawer, R.string.drawer_open, R.string.drawer_close) {
 
       @Override
       public void onDrawerClosed(View view) {
@@ -85,7 +85,7 @@ public class MainActivity extends FragmentActivity implements EventHandler, Even
 
   @Override
   public boolean onCreateOptionsMenu(Menu menu) {
-    getMenuInflater().inflate(R.menu.action_bar_menu, menu);
+    getSupportMenuInflater().inflate(R.menu.action_bar_menu, menu);
     actionBarManager.attachInternalMenu(menu);
     addMonthFragment();
     return true;

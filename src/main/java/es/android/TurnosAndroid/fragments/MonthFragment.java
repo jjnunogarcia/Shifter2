@@ -9,7 +9,6 @@ import android.database.DataSetObserver;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.v4.app.ListFragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.text.format.DateUtils;
@@ -22,6 +21,7 @@ import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AbsListView.OnScrollListener;
 import android.widget.TextView;
+import com.actionbarsherlock.app.SherlockListFragment;
 import es.android.TurnosAndroid.*;
 import es.android.TurnosAndroid.controllers.CalendarController;
 import es.android.TurnosAndroid.database.CalendarProvider;
@@ -43,7 +43,7 @@ import java.util.*;
  * This displays a titled list of weeks with selectable days. It can be configured to display the week number, start the week on a given day, show a reduced number of days, or display an
  * arbitrary number of weeks at a time. By overriding methods and changing variables this fragment can be customized to easily display a month selection component in a given style.
  */
-public class MonthFragment extends ListFragment implements EventHandler, LoaderManager.LoaderCallbacks, OnScrollListener, OnTouchListener, MonthActionBarInterface {
+public class MonthFragment extends SherlockListFragment implements EventHandler, LoaderManager.LoaderCallbacks, OnScrollListener, OnTouchListener, MonthActionBarInterface {
   public static final  String          TAG                                 = MonthFragment.class.getSimpleName();
   public static final  int             DAYS_PER_WEEK                       = 7;
   public static final  String          KEY_INITIAL_TIME                    = "initial_time";
